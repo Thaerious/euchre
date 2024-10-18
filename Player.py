@@ -71,8 +71,9 @@ class PlayerList(list):
     def rotate(this, player = None):
         firstPlayer = this.pop(0)
         this.append(firstPlayer)
+        if player == None: return
 
-        if player != None and this[0] != player:
+        while this[0] != player:
             this.rotate()
 
     def nextPlayer(this, afterThis, circular = False):
@@ -84,3 +85,8 @@ class PlayerList(list):
 
         if circular: return this[0]
         else: return None
+
+    def __str__(this):     
+        names = []
+        for player in this: names.append(player.name)
+        return "[" + delString(names) + "]"

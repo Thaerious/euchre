@@ -13,7 +13,7 @@ class GameLoop:
         this.teams = [this.euchre.players[0].team, this.euchre.players[1].team]
 
     def printGame(this):        
-        for player in this.game.euchre.activeList:
+        for player in this.euchre.players:
             if (this.game.activePlayer == player): print(f"> {str(player)} {player.tricks}")
             else:  print(f"  {str(player)} {player.tricks}")
 

@@ -6,8 +6,7 @@ class Euchre:
     def __init__(this, names):
         random.shuffle(names)
         this.players = PlayerList(names)
-        this.playing = None
-        this.order = None
+        this.playing = PlayerList()
         this.activeList = this.players
 
         this.teams = [this.players[0].team, this.players[1].team]
@@ -17,6 +16,16 @@ class Euchre:
         this.maker = None
         this.trick = []
         
+    def canPlay(this, player, card):
+        if len(this.trick) == 0: return True
+        leadSuit = this.trick[0].getSuit(this.trump)
+        if card.getSuit(this.trump) == leadSuit: return True        
+
+        for playerCard in player.cards:
+            if playerCard.getSuit(this.trump) == leadSuit : return False
+
+        return True
+
     def resetDeck(this):
         this.deck = []
         for suit in Card.suits:
@@ -29,20 +38,9 @@ class Euchre:
     def dealer(this):
         return this.players[3]
 
-    def leadPlayer(this):
-        return this.activeList[0]
-
-    def lastPlayer(this):
-        return this.activeList[-1]
-
     def copyPlayersToPlaying(this):       
         this.players.clear() 
         this.playing = this.players.copy()
-        this.activeList = this.playing
-
-    def copyPlayingToOrder(this):
-        this.order = this.playing.copy()
-        this.activeList = this.order
 
     def dealCards(this):
         for i in range(0, 5):

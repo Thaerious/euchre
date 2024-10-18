@@ -9,6 +9,10 @@ class Card:
     def __str__(this):
         return this.value + this.suit
 
+    def getSuit(this, trump):
+        if this.isLeftBower(trump): return trump
+        return this.suit
+
     # compare two cards this and that
     # assume this card is played first
     # return 1 if this beats that, otherwise return -1

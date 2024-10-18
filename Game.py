@@ -7,10 +7,12 @@ class Game:
         this.euchre = euchre
         this.state = this.state0
         this.activePlayer = None
-            
-    def input(this, player, action, data = None):
-        if player != this.activePlayer: return
-        this.state(player, action, data)        
+
+    def input(this, player, action, data = None):            
+        if this.activePlayer != None and player != this.activePlayer: 
+            raise ActionException(f"Incorrect Player: expected {this.activePlayer.name} found {player.name}")
+        
+        this.state(player, action, data)
 
     def state0(this, player, action, data):
         if action != "start": raise ActionException("Unhandled Action " + (str)(action))
@@ -25,18 +27,22 @@ class Game:
         this.euchre.dealCards()      
         this.enterState1()  
 
-    def enterState1(this):        
+    def enterState1(this):    
         if this.state == this.state1:
-            this.activePlayer = this.nextPlayer()
+            this.nextPlayer()
         else:
-            this.activePlayer = this.euchre.leadPlayer() 
+            this.activePlayer = this.euchre.playing[0]
             this.state = this.state1
 
     def state1(this, player, action, data):         
         this.allowedActions(action, "pass", "order")
 
         if action == "pass": 
-            this.enterState1()
+            if this.activePlayer == this.euchre.dealer(): 
+                this.nextPlayer()
+                this.enterState4()
+            else: 
+                this.enterState1()
         elif action == "order":
             this.euchre.makeSuit(this.activePlayer)
             this.enterState2()
@@ -57,24 +63,22 @@ class Game:
             this.enterstate7a()
         
     def enterState3(this):
+        print(this.euchre.dealer())
+        print(this.euchre.players)
         this.activePlayer = this.euchre.dealer()
         this.state = this.state3
 
     def state3(this, player, action, card):
         this.allowedActions(action, "down", "up")
-
-        if action == "down": 
-            this.enterstate7a()
-        elif action == "up":
-            this.euchre.swapCard(card)
-            this.enterstate7a()
+        if action == "up": this.euchre.swapCard(card)
+        this.activePlayer = this.euchre.playing[0]
+        this.enterstate7a()
 
     def enterState4(this):
         if this.state == this.state4:
-            this.activePlayer = this.nextPlayer()
+            this.nextPlayer()
             if this.activePlayer == this.euchre.dealer(): this.state = this.state5
         else:
-            this.activePlayer = this.euchre.leadPlayer()         
             this.state = this.state4
 
     def state4(this, player, action, suit):
@@ -110,27 +114,27 @@ class Game:
 
     def enterstate7a(this):
         this.state = None
-        this.euchre.copyPlayingToOrder()
         this.enterState7()
 
     def enterstate7b(this):
         this.state = None
-        this.euchre.copyPlayingToOrder()
-        this.euchre.activeList.rotate(this.euchre.trickWinner())
+        this.euchre.playing.rotate(this.euchre.trickWinner())
         this.euchre.trick = []
         this.enterState7()
 
     def enterState7(this):
         if this.state == this.state7:
-            this.activePlayer = this.nextPlayer()
-        else:
-            this.activePlayer = this.euchre.leadPlayer() 
+            this.nextPlayer()
+        else:            
+            this.activePlayer = this.euchre.playing[0]
             this.state = this.state7
 
     def state7(this, player, action, card):
         this.allowedActions(action, "play")
 
-        # todo verfiy validity of card
+        if this.euchre.canPlay(player, card) == False:
+            raise ActionException("Must play lead suit if possible.") 
+
         this.euchre.playCard(player, card)
 
         if this.trickFinished() == False:
@@ -161,13 +165,13 @@ class Game:
             this.enterState1a()           
 
     def trickFinished(this):
-        return this.activePlayer == this.euchre.lastPlayer()
+        return len(this.euchre.trick) == len(this.euchre.playing)
         
     def handFinished(this):
         return len(this.activePlayer.cards) == 0
 
     def nextPlayer(this):
-        return this.euchre.activeList.nextPlayer(this.activePlayer)
+        this.activePlayer = this.euchre.playing.nextPlayer(this.activePlayer)
 
     def allowedActions(this, action, *allowedActions):
         for allowed in allowedActions:
