@@ -5,6 +5,17 @@ from snapshot import snapshot
 from pprint import pprint
 import random
 
+stateLabels = {
+    "state0" : "Game not started (start): ",
+    "state1" : "Order up dealer (pass, order): ",
+    "state2" : "Go Alone (alone, helper): ",
+    "state3" : "Pick up card (up, down): ",
+    "state4" : "Make suit (pass, make): ",
+    "state5" : "Screw the dealer (make): ",
+    "state6" : "Go Alone (alone, helper): ",
+    "state7" : "Play a card (play): "
+}
+
 class GameLoop:    
     def __init__(this):
         this.euchre = Euchre(["Adam", "Eve", "Cain", "Able"])
@@ -14,30 +25,36 @@ class GameLoop:
         this.isRunning = True
         this.teams = [this.euchre.players[0].team, this.euchre.players[1].team]
 
+    def playerString(this, player):
+        return f"{str(player)} {player.tricks} {this.pastTricks(player)}"
+
     def printGame(this):        
         for player in this.euchre.players:
-            if (this.game.activePlayer == player): print(f"> {str(player)} {player.tricks} {this.prevTricks(player)}")
-            else:  print(f"  {str(player)} {player.tricks} {this.prevTricks(player)}")
+            if (this.game.activePlayer == player): print(f"> {this.playerString(player)}")
+            else:  print(f"  {this.playerString(player)}")
+
+        t1Text = f"Team1 [{this.teams[0].player1.name} {this.teams[0].player2.name}]"
+        t2Text = f"Team2 [{this.teams[1].player1.name} {this.teams[1].player2.name}]" 
 
         if this.euchre.maker == None:
-            print (f"Team1: {this.teams[0].score}")
-            print (f"Team2: {this.teams[1].score}")
+            print (f"{t1Text}: {this.teams[0].score}")
+            print (f"{t2Text}: {this.teams[1].score}")
         elif this.euchre.maker.team == this.teams[0]:
-            print (f"Team1: {this.teams[0].score} made")
-            print (f"Team2: {this.teams[1].score}")
+            print (f"{t1Text}: {this.teams[0].score} made by {this.euchre.maker.name}")
+            print (f"{t2Text}: {this.teams[1].score}")
         else:
-            print (f"Team1: {this.teams[0].score}")
-            print (f"Team2: {this.teams[1].score} made")
+            print (f"{t1Text}: {this.teams[0].score}")
+            print (f"{t2Text}: {this.teams[1].score} made by {this.euchre.maker.name}")
 
 
         print(this.game.state.__name__)    
         print("upcard: " + (str)(this.game.euchre.upcard))
         print("[" + delString(this.game.euchre.trick) + "] : " + this.game.euchre.trump)
 
-    def prevTricks(this, player):
-        prev = []
-        for trick in this.euchre.pastTricks:
-            prev.append(trick[player.name])
+    def pastTricks(this, player):
+        rvalue = []
+        for rvalue in this.euchre.pastTricks:
+            prev.append(rvalue[player.name])
 
         return "[" + delString(prev) + "]"
 
@@ -103,7 +120,7 @@ class GameLoop:
         while this.isRunning:
             this.printGame()
             print("---------------------------")
-            line = input("Please enter an action: ")
+            line = input(stateLabels[this.game.state.__name__])
             this.doAction(line)
 
 gameLoop = GameLoop()

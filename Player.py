@@ -22,7 +22,7 @@ class Player:
 
     def clear(this):
         this.cards = []
-        this.played = None
+        this.played = [] # cards playe in the current trick
         this.tricks = 0
         this.alone = False   
 
@@ -69,12 +69,13 @@ class PlayerList(list):
     # Move the first player to the end
     # Repeate unil the first player is the player specified as 'player'.
     def rotate(this, player = None):
-        firstPlayer = this.pop(0)
-        this.append(firstPlayer)
+        print(f"Rotate {str(player)}")
+
+        this.append(this.pop(0))
         if player == None: return
 
         while this[0] != player:
-            this.rotate()
+            this.append(this.pop(0))
 
     def nextPlayer(this, afterThis, circular = False):
         returnNext = False
