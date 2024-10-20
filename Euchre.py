@@ -7,9 +7,14 @@ class Euchre:
         random.shuffle(names)
         this.players = PlayerList(names)
         this.playing = PlayerList()
+        this.activeList = this.players
+
         this.teams = [this.players[0].team, this.players[1].team]
-        this.pastTricks = []
-        this.reset()
+
+        this.upcard = None
+        this.trump = ""
+        this.maker = None
+        this.trick = []
         
     def canPlay(this, player, card):
         if len(this.trick) == 0: return True
@@ -20,17 +25,6 @@ class Euchre:
             if playerCard.getSuit(this.trump) == leadSuit : return False
 
         return True
-
-    def reset(this):
-        this.dealer = None
-        this.lead = None
-        this.upcard = None
-        this.downcard = None
-        this.pickedUp = False
-        this.trump = ""
-        this.maker = None
-        this.trick = []
-        this.resetDeck(this)
 
     def resetDeck(this):
         this.deck = []
@@ -67,7 +61,6 @@ class Euchre:
     def swapCard(this, card):
         this.dealer().cards.remove(card)
         this.dealer().cards.append(this.upcard)
-        this.downcard = card
 
     def makeSuit(this, player, suit = None):
         this.maker = player
@@ -91,12 +84,4 @@ class Euchre:
     def trickWinner(this):
         bestCard = this.bestCardPlayed()
         index = this.trick.index(bestCard)
-        return this.players[index]
-
-    def recordTrick(this):
-        record = {}
-        this.pastTricks.append(record)
-
-        for i in range(0, len(this.trick)):
-            record[this.playing[i].name] = this.trick[i]
-
+        return this.activeList[index]
