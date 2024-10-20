@@ -21,6 +21,7 @@ class Game:
     def enterState1a(this):
         this.euchre.resetDeck()
         this.euchre.trick = []
+        this.euchre.pastTricks = []
         this.euchre.shuffle()
         this.euchre.players.rotate()
         this.euchre.copyPlayersToPlaying()
@@ -141,11 +142,13 @@ class Game:
             this.enterState7()
             return
 
-        this.euchre.trickWinner().tricks += 1            
+        this.euchre.recordTrick()
+        this.euchre.trickWinner().tricks += 1    
+
         if this.handFinished(): 
             this.scoreHand()
         else: 
-            this.enterstate7b()     
+            this.enterstate7b()
 
     def scoreHand(this):
         team = this.euchre.maker.team

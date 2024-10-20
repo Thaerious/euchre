@@ -1,6 +1,8 @@
 from Euchre import Euchre
 from Game import Game, ActionException
 from delString import delString
+from snapshot import snapshot
+from pprint import pprint
 import random
 
 class GameLoop:    
@@ -14,8 +16,8 @@ class GameLoop:
 
     def printGame(this):        
         for player in this.euchre.players:
-            if (this.game.activePlayer == player): print(f"> {str(player)} {player.tricks}")
-            else:  print(f"  {str(player)} {player.tricks}")
+            if (this.game.activePlayer == player): print(f"> {str(player)} {player.tricks} {this.prevTricks(player)}")
+            else:  print(f"  {str(player)} {player.tricks} {this.prevTricks(player)}")
 
         if this.euchre.maker == None:
             print (f"Team1: {this.teams[0].score}")
@@ -31,6 +33,13 @@ class GameLoop:
         print(this.game.state.__name__)    
         print("upcard: " + (str)(this.game.euchre.upcard))
         print("[" + delString(this.game.euchre.trick) + "] : " + this.game.euchre.trump)
+
+    def prevTricks(this, player):
+        prev = []
+        for trick in this.euchre.pastTricks:
+            prev.append(trick[player.name])
+
+        return "[" + delString(prev) + "]"
 
     def loadHistory(this):
         with open('history.txt', 'r') as file:
@@ -71,7 +80,7 @@ class GameLoop:
         parsed = this.parseInput(line)
 
         if parsed["action"] == "load":
-            this.loadHistory()
+            this.loadHistory()        
         elif parsed["action"] == "save":
             this.saveHistory()      
         elif parsed["action"] == "exit":
@@ -79,6 +88,10 @@ class GameLoop:
         elif parsed["action"] == "seed":
             random.seed((int)(parsed["data"]))
             this.history.append(line)
+        elif parsed["action"] == "snap":
+            print("---------------------------")
+            pprint(snapshot(this.game, this.game.activePlayer))
+            print("---------------------------")
         else:
             try:
                 this.game.input(this.game.activePlayer, parsed["action"], this.convertData(parsed["data"]))
