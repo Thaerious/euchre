@@ -22,7 +22,7 @@ class Player:
 
     def clear(this):
         this.cards = []
-        this.played = [] # cards playe in the current trick
+        this.played = [] # cards played in the current trick
         this.tricks = 0
         this.alone = False   
 

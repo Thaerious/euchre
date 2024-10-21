@@ -9,8 +9,10 @@ class Euchre:
         this.playing = PlayerList() # the order for the trick
 
         this.teams = [this.players[0].team, this.players[1].team]
-
+        
+        this.trick = []
         this.upcard = None
+        this.downcard = None
         this.trump = ""
         this.maker = None
         
@@ -59,6 +61,7 @@ class Euchre:
     def swapCard(this, card):
         this.dealer().cards.remove(card)
         this.dealer().cards.append(this.upcard)
+        this.downcard = card
 
     def makeSuit(this, player, suit = None):
         this.maker = player
@@ -68,6 +71,7 @@ class Euchre:
     def playCard(this, player, card):
         player.cards.remove(card)   
         player.played.append(card)
+        this.trick.append(card)
 
     def trickWinner(this):
         bestPlayer = this.playing[0]        

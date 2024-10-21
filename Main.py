@@ -26,7 +26,7 @@ class GameLoop:
         this.teams = [this.euchre.players[0].team, this.euchre.players[1].team]
 
     def playerString(this, player):
-        return f"{str(player)} {player.tricks} {this.pastTricks(player)}"
+        return f"{str(player)} {player.tricks} [{delString(player.played)}]"
 
     def printGame(this):        
         for player in this.euchre.players:
@@ -50,13 +50,6 @@ class GameLoop:
         print(this.game.state.__name__)    
         print("upcard: " + (str)(this.game.euchre.upcard))
         print("[" + delString(this.game.euchre.trick) + "] : " + this.game.euchre.trump)
-
-    def pastTricks(this, player):
-        rvalue = []
-        for rvalue in this.euchre.pastTricks:
-            prev.append(rvalue[player.name])
-
-        return "[" + delString(prev) + "]"
 
     def loadHistory(this):
         with open('history.txt', 'r') as file:
@@ -107,7 +100,7 @@ class GameLoop:
             this.history.append(line)
         elif parsed["action"] == "snap":
             print("---------------------------")
-            pprint(snapshot(this.game, this.game.activePlayer))
+            pprint(snapshot(this.game, this.game.activePlayer).run())
             print("---------------------------")
         else:
             try:
