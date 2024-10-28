@@ -1,13 +1,76 @@
+import random
+
+class CardList(list):
+    def __init__(this, stringList = []):
+        for string in stringList:
+            this.append(Card(string))
+
+    def randomItem(this):
+        if len(this) == 0: return None
+        index = random.randint(0, len(this)) - 1
+        return this[index]        
+
+class Hand(CardList):
+    # Given 'trick' and 'trump' return the cards in 'this' that can be played.
+    def playableCards(this, trick, trump):
+        cards = CardList()
+        for card in this:
+            if trick.canPlay(card, this, trump):
+                cards.append(card)
+                
+        return cards   
+
+class Trick(CardList):
+    # Can 'card' be played if 'this' is the current trick.
+    def canPlay(this, card, hand, trump):
+        if not isinstance(card, Card): raise TypeError(f"expected Card, found {type(card)}")
+        if not isinstance(hand, CardList): raise TypeError(f"expected CardList, found {type(hand)}")
+        if not isinstance(trump, str): raise TypeError(f"expected str, found {type(trump)}")
+
+        # empty trick
+        if len(this) == 0: return True
+
+        # subject card suit matches leading card suit
+        leadSuit = this[0].suit
+        if card.getSuit(trump) == leadSuit: return True
+
+        # if any other card in the hand matches suit
+        for cardInHand in hand:
+            if cardInHand == card: continue
+            if cardInHand.getSuit(trump) == leadSuit: return False
+
+        return True  
+
+class Deck(CardList):
+    def __init__(this):
+        for suit in Card.suits:
+            for value in Card.values:
+                this.append(Card(suit, value))
+
+    def shuffle(this):
+        random.shuffle(this)
+        return this
+
 class Card:
     suits = ["♠", "♣", "♥", "♦"]
     values = ["9", "10", "J", "Q", "K", "A"]
 
-    def __init__(this, suit, value):
-        this.suit = suit
-        this.value = value
+    def __init__(this, suit, value = None):
+        if value == None:
+            # initialize from card string ie 10♥
+            this.suit = suit[-1]
+            this.value = suit[:-1]
+        else:
+            this.suit = suit
+            this.value = value
 
     def __str__(this):
         return this.value + this.suit
+
+    def __eq__(this, that):        
+        if that == None: return False
+        if this.suit != that.suit: return False
+        return this.value == that.value
 
     def getSuit(this, trump):
         if this.isLeftBower(trump): return trump

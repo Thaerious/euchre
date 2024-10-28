@@ -1,4 +1,5 @@
 from delString import delString
+from Card import Card, CardList, Hand
 
 class Team:
     def __init__(this, player1, player2):
@@ -21,8 +22,8 @@ class Player:
         this.clear()             
 
     def clear(this):
-        this.cards = []
-        this.played = [] # cards played in the current trick
+        this.cards = Hand()
+        this.played = CardList() # cards this player has played in the current trick
         this.tricks = 0
         this.alone = False   
 
@@ -69,8 +70,6 @@ class PlayerList(list):
     # Move the first player to the end
     # Repeate unil the first player is the player specified as 'player'.
     def rotate(this, player = None):
-        print(f"Rotate {str(player)}")
-
         this.append(this.pop(0))
         if player == None: return
 

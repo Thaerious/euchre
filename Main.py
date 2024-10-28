@@ -1,8 +1,9 @@
 from Euchre import Euchre
 from Game import Game, ActionException
 from delString import delString
-from snapshot import snapshot
+from Snapshot import Snapshot
 from pprint import pprint
+from bots.Bot import Bot
 import random
 
 stateLabels = {
@@ -16,9 +17,16 @@ stateLabels = {
     "state7" : "Play a card (play): "
 }
 
-class GameLoop:    
+class GameLoop:
     def __init__(this):
-        this.euchre = Euchre(["Adam", "Eve", "Cain", "Able"])
+        this.euchre = Euchre(["Adam", "T100", "Skynet", "Robocop"])
+        this.bots = {
+            "Adam" : Bot(),
+            "T100" : Bot(),
+            "Skynet" : Bot(),
+            "Robocop" : Bot()
+        }
+
         this.game = Game(this.euchre)
         this.history = []
         this.action = ""
@@ -91,6 +99,15 @@ class GameLoop:
 
         if parsed["action"] == "load":
             this.loadHistory()        
+        elif parsed["action"] == "bot":
+            snap = Snapshot(this.game, this.game.activePlayer)
+            action = this.bots[this.game.activePlayer.name].decide(snap)
+            print(f"Bot: {action}")
+            this.history.append(action)
+            split = action.split(" ")            
+            if len(split) == 1: split.append(None)
+            this.game.input(this.game.activePlayer, split[0], split[1])
+            print("---------------------------")                        
         elif parsed["action"] == "save":
             this.saveHistory()      
         elif parsed["action"] == "exit":
@@ -100,7 +117,7 @@ class GameLoop:
             this.history.append(line)
         elif parsed["action"] == "snap":
             print("---------------------------")
-            pprint(snapshot(this.game, this.game.activePlayer).run())
+            pprint(Snapshot(this.game, this.game.activePlayer))
             print("---------------------------")
         else:
             try:
@@ -113,8 +130,18 @@ class GameLoop:
         while this.isRunning:
             this.printGame()
             print("---------------------------")
+            if this.game.state.__name__ == "state7": this.printPlayable()
             line = input(stateLabels[this.game.state.__name__])
             this.doAction(line)
+
+    def printPlayable(this):
+        i = 0
+        for card in this.game.activePlayer.cards:
+            if this.game.euchre.trick.canPlay(card, this.game.activePlayer.cards, this.game.euchre.trump):
+                print(f"{i}[{card}]", end=" ")
+            i = i + 1
+
+        print("")
 
 gameLoop = GameLoop()
 gameLoop.start()

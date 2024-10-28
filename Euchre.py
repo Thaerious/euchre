@@ -1,5 +1,6 @@
 from Player import Player, PlayerList, Team
-from Card import Card
+from Card import Card, Deck, Trick, Hand
+from delString import delString
 import random
 
 class Euchre:
@@ -10,13 +11,15 @@ class Euchre:
 
         this.teams = [this.players[0].team, this.players[1].team]
         
-        this.trick = []
+        this.trick = Trick()
         this.upcard = None
         this.downcard = None
         this.trump = ""
         this.maker = None
         
     def canPlay(this, player, card):
+
+        
         if len(this.trick) == 0: return True
         leadSuit = this.trick[0].getSuit(this.trump)
         if card.getSuit(this.trump) == leadSuit: return True        
@@ -25,15 +28,6 @@ class Euchre:
             if playerCard.getSuit(this.trump) == leadSuit : return False
 
         return True
-
-    def resetDeck(this):
-        this.deck = []
-        for suit in Card.suits:
-            for value in Card.values:
-                this.deck.append(Card(suit, value))
-
-    def shuffle(this):
-        random.shuffle(this.deck)
 
     def dealer(this):
         return this.players[3]
@@ -58,7 +52,7 @@ class Euchre:
         player.alone = True
         this.playing.remove(player.partner)
 
-    def swapCard(this, card):
+    def dealerSwapCard(this, card):
         this.dealer().cards.remove(card)
         this.dealer().cards.append(this.upcard)
         this.downcard = card

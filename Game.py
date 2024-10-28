@@ -1,3 +1,6 @@
+from Card import Card, Deck, Trick
+from delString import delString
+
 class ActionException(Exception):
     def __init__(this, msg):
         super().__init__(msg)
@@ -8,10 +11,13 @@ class Game:
         this.state = this.state0
         this.activePlayer = None
 
-    def input(this, player, action, data = None):            
+    def input(this, player, action, data = None):
         if this.activePlayer != None and player != this.activePlayer: 
             raise ActionException(f"Incorrect Player: expected {this.activePlayer.name} found {player.name}")
         
+        if isinstance(data, str): 
+            data = Card(data[-1], data[:-1]) 
+
         this.state(player, action, data)
 
     def state0(this, player, action, data):
@@ -19,9 +25,8 @@ class Game:
         this.enterState1a()
 
     def enterState1a(this):
-        this.euchre.resetDeck()
-        this.euchre.trick = []
-        this.euchre.shuffle()
+        this.euchre.deck = Deck().shuffle()
+        this.euchre.trick = Trick()
         this.euchre.players.rotate()
         this.euchre.copyPlayersToPlaying()
         this.euchre.dealCards()      
@@ -70,7 +75,7 @@ class Game:
 
     def state3(this, player, action, card):
         this.allowedActions(action, "down", "up")
-        if action == "up": this.euchre.swapCard(card)
+        if action == "up": this.euchre.dealerSwapCard(card)
         this.activePlayer = this.euchre.playing[0]
         this.enterstate7a()
 
@@ -119,7 +124,7 @@ class Game:
     def enterstate7b(this):
         this.state = None
         this.euchre.playing.rotate(this.euchre.trickWinner())
-        this.euchre.trick = []
+        this.euchre.trick = Trick()
         this.enterState7()
 
     def enterState7(this):
@@ -132,7 +137,7 @@ class Game:
     def state7(this, player, action, card):
         this.allowedActions(action, "play")
 
-        if this.euchre.canPlay(player, card) == False:
+        if this.euchre.trick.canPlay(card, player.cards, this.euchre.trump) == False:
             raise ActionException("Must play lead suit if possible.") 
 
         this.euchre.playCard(player, card)
@@ -179,3 +184,31 @@ class Game:
             if action == allowed: return
 
         raise ActionException("Unhandled Action " + (str)(action))
+
+
+    def print(this):        
+        teams = [this.euchre.players[0].team, this.euchre.players[1].team]
+
+        for player in this.euchre.players:
+            if (this.activePlayer == player):
+                print(f"> {str(player)} {player.tricks} [{delString(player.played)}]")
+            else:
+                print(f"  {str(player)} {player.tricks} [{delString(player.played)}]")
+
+        t1Text = f"Team1 [{teams[0].player1.name} {teams[0].player2.name}]"
+        t2Text = f"Team2 [{teams[1].player1.name} {teams[1].player2.name}]" 
+
+        if this.euchre.maker == None:
+            print (f"{t1Text}: {teams[0].score}")
+            print (f"{t2Text}: {teams[1].score}")
+        elif this.euchre.maker.team == teams[0]:
+            print (f"{t1Text}: {teams[0].score} made by {this.euchre.maker.name}")
+            print (f"{t2Text}: {teams[1].score}")
+        else:
+            print (f"{t1Text}: {teams[0].score}")
+            print (f"{t2Text}: {teams[1].score} made by {this.euchre.maker.name}")
+
+
+        print(this.state.__name__)    
+        print("upcard: " + (str)(this.euchre.upcard))
+        print("[" + delString(this.euchre.trick) + "] : " + this.euchre.trump)        
