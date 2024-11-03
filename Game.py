@@ -33,11 +33,8 @@ class Game:
         this.enterState1()  
 
     def enterState1(this):    
-        if this.state == this.state1:
-            this.nextPlayer()
-        else:
-            this.activePlayer = this.euchre.playing[0]
-            this.state = this.state1
+        this.activePlayer = this.euchre.playing[0]
+        this.state = this.state1
 
     def state1(this, player, action, data):         
         this.allowedActions(action, "pass", "order", "alone")
@@ -47,18 +44,15 @@ class Game:
                 # void condition
                 this.nextPlayer()
                 this.enterState3()
-            else: 
-                # repeat condition
-                this.enterState1()
         elif action == "order":
             this.euchre.makeSuit(this.activePlayer)
-            this.enterState3()
+            this.enterState2()
         elif action == "alone":            
             this.euchre.goAlone(this.activePlayer)
             if this.activePlayer.partner != this.euchre.dealer:
                 this.enterState2()
             else
-                this.enterState5a()   
+                this.enterState5a()
         
     def enterState2(this):
         this.activePlayer = this.euchre.dealer()
@@ -170,7 +164,6 @@ class Game:
             if action == allowed: return
 
         raise ActionException("Unhandled Action " + (str)(action))
-
 
     def print(this):        
         teams = [this.euchre.players[0].team, this.euchre.players[1].team]
