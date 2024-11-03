@@ -46,8 +46,9 @@ class Game:
             if this.activePlayer == this.euchre.dealer(): 
                 # void condition
                 this.nextPlayer()
-                this.enterState4()
+                this.enterState3()
             else: 
+                # repeat condition
                 this.enterState1()
         elif action == "order":
             this.euchre.makeSuit(this.activePlayer)
@@ -69,42 +70,37 @@ class Game:
         this.activePlayer = this.euchre.playing[0]
         this.enterstate7a()
 
-    def enterState4(this):
-        if this.state == this.state4:
+    def enterState3(this):
+        if this.state == this.State3:
             this.nextPlayer()
-            if this.activePlayer == this.euchre.dealer(): this.state = this.state5
+            if this.activePlayer == this.euchre.dealer(): this.state = this.State4
         else:
-            this.state = this.state4
+            this.state = this.State3
 
-    def state4(this, player, action, suit):
-        this.allowedActions(action, "pass", "make")
+    def State3(this, player, action, suit):
+        this.allowedActions(action, "pass", "make", "alone")
 
-        if action == "pass":
-            this.enterState4()
+        if action == "pass":            
+            if this.activePlayer == this.euchre.dealer(): 
+                # void condition
+                this.enterState4
+            else
+                # repeat condition
+                this.enterState3()
         elif action == "make":
             this.euchre.makeSuit(player, suit)
-            this.enterstate6()
+            this.enterstate7a()
+        elif action == "alone":
+            this.euchre.makeSuit(player, suit)
+            this.euchre.goAlone(player)
+            this.enterstate7a()
 
-    def enterstate5(this):
-        this.state = this.state5
+    def enterState4(this):
+        this.state = this.State4
 
-    def state5(this, player, action, suit):
+    def State4(this, player, action, suit):
         this.allowedActions(action, "make")
-
-        if action != "make": raise ActionException("Unhandled Action " + (str)(action))
         this.euchre.makeSuit(player, suit)
-        this.enterstate6()
-
-    def enterstate6(this):
-        this.state = this.state6
-
-    def state6(this, player, action, _):
-        this.allowedActions(action, "alone", "helper")
-
-        if action == "alone":
-            this.euchre.goAlone(this.activePlayer)
-        elif action != "helper": raise ActionException("Unhandled Action " + (str)(action))             
-
         this.enterstate7a()
 
     def enterstate7a(this):
