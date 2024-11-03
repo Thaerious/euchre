@@ -51,24 +51,23 @@ class Game:
                 this.enterState1()
         elif action == "order":
             this.euchre.makeSuit(this.activePlayer)
-            this.enterState2()
-        elif action == "alone":
-
-
+            this.enterState3()
+        elif action == "alone":            
+            this.euchre.goAlone(this.activePlayer)
+            if this.activePlayer.partner != this.euchre.dealer:
+                this.enterState2()
+            else
+                this.enterstate7a()   
+        
     def enterState2(this):
+        this.activePlayer = this.euchre.dealer()
         this.state = this.state2
 
-    def state2(this, player, action, _):
-        this.allowedActions(action, "helper", "alone")
-
-        if action == "helper":
-            this.enterState3()
-        elif this.activePlayer.partner != this.euchre.dealer:
-            this.euchre.goAlone(this.activePlayer)
-            this.enterState3()
-        else:
-            this.euchre.goAlone(this.activePlayer)
-            this.enterstate7a()      
+    def state2(this, player, action, card):
+        this.allowedActions(action, "down", "up")
+        if action == "up": this.euchre.dealerSwapCard(card)
+        this.activePlayer = this.euchre.playing[0]
+        this.enterstate7a()
 
     def enterState4(this):
         if this.state == this.state4:
