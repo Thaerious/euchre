@@ -40,10 +40,9 @@ class Game:
         this.allowedActions(action, "pass", "order", "alone")
 
         if action == "pass": 
-            if this.activePlayer == this.euchre.dealer(): 
-                # void condition
-                this.nextPlayer()
-                this.enterState3()
+            this.nextPlayer()
+            # void condition                
+            if this.activePlayer == this.euchre.playing[0]: this.enterState3()
         elif action == "order":
             this.euchre.makeSuit(this.activePlayer)
             this.enterState2()
@@ -51,7 +50,7 @@ class Game:
             this.euchre.goAlone(this.activePlayer)
             if this.activePlayer.partner != this.euchre.dealer:
                 this.enterState2()
-            else
+            else:
                 this.enterState5a()
         
     def enterState2(this):
@@ -65,22 +64,16 @@ class Game:
         this.enterState5a()
 
     def enterState3(this):
-        if this.state == this.State3:
-            this.nextPlayer()
-            if this.activePlayer == this.euchre.dealer(): this.state = this.State4
-        else:
-            this.state = this.State3
+        this.activePlayer = this.euchre.playing[0]
+        this.state = this.State3
 
     def State3(this, player, action, suit):
         this.allowedActions(action, "pass", "make", "alone")
 
         if action == "pass":            
-            if this.activePlayer == this.euchre.dealer(): 
-                # void condition
-                this.enterState4
-            else
-                # repeat condition
-                this.enterState3()
+            this.nextPlayer()
+            # void condition                
+            if this.activePlayer == this.euchre.playing[0]: this.enterState4()
         elif action == "make":
             this.euchre.makeSuit(player, suit)
             this.enterState5a()
