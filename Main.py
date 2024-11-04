@@ -8,13 +8,11 @@ import random
 
 stateLabels = {
     "state0" : "Game not started (start): ",
-    "state1" : "Order up dealer (pass, order): ",
-    "state2" : "Go Alone (alone, helper): ",
-    "state3" : "Pick up card (up, down): ",
-    "state4" : "Make suit (pass, make): ",
-    "state5" : "Screw the dealer (make): ",
-    "state6" : "Go Alone (alone, helper): ",
-    "state7" : "Play a card (play): "
+    "state1" : "Order up dealer (pass, order, alone): ",
+    "state2" : "Pick up card (up, down): ",
+    "state3" : "Make suit (pass, make, alone): ",
+    "state4" : "Screw the dealer (make): ",
+    "state5" : "Play a card (play): "
 }
 
 class GameLoop:

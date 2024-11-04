@@ -29,10 +29,10 @@ class Game:
         this.euchre.trick = Trick()
         this.euchre.players.rotate()
         this.euchre.copyPlayersToPlaying()
-        this.euchre.dealCards()      
+        this.euchre.dealCards()
         this.enterState1()  
 
-    def enterState1(this):    
+    def enterState1(this):
         this.activePlayer = this.euchre.playing[0]
         this.state = this.state1
 
@@ -51,7 +51,7 @@ class Game:
             if this.activePlayer.partner != this.euchre.dealer:
                 this.enterState2()
             else:
-                this.enterState5a()
+                this.enterState5()
         
     def enterState2(this):
         this.activePlayer = this.euchre.dealer()
@@ -61,13 +61,13 @@ class Game:
         this.allowedActions(action, "down", "up")
         if action == "up": this.euchre.dealerSwapCard(card)
         this.activePlayer = this.euchre.playing[0]
-        this.enterState5a()
+        this.enterState5()
 
     def enterState3(this):
         this.activePlayer = this.euchre.playing[0]
         this.state = this.State3
 
-    def State3(this, player, action, suit):
+    def state3(this, player, action, suit):
         this.allowedActions(action, "pass", "make", "alone")
 
         if action == "pass":            
@@ -76,38 +76,28 @@ class Game:
             if this.activePlayer == this.euchre.playing[0]: this.enterState4()
         elif action == "make":
             this.euchre.makeSuit(player, suit)
-            this.enterState5a()
+            this.enterState5()
         elif action == "alone":
             this.euchre.makeSuit(player, suit)
             this.euchre.goAlone(player)
-            this.enterState5a()
+            this.enterState5()
 
     def enterState4(this):
         this.state = this.State4
 
-    def State4(this, player, action, suit):
+    def state4(this, player, action, suit):
         this.allowedActions(action, "make")
         this.euchre.makeSuit(player, suit)
         this.enterState5a()
 
-    def enterState5a(this):
-        this.state = None
-        this.enterState5()
-
-    def enterState5b(this):
-        this.state = None
-        this.euchre.playing.rotate(this.euchre.trickWinner())
-        this.euchre.trick = Trick()
-        this.enterState5()
-
     def enterState5(this):
-        if this.state == this.State5:
+        if this.state == this.state5:
             this.nextPlayer()
         else:
             this.activePlayer = this.euchre.playing[0]
-            this.state = this.State5
+            this.state = this.state5
 
-    def State5(this, player, action, card):
+    def state5(this, player, action, card):
         this.allowedActions(action, "play")
 
         if this.euchre.trick.canPlay(card, player.cards, this.euchre.trump) == False:
@@ -119,12 +109,18 @@ class Game:
             this.enterState5()
             return
 
-        this.euchre.trickWinner().tricks += 1    
+        winner = this.euchre.trickWinner()
+        winner.tricks += 1    
+
+        print(f" **** Winner {winner.name}")
+
+        this.euchre.playing.rotate(winner)
+        this.euchre.trick = Trick()
 
         if this.handFinished(): 
             this.scoreHand()
         else: 
-            this.enterState5b()
+            this.enterState5()
 
     def scoreHand(this):
         team = this.euchre.maker.team
