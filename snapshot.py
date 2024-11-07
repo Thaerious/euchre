@@ -34,11 +34,10 @@ class Snapshot:
         snap = {}
 
         this.state = int(game.state.__name__[5:])
-        this.forPlayer = this.playerIndex(this.player)
-        this.upcard = str(euchre.upcard)
+        this.upcard = euchre.upcard
         this.trump = euchre.trump
         this.maker = this.playerIndex(euchre.maker)
-        this.dealer= this.playerIndex(euchre.dealer())
+        this.dealer = this.playerIndex(euchre.dealer())
         this.cards = this.player.cards
         this.trick = euchre.trick
 
@@ -58,3 +57,15 @@ class Snapshot:
             this.playing.append(this.playerIndex(player))
 
         return snap
+
+    def __str__(this):
+        return(
+            f"players: {this.players}\n"
+            f"state: {this.state}\n"
+            f"up-card: {this.upcard}\n"
+            f"trump: {this.trump}\n"
+            f"maker: {this.maker}\n"
+            f"dealer: {this.dealer}\n"
+            f"cards: {this.cards}\n"
+            f"trick: {this.trick}\n"
+        )

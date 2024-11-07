@@ -1,4 +1,5 @@
 import random
+from delString import delString
 
 class CardList(list):
     def __init__(this, stringList = []):
@@ -8,7 +9,10 @@ class CardList(list):
     def randomItem(this):
         if len(this) == 0: return None
         index = random.randint(0, len(this)) - 1
-        return this[index]        
+        return this[index]     
+
+    def __str__(this):
+        return delString(this)
 
 class Hand(CardList):
     # Given 'trick' and 'trump' return the cards in 'this' that can be played.
