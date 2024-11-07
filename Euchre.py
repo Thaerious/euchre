@@ -69,12 +69,14 @@ class Euchre:
 
     def trickWinner(this):
         bestPlayer = this.playing[0]        
+        bestCard = this.playing[0].played[-1]
 
-        for player in this.playing:
-            bestCard = this.playing[0].played[-1]
+        for player in this.playing:            
             card = player.played[-1]
             compare = bestCard.compare(card, this.trump)
+            print(f"Card.compare({bestCard}, {card}, {this.trump}) = {compare}")
             if (compare < 0):
                  bestPlayer = player
+                 bestCard = card
 
         return bestPlayer 
