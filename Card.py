@@ -79,7 +79,7 @@ class Card:
     # compare two cards this and that
     # assume this card is played first
     # return 1 if this beats that, otherwise return -1
-    def compare(this, that, trump):
+    def compare(this, that, trump):        
         if (this.isRightBower(trump)):
             return 1
         if (that.isRightBower(trump)):
@@ -99,10 +99,10 @@ class Card:
         thisIndex = Card.values.index(this.value)
         thatIndex = Card.values.index(that.value)
         
-        if (thisIndex > thatIndex):
-            return 1
+        if (thisIndex > thatIndex): return 1
+        if (thisIndex < thatIndex): return -1
 
-        return -1
+        return 0
 
     def isRightBower(this, trump):
         return this.value == "J" and this.suit == trump

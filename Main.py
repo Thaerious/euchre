@@ -115,7 +115,7 @@ class GameLoop:
             this.history.append(line)
         elif parsed["action"] == "snap":
             print("---------------------------")
-            pprint(Snapshot(this.game, this.game.activePlayer))
+            print(str(Snapshot(this.game, this.game.activePlayer)))
             print("---------------------------")
         else:
             try:
