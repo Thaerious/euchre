@@ -1,10 +1,17 @@
-def delString(aList):
+# create a delmited string out of a list
+
+
+def delString(aList, delimiter = ", "):
     sb = ""
 
-    for item in aList:
-        sb = sb + str(item) + ","
+    length = len(aList) - 1
+    if length < 0: return ""
 
-    if sb.endswith(","):
-        sb = sb[:-1]
+    for i in range(length):
+        item = aList[i]
+        sb = sb + str(item) + delimiter
+
+    item = aList[-1]
+    sb = sb + str(item)
         
     return sb
