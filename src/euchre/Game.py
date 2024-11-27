@@ -25,7 +25,7 @@ class Game:
         this.enterState1a()
 
     def enterState1a(this):
-        this.euchre.deck = Deck().shuffle()
+        this.euchre.shuffle()
         this.euchre.trick = Trick()
         this.euchre.players.rotate()
         this.euchre.copyPlayersToPlaying()

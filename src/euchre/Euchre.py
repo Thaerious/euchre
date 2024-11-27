@@ -10,16 +10,19 @@ class Euchre:
         this.playing = PlayerList() # the order for the trick
 
         this.teams = [this.players[0].team, this.players[1].team]
-        
+        this.deck = Deck()
+
         this.trick = Trick()
         this.upcard = None
         this.downcard = None
         this.trump = ""
         this.maker = None
         
-    def canPlay(this, player, card):
+    def shuffle(this):
+        this.deck = Deck().shuffle()
+        this.trick = Trick()
 
-        
+    def canPlay(this, player, card):       
         if len(this.trick) == 0: return True
         leadSuit = this.trick[0].getSuit(this.trump)
         if card.getSuit(this.trump) == leadSuit: return True        
@@ -80,3 +83,20 @@ class Euchre:
                  bestCard = card
 
         return bestPlayer 
+
+    def __str__(this):
+        sb = ""
+
+        for attr in dir(this):
+            if attr.startswith("__"): continue
+            attrValue = getattr(this, attr)
+            if callable(attrValue): continue
+            sb = sb + f"{attr} : {str(attrValue)}\n"
+
+        sb = sb + f"dealer : {this.dealer().name}\n"
+
+        for player in this.players:
+            sb = sb + f"{str(player)}\n"
+
+        return sb
+        

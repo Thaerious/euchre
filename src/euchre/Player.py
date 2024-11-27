@@ -14,6 +14,12 @@ class Team:
     def isAlone(this):
         return this.player1.alone | this.player2.alone
 
+    def __str__(this):
+        return f"[{this.player1.name}, {this.player2.name}]"
+
+    def __repr__(this):
+        return this.__str__()        
+
 class Player:
     def __init__(this, name):
         this.name = name        

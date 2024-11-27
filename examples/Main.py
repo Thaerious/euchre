@@ -1,9 +1,9 @@
 from euchre.Euchre import Euchre
-from Game import Game, ActionException
-from delString import delString
-from Snapshot import Snapshot
+from euchre.Game import Game, ActionException
+from euchre.delString import delString
+from euchre.Snapshot import Snapshot
 from pprint import pprint
-from bots.Bot import Bot
+from euchre.bots.Bot import Bot
 import random
 
 stateLabels = {
@@ -94,6 +94,7 @@ class GameLoop:
 
     def doAction(this, line):
         parsed = this.parseInput(line)
+        print("------------------------------------------------------")    
 
         if parsed["action"] == "load":
             this.loadHistory()        
@@ -105,7 +106,7 @@ class GameLoop:
             split = action.split(" ")            
             if len(split) == 1: split.append(None)
             this.game.input(this.game.activePlayer, split[0], split[1])
-            print("---------------------------")                        
+            print("------------------------------------------------------")                        
         elif parsed["action"] == "save":
             this.saveHistory()      
         elif parsed["action"] == "exit":
@@ -113,10 +114,14 @@ class GameLoop:
         elif parsed["action"] == "seed":
             random.seed((int)(parsed["data"]))
             this.history.append(line)
+        elif parsed["action"] == "print":
+            print("------------------------------------------------------")   
+            print(str(this.euchre))
+            print("------------------------------------------------------")               
         elif parsed["action"] == "snap":
-            print("---------------------------")
+            print("------------------------------------------------------")   
             print(str(Snapshot(this.game, this.game.activePlayer)))
-            print("---------------------------")
+            print("------------------------------------------------------")   
         else:
             try:
                 this.game.input(this.game.activePlayer, parsed["action"], this.convertData(parsed["data"]))
@@ -127,7 +132,7 @@ class GameLoop:
     def start(this):
         while this.isRunning:
             this.printGame()
-            print("---------------------------")
+            print("------------------------------------------------------")   
             if this.game.state.__name__ == "state7": this.printPlayable()
             line = input(stateLabels[this.game.state.__name__])
             this.doAction(line)

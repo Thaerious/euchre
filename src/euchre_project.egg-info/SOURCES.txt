@@ -1,6 +1,5 @@
 pyproject.toml
 src/euchre/Card.py
-src/euchre/DevMain.py
 src/euchre/Euchre.py
 src/euchre/Game.py
 src/euchre/Player.py
@@ -10,6 +9,10 @@ src/euchre/delString.py
 src/euchre/bots/Bot.py
 src/euchre/bots/T100.py
 src/euchre/bots/__init__.py
+src/euchre/bots/evals/CountSuitInHand.py
+src/euchre/bots/evals/CountTrumpInHand.py
+src/euchre/bots/evals/RulePart.py
+src/euchre/bots/evals/__init__.py
 src/euchre_project.egg-info/PKG-INFO
 src/euchre_project.egg-info/SOURCES.txt
 src/euchre_project.egg-info/dependency_links.txt
