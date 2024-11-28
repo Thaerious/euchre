@@ -41,7 +41,7 @@ class Player:
         return newPlayer
 
     def __str__(this):     
-        sb = this.name + "[" + delString(this.cards) + "]"
+        sb = f"{this.name}[{delString(this.cards)}][{delString(this.played)}] {this.tricks}"
         if (this.alone): sb = sb + "A"
         return sb
 
@@ -74,7 +74,7 @@ class PlayerList(list):
         for player in this: player.clear()
 
     # Move the first player to the end
-    # Repeate unil the first player is the player specified as 'player'.
+    # Repeat until the first player is the player specified as 'player'.
     def rotate(this, player = None):
         this.append(this.pop(0))
         if player == None: return
@@ -82,17 +82,18 @@ class PlayerList(list):
         while this[0] != player:
             this.append(this.pop(0))
 
-    def nextPlayer(this, afterThis, circular = False):
+    # Return the next next player in this list
+    # If there is no next player, returns None
+    def nextPlayer(this, afterThis):
         returnNext = False
 
         for player in this:
             if returnNext: return player
             if player == afterThis: returnNext = True
 
-        if circular: return this[0]
-        else: return None
+        return None
 
     def __str__(this):     
         names = []
         for player in this: names.append(player.name)
-        return "[" + delString(names) + "]"
+        return f"[{delString(names)}]"

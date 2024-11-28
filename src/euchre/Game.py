@@ -11,13 +11,15 @@ class Game:
         this.state = this.state0
         this.activePlayer = None
 
-    def input(this, player, action, data = None):
-        if this.activePlayer != None and player != this.activePlayer: 
-            raise ActionException(f"Incorrect Player: expected {this.activePlayer.name} found {player.name}")
+    def input(this, player, action, data = None):        
+        if this.state != this.state0 and player != this.euchre.getCurrentPlayer(): 
+            raise ActionException(f"Incorrect Player: expected {this.euchre.getCurrentPlayer().name} found {player.name}")
         
+        # if data is a string, convert it to a card
         if isinstance(data, str): 
             data = Card(data[-1], data[:-1]) 
 
+        # activate the current state
         this.state(player, action, data)
 
     def state0(this, player, action, data):
@@ -25,55 +27,48 @@ class Game:
         this.enterState1a()
 
     def enterState1a(this):
-        this.euchre.shuffle()
-        this.euchre.trick = Trick()
-        this.euchre.players.rotate()
-        this.euchre.copyPlayersToPlaying()
-        this.euchre.dealCards()
+        this.euchre.nextHand()
         this.enterState1()  
 
     def enterState1(this):
-        this.activePlayer = this.euchre.playing[0]
         this.state = this.state1
 
     def state1(this, player, action, data):         
         this.allowedActions(action, "pass", "order", "alone")
 
         if action == "pass": 
-            this.nextPlayer()
-            # void condition                
-            if this.activePlayer == this.euchre.playing[0]: this.enterState3()
+            this.euchre.nextPlayer()            
+            if this.euchre.isAtFirstPlayer(): this.enterState3() # void condition
         elif action == "order":
-            this.euchre.makeSuit(this.activePlayer)
+            this.euchre.orderUp()
             this.enterState2()
-        elif action == "alone":            
-            this.euchre.goAlone(this.activePlayer)
-            if this.activePlayer.partner != this.euchre.dealer:
+        elif action == "alone":      
+            this.euchre.orderUp()      
+            this.euchre.goAlone()
+            if this.getCurrentPlayer().partner != this.euchre.dealer:
                 this.enterState2()
             else:
                 this.enterState5()
         
     def enterState2(this):
-        this.activePlayer = this.euchre.dealer()
+        this.euchre.activateDealer()
         this.state = this.state2
 
     def state2(this, player, action, card):
         this.allowedActions(action, "down", "up")
         if action == "up": this.euchre.dealerSwapCard(card)
-        this.activePlayer = this.euchre.playing[0]
         this.enterState5()
 
     def enterState3(this):
-        this.activePlayer = this.euchre.playing[0]
         this.state = this.State3
 
     def state3(this, player, action, suit):
         this.allowedActions(action, "pass", "make", "alone")
 
         if action == "pass":            
-            this.nextPlayer()
+            this.euchre.nextPlayer()
             # void condition                
-            if this.activePlayer == this.euchre.playing[0]: this.enterState4()
+            if this.euchre.isAtFirstPlayer(): this.enterState4()
         elif action == "make":
             this.euchre.makeSuit(player, suit)
             this.enterState5()
@@ -92,9 +87,9 @@ class Game:
 
     def enterState5(this):
         if this.state == this.state5:
-            this.nextPlayer()
+            this.euchre.nextPlayer()
         else:
-            this.activePlayer = this.euchre.playing[0]
+            this.euchre.activateFirstPlayer()
             this.state = this.state5
 
     def state5(this, player, action, card):
@@ -105,17 +100,14 @@ class Game:
 
         this.euchre.playCard(player, card)
 
-        if this.trickFinished() == False:
+        if this.euchre.isTrickFinished() == False:
             this.enterState5()
             return
 
         winner = this.euchre.trickWinner()
         winner.tricks += 1    
 
-        print(f" **** Winner {winner.name}")
-
-        this.euchre.playing.rotate(winner)
-        this.euchre.trick = Trick()
+        this.euchre.nextTrick(winner)
 
         if this.handFinished(): 
             this.scoreHand()
@@ -138,15 +130,9 @@ class Game:
             this.state = None
         else:
             this.enterState1a()           
-
-    def trickFinished(this):
-        return len(this.euchre.trick) == len(this.euchre.playing)
         
     def handFinished(this):
-        return len(this.activePlayer.cards) == 0
-
-    def nextPlayer(this):
-        this.activePlayer = this.euchre.playing.nextPlayer(this.activePlayer)
+        return len(this.euchre.getCurrentPlayer().cards) == 0
 
     def allowedActions(this, action, *allowedActions):
         for allowed in allowedActions:
@@ -155,26 +141,27 @@ class Game:
         raise ActionException("Unhandled Action " + (str)(action))
 
     def print(this):        
-        teams = [this.euchre.players[0].team, this.euchre.players[1].team]
-
         for player in this.euchre.players:
-            if (this.activePlayer == player):
-                print(f"> {str(player)} {player.tricks} [{delString(player.played)}]")
-            else:
-                print(f"  {str(player)} {player.tricks} [{delString(player.played)}]")
+            if player.alone: print("A", end="")
+            else: player.alone: print(" ", end="")
 
-        t1Text = f"Team1 [{teams[0].player1.name} {teams[0].player2.name}]"
-        t2Text = f"Team2 [{teams[1].player1.name} {teams[1].player2.name}]" 
+            if (this.euchre.getCurrentPlayer() == player):                
+                print(f"> {str(player)}")
+            else:
+                print(f"  {str(player)}")
+
+        t1Text = f"Team1 [{this.euchre.teams[0].player1.name} {this.euchre.teams[0].player2.name}]"
+        t2Text = f"Team2 [{this.euchre.teams[1].player1.name} {this.euchre.teams[1].player2.name}]" 
 
         if this.euchre.maker == None:
-            print (f"{t1Text}: {teams[0].score}")
-            print (f"{t2Text}: {teams[1].score}")
-        elif this.euchre.maker.team == teams[0]:
-            print (f"{t1Text}: {teams[0].score} made by {this.euchre.maker.name}")
-            print (f"{t2Text}: {teams[1].score}")
+            print (f"{t1Text}: {this.euchre.teams[0].score}")
+            print (f"{t2Text}: {this.euchre.teams[1].score}")
+        elif this.euchre.maker.team == this.euchre.teams[0]:
+            print (f"{t1Text}: {this.euchre.teams[0].score} made by {this.euchre.maker.name}")
+            print (f"{t2Text}: {this.euchre.teams[1].score}")
         else:
-            print (f"{t1Text}: {teams[0].score}")
-            print (f"{t2Text}: {teams[1].score} made by {this.euchre.maker.name}")
+            print (f"{t1Text}: {this.euchre.teams[0].score}")
+            print (f"{t2Text}: {this.euchre.teams[1].score} made by {this.euchre.maker.name}")
 
 
         print(this.state.__name__)    
