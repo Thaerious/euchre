@@ -61,7 +61,7 @@ class Card:
 
     def __init__(this, suit, value = None):
         if value == None:
-            # initialize from card string ie 10♥
+            # initialize from card string ie "10♥"
             this.suit = suit[-1]
             this.value = suit[:-1]
         else:
@@ -73,6 +73,7 @@ class Card:
 
     def __eq__(this, that):        
         if that == None: return False
+        if isinstance(that, str): that = Card(that)
         if this.suit != that.suit: return False
         return this.value == that.value
 

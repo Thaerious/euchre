@@ -1,17 +1,18 @@
-from euchre.Euchre import Euchre
-from euchre.Game import Game, ActionException
+from euchre.Euchre import Euchre, EuchreException
+from euchre.Game import Game
 from euchre.delString import delString
 from euchre.Snapshot import Snapshot
 from pprint import pprint
 from euchre.bots.Bot import Bot
 import random
+import json
 
 stateLabels = {
     "state0" : "Game not started (start): ",
     "state1" : "Order up dealer (pass, order, alone): ",
     "state2" : "Pick up card (up, down): ",
     "state3" : "Make suit (pass, make, alone): ",
-    "state4" : "Screw the dealer (make): ",
+    "state4" : "Screw the dealer (make, alone): ",
     "state5" : "Play a card (play): "
 }
 
@@ -99,12 +100,18 @@ class GameLoop:
             print("------------------------------------------------------")   
             print(str(Snapshot(this.game, this.euchre.getCurrentPlayer())))
             print("------------------------------------------------------")   
+        elif parsed["action"] == "json":
+            print("------------------------------------------------------")   
+            snap = Snapshot(this.game, this.euchre.getCurrentPlayer())
+            asJSON = json.dumps(snap)
+            print(asJSON)
+            print("------------------------------------------------------")               
         else:
             try:
                 this.game.input(this.euchre.getCurrentPlayer(), parsed["action"], this.convertData(parsed["data"]))
                 this.history.append(line)
-            except ActionException as ex:
-                print("ActionException: " + str(ex))        
+            except EuchreException as ex:
+                print("EuchreException: " + str(ex))        
 
     def start(this):
         while this.isRunning:

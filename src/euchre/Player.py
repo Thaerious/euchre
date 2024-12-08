@@ -42,7 +42,6 @@ class Player:
 
     def __str__(this):     
         sb = f"{this.name}[{delString(this.cards)}][{delString(this.played)}] {this.tricks}"
-        if (this.alone): sb = sb + "A"
         return sb
 
 class PlayerList(list):
@@ -65,6 +64,12 @@ class PlayerList(list):
         this[0].team.otherTeam = this[1].team
         this[1].team.otherTeam = this[0].team
 
+    def getPlayer(this, name):
+        for player in this:
+            if player.name == name: return player
+
+        return None
+
     def copy(this):
         copiedList = PlayerList()
         for player in this: copiedList.append(player)
@@ -84,7 +89,7 @@ class PlayerList(list):
 
     # Return the next next player in this list
     # If there is no next player, returns None
-    def nextPlayer(this, afterThis):
+    def activateNextPlayer(this, afterThis):
         returnNext = False
 
         for player in this:

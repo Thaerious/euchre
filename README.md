@@ -2,8 +2,8 @@
 
 ### Euchre Object
  - trick
- - upcard
- - downcard
+ - upCard
+ - downCard
  - trump
  - maker
  - deck
@@ -11,6 +11,6 @@
    - name
    - partner
    - team
-   - cards
-   - played
+   - cards []
+   - played []
  - playing

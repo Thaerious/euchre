@@ -49,11 +49,25 @@ class TestCard(unittest.TestCase):
         actual = trick.canPlay(card, hand, trump)
         this.assertEqual(actual, True)
 
-    def test_get_suit(this):
+    def test_get_suit_eq(this):
         trump = '♦'
-        card = Card('J♥')
+        card = Card('A♦')
         this.assertEqual(card.getSuit(trump), trump)
         
+    def test_get_suit_neq(this):
+        trump = '♠'
+        card = Card('A♦')
+        this.assertNotEqual(card.getSuit(trump), trump)
+
+    def test_get_suit_rb(this):
+        trump = '♠'
+        card = Card('J♠')
+        this.assertEqual(card.getSuit(trump), trump)
+
+    def test_get_suit_lb(this):
+        trump = '♠'
+        card = Card('J♣')
+        this.assertEqual(card.getSuit(trump), trump)
 
     def test_cant_play_left_bower_must_follow_suit(this):
         hand = Hand(['J♥', '10♥', '10♣', 'Q♥', 'K♦'])

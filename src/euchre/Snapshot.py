@@ -1,3 +1,4 @@
+from euchre.Normalized import Normalized
 import copy
 
 class Snapshot:
@@ -5,67 +6,46 @@ class Snapshot:
         if game is None: raise ValueError("Game can not be none.")
         if player is None: raise ValueError("Player can not be none.")
 
-        this.player = player
-        this.players = this.__orderNames(game, player) 
-        this.run(game)
+        this.build(game, player)
 
-    # return an ordered list of names started with 'self'
-    # this ensures self is #0, partner is #2, opponents are #1, #3
-    def __orderNames(this, game, player):
-        players = game.euchre.players.copy()
-        players.rotate(player)
-        names = []
-
-        for player in players:
-            names.append(player.name)
-
-        return names
-
-    # return the saved index of the player
-    # if player is none, returns none
-    def playerIndex(this, player):
-        if player == None: return None
-        return this.players.index(player.name)   
-
-    def run(this, game):
+    def build(this, game, forPlayer):
         euchre = game.euchre
 
-        primitive_types = (int, float, str, bool, type(None), bytes)
-        snap = {}
-
+        this.names = [player.name for player in euchre.players]
+        this.tricks = [player.tricks for player in euchre.players]
+        this.forPlayer = euchre.players.index(forPlayer)
+        this.active = euchre.currentPlayer
         this.state = int(game.state.__name__[5:])
-        this.upcard = euchre.upcard
+        this.upCard = euchre.upCard
         this.trump = euchre.trump
-        this.maker = this.playerIndex(euchre.maker)
-        this.dealer = this.playerIndex(euchre.dealer())
-        this.cards = this.player.cards
+
+        if euchre.maker == None:
+            this.maker = None
+        else:
+            this.maker = euchre.players.index(euchre.maker)
+
+        this.dealer = euchre.dealer
+        this.hand = forPlayer.cards
         this.trick = euchre.trick
+        this.order = euchre.order   
+        this.trickCount = euchre.trickCount
+        this.handCount =  euchre.handCount
+        this.score = [euchre.players[0].team.score, euchre.players[1].team.score]
 
-        if game.activePlayer != None:
-            this.activePlayer = this.playerIndex(game.activePlayer)
+        this.normalized = Normalized(euchre, forPlayer)
+
+        if euchre.getDealer() == forPlayer:
+            this.downCard = euchre.downCard
         else:
-            this.activePlayer = -1
-
-        if this.player == euchre.dealer():
-            this.downcard = str(euchre.downcard)
-        else:
-            if euchre.downcard == None: this.downcard = None
-            else: this.downcard = "hidden"
-
-        this.playing = []
-        for player in euchre.playing: 
-            this.playing.append(this.playerIndex(player))
-
-        return snap
-
+            this.downCard = None
+    
     def __str__(this):
-        return(
-            f"players: {this.players}\n"
-            f"state: {this.state}\n"
-            f"up-card: {this.upcard}\n"
-            f"trump: {this.trump}\n"
-            f"maker: {this.maker}\n"
-            f"dealer: {this.dealer}\n"
-            f"cards: {this.cards}\n"
-            f"trick: {this.trick}\n"
-        )
+        sb = ""
+
+        for attr in dir(this):
+            if attr.startswith("_"): continue
+            attrValue = getattr(this, attr)
+            if callable(attrValue) == True: continue
+            sb = sb + f"{attr} : {str(attrValue)}\n"
+
+        return sb
