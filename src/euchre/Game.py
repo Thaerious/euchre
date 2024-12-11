@@ -12,6 +12,9 @@ class Game:
         this.state = this.state0
         this.activePlayer = None
 
+    def currentState(this):
+        return int(this.state.__name__[5:])
+
     def input(this, player, action, data = None):        
         if this.state != this.state0 and player != this.euchre.getCurrentPlayer(): 
             raise ActionException(f"Incorrect Player: expected {this.euchre.getCurrentPlayer().name} found {player.name}")

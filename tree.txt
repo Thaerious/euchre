@@ -298,7 +298,7 @@
     │           │   │   │   ├── __init__.cpython-310.pyc
     │           │   │   │   ├── main.cpython-310.pyc
     │           │   │   │   ├── pyproject.cpython-310.pyc
-    │           │   │   │   ├── self_outdated_check.cpython-310.pyc
+    │           │   │   │   ├── this_outdated_check.cpython-310.pyc
     │           │   │   │   └── wheel_builder.cpython-310.pyc
     │           │   │   ├── pyproject.py
     │           │   │   ├── req
@@ -349,7 +349,7 @@
     │           │   │   │       ├── reporter.py
     │           │   │   │       ├── requirements.py
     │           │   │   │       └── resolver.py
-    │           │   │   ├── self_outdated_check.py
+    │           │   │   ├── this_outdated_check.py
     │           │   │   ├── utils
     │           │   │   │   ├── appdirs.py
     │           │   │   │   ├── compatibility_tags.py

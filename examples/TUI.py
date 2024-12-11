@@ -1,14 +1,24 @@
+import socket
+import pickle
+import curses
+import queue
+import threading
 from euchre import *
 from euchre.Card import Hand
-import curses
-import random
 
+HOST = "127.0.0.1"  # The server's hostname or IP address
+PORT = 65432  # The port used by the server
 
+def connect():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        data = s.recv(1024)
+        snap = pickle.loads(data)
+        return snap
 
 class View:
-    def __init__(this, stdscr, server):
+    def __init__(this, stdscr):
         this.stdscr = stdscr
-        this.server = server
 
     def update(this, snap):
         x = 0
@@ -39,7 +49,31 @@ class View:
 
         key = this.stdscr.getch()
         if key == 10:  # Enter key                       
-            this.mock.input(None, "start", None)
+            this.connect()
+
+    def connect(this):
+        this.running = True
+
+        this.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        this.socket.connect((HOST, PORT))        
+        this.snapQ = queue.Queue()
+        
+        this.listenThread = threading.Thread(target=this.listenLoop)
+        this.listenThread.daemon = True  # Ensure threads close when the main program exits
+        this.listenThread.start()
+
+    def listenLoop(this):
+        while this.running == True:
+            data = this.socket.recv(4096)
+            snap = pickle.loads(data)
+            this.queue.put(snap)
+
+    def gameLoop(this):
+        this.running = True
+        while this.running == True:
+            data = this.socket.recv(4096)
+            snap = pickle.loads(data)
+            this.printBoard(snap)
 
     def printMenu(this, x = 20):
         this.stdscr.addstr(x, 0, "[x] Exit")
@@ -69,9 +103,13 @@ class View:
         this.printNorth(snap)
         this.printWest(snap)
         this.printMenu()
+        this.stdscr.refresh()
 
     def printUpCard(this, snap):
-        printCard(this.stdscr, 5, 10, snap.upCard)
+        if snap.upCard is not None:
+            printCard(this.stdscr, 5, 10, snap.upCard)
+        else:
+            printCard(this.stdscr, 5, 10, Card("X"))
         printCard(this.stdscr, 5, 18, Card("  "))
 
     def printSouth(this, snap):
@@ -142,9 +180,7 @@ def printHandHz(stdscr, x, y, hand, highlight = -1):
 
 
 def Main(stdscr):
-    server = MockServer()
-    view = View(stdscr, server)
-    server.addAgent("Adam", view)
+    view = View(stdscr)
     view.start()
 
 if __name__ == "__main__":

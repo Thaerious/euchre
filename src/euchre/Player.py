@@ -94,7 +94,7 @@ class PlayerList(list):
 
         for player in this:
             if returnNext: return player
-            if player == afterThis: returnNext = True
+            if player == afterthis: returnNext = True
 
         return None
 
