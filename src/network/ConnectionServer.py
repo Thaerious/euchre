@@ -23,7 +23,7 @@ class ConnectionServer:
                 gameServer = GameServer(conn, addr)
                 client_thread = threading.Thread(target=gameServer.onConnect)
                 client_thread.daemon = True  # Ensure threads close when the main program exits
-                client_thread.start()    
+                client_thread.start()
             except socket.timeout:
                 # Timeout occurred, check if we should still run
                 continue        

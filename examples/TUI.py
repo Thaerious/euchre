@@ -9,39 +9,42 @@ from euchre.Card import Hand
 HOST = "127.0.0.1"  # The server's hostname or IP address
 PORT = 65432  # The port used by the server
 
-def connect():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
-        data = s.recv(1024)
-        snap = pickle.loads(data)
-        return snap
+class TestView:
+    def connect(this):
+        this.running = True
+
+        this.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        this.socket.connect((HOST, PORT))        
+        
+        this.listenThread = threading.Thread(target=this.listen)
+        this.listenThread.daemon = True  # Ensure threads close when the main program exits
+        this.listenThread.start()
+        this.listenThread.join()
+
+    def listen(this):
+        while this.running == True:
+            this.read()
+
+    def read(this):
+        data = this.socket.recv(4096)
+        this.snap = pickle.loads(data)
+        this.printBoard(this.snap)
+
+    def printBoard(this, snap):
+        print(snap)
 
 class View:
     def __init__(this, stdscr):
         this.stdscr = stdscr
-
-    def update(this, snap):
-        x = 0
-        # running = True
-        # while running:
-        #     key = this.stdscr.getch()
-        #     if key ==  ord('x'): 
-        #         running = False
-        #     elif key == ord('p'):
-        #         this.printEuchre()
-        #     elif key == ord('z'):
-        #         this.printSnap()     
-            
-        #     snap = Snapshot(this.game, this.euchre.players.getPlayer("Adam"))
-        #     this.printBoard(snap)
-
-    def start(this):
-        this.stdscr.clear()
-        curses.curs_set(0)
+        stdscr.keypad(True)
         curses.start_color()
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)  # Default color
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)  # Highlight color
         curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)  # Current player color
+
+    def start(this):
+        this.stdscr.clear()
+        curses.curs_set(0)
 
         this.stdscr.addstr(0, 0, f"┌─────────────────────────┐", curses.color_pair(1))
         this.stdscr.addstr(1, 0, f"│Press Enter to Start Game│", curses.color_pair(1))
@@ -55,30 +58,97 @@ class View:
         this.running = True
 
         this.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        this.socket.connect((HOST, PORT))        
+        this.socket.connect((HOST, PORT))     
+        this.socket.settimeout(1.0)   
         this.snapQ = queue.Queue()
-        
-        this.listenThread = threading.Thread(target=this.listenLoop)
+
+        this.listenThread = threading.Thread(target=this.listen)
         this.listenThread.daemon = True  # Ensure threads close when the main program exits
-        this.listenThread.start()
+        this.listenThread.start()        
+        this.startUILoop()    
+        this.listenThread.join()
 
-    def listenLoop(this):
+    def listen(this):
         while this.running == True:
-            data = this.socket.recv(4096)
-            snap = pickle.loads(data)
-            this.queue.put(snap)
+            try:
+                data = this.socket.recv(4096)
 
-    def gameLoop(this):
-        this.running = True
+                # Handle the case where the connection is closed
+                if not data: break
+
+                snap = pickle.loads(data)
+                this.snapQ.put(snap)
+            except socket.timeout:
+                # Timeout allows us to check this.running periodically
+                continue
+            except Exception as e:
+                print(f"Error: {e}")
+                break                
+            
+    def startUILoop(this):
+        this.snap = this.snapQ.get() 
+        this.getNextSnap()
+
         while this.running == True:
-            data = this.socket.recv(4096)
-            snap = pickle.loads(data)
-            this.printBoard(snap)
+            this.printBoard(this.snap)            
+            key = this.stdscr.getch()                 
 
-    def printMenu(this, x = 20):
-        this.stdscr.addstr(x, 0, "[x] Exit")
-        this.stdscr.addstr(x + 1, 0, "[p] Print euchre object")
-        this.stdscr.addstr(x + 2, 0, "[z] Print snapshot")
+            if key == ord('x'):
+                this.stdscr.clear()                
+                this.stdscr.refresh()
+                this.running = False
+            elif key == ord('p'):
+                this.printSnap(this.snap)
+                this.printBoard(this.snap)
+            elif key == ord('n'):
+                this.getNextSnap()                                             
+            elif key == curses.KEY_RIGHT:
+                this.selectedOption = this.selectedOption + 1
+                if this.selectedOption >= len(this.options): this.selectedOption = len(this.options) - 1
+            elif key == curses.KEY_LEFT:
+                this.selectedOption = this.selectedOption - 1
+                if this.selectedOption < 0: this.selectedOption = 0
+
+    def getNextSnap(this):
+        if this.snapQ.qsize() > 0:
+            this.snap = this.snapQ.get() 
+
+        if this.snap.state == 1:
+            this.options = ["Pass", "Order", "Alone"]
+            this.selectedOption = 0            
+
+        elif this.snap.state == 2:
+            this.options = ["Up", "Down"]
+            this.selectedOption = 0            
+
+        elif this.snap.state == 3:
+            this.options = ["Pass", "Make", "Alone"]
+            this.selectedOption = 0   
+
+        elif this.snap.state == 4:
+            this.options = ["Make", "Alone"]
+            this.selectedOption = 0       
+
+        else:
+            this.options = []
+            this.selectedOption = 0                   
+
+    def printMenu(this, snap, x = 20):
+        if snap.active == snap.forPlayer:
+            this.printActiveMenu(snap, x)
+        else:
+            this.printIdleMenu(snap, x)
+
+    def printActiveMenu(this, snap, x = 20):
+        if snap.state != 5: this.printOptions(x)        
+        this.stdscr.addstr(x + 1, 0, "[p] Print snapshot")
+        this.stdscr.addstr(x + 2, 0, "[x] Exit")        
+
+    def printIdleMenu(this, snap, x = 20):
+        this.stdscr.addstr(x + 0, 0, "[n] Next")
+        this.stdscr.addstr(x + 1, 0, "[p] Print snapshot")
+        this.stdscr.addstr(x + 2, 0, "[x] Exit")
+        this.stdscr.addstr(x + 3, 0, f"snapshots in queue = {this.snapQ.qsize()}")
 
     def printEuchre(this):
         this.stdscr.clear()
@@ -87,13 +157,23 @@ class View:
         this.stdscr.addstr(string.count('\n') + 1, 0, "Press any key to continue")
         this.stdscr.getch()
 
-    def printSnap(this):
-        this.stdscr.clear()
-        snap = Snapshot(this.game, this.euchre.players.getPlayer("Adam"))
+    def printSnap(this, snap):
+        this.stdscr.clear()        
         string = str(snap)
         this.stdscr.addstr(string)
         this.stdscr.addstr(string.count('\n') + 1, 0, "Press any key to continue")
+        this.stdscr.refresh()
         this.stdscr.getch()      
+
+    def printOptions(this, x):
+        y = 0
+        for i, option in enumerate(this.options):
+            if i == this.selectedOption:
+                this.stdscr.addstr(x, y, f"[{option}]", curses.color_pair(2))
+            else:
+                this.stdscr.addstr(x, y, f"[{option}]", curses.color_pair(1))
+
+            y = y + len(option) + 3
 
     def printBoard(this, snap):
         this.stdscr.clear()
@@ -102,7 +182,7 @@ class View:
         this.printEast(snap)
         this.printNorth(snap)
         this.printWest(snap)
-        this.printMenu()
+        this.printMenu(snap)
         this.stdscr.refresh()
 
     def printUpCard(this, snap):
@@ -181,7 +261,9 @@ def printHandHz(stdscr, x, y, hand, highlight = -1):
 
 def Main(stdscr):
     view = View(stdscr)
-    view.start()
+    view.connect()
 
 if __name__ == "__main__":
     curses.wrapper(Main)
+    # view = TestView()
+    # view.connect()

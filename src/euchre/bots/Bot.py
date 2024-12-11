@@ -8,17 +8,17 @@ class Bot:
         getattr(this, f"state{snap.state}")()
 
     def state1(this):
-        print("State 1")
+        return ("pass", None)
 
     def state2(this):
-        print("State 2")
+        return ("down", None)
 
     def state3(this):
-        print("State 3")
+        return ("pass", None)
 
     def state4(this):
-        print("State 4")
+        return ("x", None)
 
     def state5(this):
-        print("State 5")
+        return ("x", None)
 
