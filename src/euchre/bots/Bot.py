@@ -3,9 +3,8 @@ import random
 
 class Bot:
     def decide(this, snap):
-        print(snap)
         this.snap = snap
-        getattr(this, f"state{snap.state}")()
+        return getattr(this, f"state{snap.state}")()
 
     def state1(this):
         return ("pass", None)
