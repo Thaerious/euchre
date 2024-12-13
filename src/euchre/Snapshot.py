@@ -18,6 +18,7 @@ class Snapshot:
         this.state = int(game.state.__name__[5:])
         this.upCard = euchre.upCard
         this.trump = euchre.trump
+        this.lastAction = game.lastAction
 
         if euchre.maker == None:
             this.maker = None
@@ -38,6 +39,8 @@ class Snapshot:
             this.downCard = euchre.downCard
         else:
             this.downCard = None
+
+        this.hash = game.hash
     
     def __str__(this):
         sb = ""

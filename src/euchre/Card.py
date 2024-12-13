@@ -71,6 +71,9 @@ class Card:
     def __str__(this):
         return this.value + this.suit
 
+    def __repr__(this):
+        return this.value + this.suit        
+
     def __eq__(this, that):        
         if that == None: return False
         if isinstance(that, str): that = Card(that)

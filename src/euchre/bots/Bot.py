@@ -1,4 +1,5 @@
 from euchre.Card import Card
+from .tools import *
 import random
 
 class Bot:
@@ -16,8 +17,12 @@ class Bot:
         return ("pass", None)
 
     def state4(this):
-        return ("x", None)
+        suits = allowedSuits(this.snap.upCard.suit)
+        suit = random.choice(suits)
+        return ("make", suit)
 
     def state5(this):
-        return ("x", None)
+        cards = playable(this.snap.trump, this.snap.trick, this.snap.hand)
+        card = random.choice(cards)
+        return ("Play", card)
 

@@ -2,7 +2,6 @@ from euchre.Player import Player, PlayerList, Team
 from euchre.Card import Card, Deck, Trick, Hand
 from euchre.delString import delString
 from euchre.rotate import rotate
-import random
 
 class EuchreException(Exception):
     def __init__(this, msg):
@@ -25,7 +24,6 @@ class Euchre:
         this.trump = None
         this.maker = None
 
-
     # shuffle the deck, should be called after nextHand
     def shuffleDeck(this):
         this.deck = Deck().shuffle()
@@ -37,6 +35,7 @@ class Euchre:
     def nextHand(this):
         this.handCount = this.handCount + 1
         this.order = []
+        
         for i in range(this.handCount, this.handCount + 4):
             this.order.append(i % 4)
 
@@ -67,7 +66,8 @@ class Euchre:
             team.score += 2
 
     def isGameOver(this):
-        if team.score >= 10| team.otherTeam.score >= 10:
+        team = this.maker.team
+        if team.score >= 10 or team.otherTeam.score >= 10:
             return True
         
         return False
@@ -185,9 +185,9 @@ class Euchre:
     # if the trick is not finished, throw an exception
     def nextTrick(this):
         if this.isTrickFinished() == False:
-            raise EuchreException("Can not advance incomplete trick")
+            return False
 
-        player = this.__trickWInner()
+        player = this.__trickWinner()
         player.tricks = player.tricks + 1
         i = this.players.index(player)
 
@@ -198,10 +198,12 @@ class Euchre:
         this.trick = Trick()      
         this.trickCount = this.trickCount + 1  
 
-    def handFinished(this):
+        return True
+
+    def isHandFinished(this):
         return this.trickCount == 5
 
-    def __trickWInner(this):
+    def __trickWinner(this):
         bestPlayer = this.getFirstPlayer()
         bestCard = bestPlayer.played[-1]
 

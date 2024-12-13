@@ -1,6 +1,7 @@
 from euchre.Card import Card, Deck, Trick
 from euchre.delString import delString
 from euchre.Euchre import EuchreException
+import random
 
 class ActionException(EuchreException):
     def __init__(this, msg):
@@ -11,8 +12,13 @@ class Game:
         this.euchre = euchre
         this.state = this.state0
         this.activePlayer = None
+        this.lastAction = [None] * 4
+        this.updateHash()
 
-    def currentState(this):
+    def updateHash(this):
+        this.hash = ''.join(random.choices('0123456789abcdef', k=8))
+
+    def getState(this):
         return int(this.state.__name__[5:])
 
     def input(this, player, action, data = None):        
@@ -24,6 +30,7 @@ class Game:
             data = Card(data[-1], data[:-1]) 
 
         # activate the current state
+        this.updateHash()
         this.state(player, action, data)
 
     def state0(this, player, action, data):
@@ -34,6 +41,10 @@ class Game:
 
     def state1(this, player, action, data):         
         this.allowedActions(action, "pass", "order", "alone")
+
+        # record the action
+        index = this.euchre.players.index(player)
+        this.lastAction[index] = (action, None)
 
         if action == "pass":
             if this.euchre.activateNextPlayer() == this.euchre.getFirstPlayer():
@@ -53,12 +64,21 @@ class Game:
 
     def state2(this, player, action, card):
         this.allowedActions(action, "down", "up")
+
+        # record the action
+        index = this.euchre.players.index(player)
+        this.lastAction[index] = (action, this.euchre.upCard)
+
         if action == "up": this.euchre.dealerSwapCard(card)
         this.euchre.activateFirstPlayer()
         this.state = this.state5
 
     def state3(this, player, action, suit):
         this.allowedActions(action, "pass", "make", "alone")
+
+        # record the action
+        index = this.euchre.players.index(player)
+        this.lastAction[index] = (action, suit)
 
         if action == "pass":            
             if this.euchre.activateNextPlayer() == this.euchre.getDealer():     
@@ -75,30 +95,39 @@ class Game:
 
     def state4(this, player, action, suit):
         this.allowedActions(action, "make", "alone")
+
+        # record the action
+        index = this.euchre.players.index(player)
+        this.lastAction[index] = (action, suit)
+
         this.euchre.makeTrump(suit)
         this.euchre.activateFirstPlayer()
         this.state = this.state5
 
     def state5(this, player, action, card):
         this.allowedActions(action, "play")
+
+        # record the action
+        index = this.euchre.players.index(player)
+        this.lastAction[index] = (action, card)
+
         this.euchre.playCard(card)
+ 
+        if this.euchre.nextTrick() == False: return
+        this.lastAction = [None] * 4
 
-        if this.euchre.isTrickFinished() == False: return
-
-        this.euchre.nextTrick()
-
-        if this.euchre.handFinished():
+        if this.euchre.isHandFinished():
             this.euchre.scoreHand()
-            if this.isGameOver():
+            if this.euchre.isGameOver():
                 this.state = this.state0
             else:
                 this.euchre.nextHand()
-                this.euchre.shuffle
-                this.euchre.deal      
+                this.euchre.shuffleDeck()
+                this.euchre.dealCards()
 
     def allowedActions(this, action, *allowedActions):
         for allowed in allowedActions:
-            if action == allowed: return
+            if action.lower() == allowed.lower(): return
 
         raise ActionException("Unhandled Action " + (str)(action))
 
