@@ -181,10 +181,7 @@ class View:
                         this.paintException(dataObject)
             except socket.timeout:
                 # Timeout allows us to check this.running periodically
-                continue
-            except Exception as e:
-                this.stdscr.clear()
-                print(e)                
+                continue            
             
     def send(this):
         action = "play"
@@ -208,6 +205,8 @@ class View:
             this.paintBoard(this.snap)            
             key = this.stdscr.getch()   
 
+            print(key)
+
             if key == ord('x'):
                 this.stdscr.clear()                
                 this.stdscr.refresh()
@@ -215,9 +214,15 @@ class View:
             elif key == ord('p'):
                 this.paintSnap(this.snap)
                 this.paintBoard(this.snap)
-            elif key == ord('v'):
-                this.paintQueue()
-                this.paintBoard(this.snap)                
+            elif key == ord('s'):
+                this.socket.sendall(pickle.dumps(("save", None))) 
+            elif key == ord('l'):
+                this.socket.sendall(pickle.dumps(("load", None)))                 
+            elif key == ord('n'):
+                this.getNextSnap()
+            elif key == ord('N'):
+                while this.snapQ.qsize() > 0:
+                    this.getNextSnap()
             elif key == ord('h'):
                 this.paintHistory()
                 this.paintBoard(this.snap)                   
@@ -232,9 +237,7 @@ class View:
             elif key == 10:  
                 if this.snap.active == this.snap.forPlayer:                    
                     this.send()
-                    this.getNextSnap(True)
-                else:
-                    this.getNextSnap() 
+                    this.getNextSnap(True)                    
 
     def getNextSnap(this, wait = False):
         if wait == True:
@@ -429,14 +432,8 @@ def paintBox(stdscr, x, y, v1, v2, color = 1):
     return x + 5
 
 def Main(stdscr):
-    try:
-        view = View(stdscr)
-        view.connect()
-    except Exception:
-        stdscr.clear()
-        print(Exception)
-        
-
+    view = View(stdscr)
+    view.connect()
     
 
 if __name__ == "__main__":

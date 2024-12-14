@@ -37,8 +37,9 @@ class Normalized:
                 this.deck[str(euchre.downCard)] = 3
 
         # trick cards set to 4
-        for i, card in enumerate(euchre.trick):
-            this.deck[str(card)] = 20 + i   
+        if euchre.getTrick() != None:
+            for i, card in enumerate(euchre.getTrick()):
+                this.deck[str(card)] = 20 + i   
 
     def __str__(this):
         sb = "\n\t"

@@ -19,6 +19,7 @@ class Snapshot:
         this.upCard = euchre.upCard
         this.trump = euchre.trump
         this.lastAction = game.lastAction
+        this.tricks = euchre.tricks
 
         if euchre.maker == None:
             this.maker = None
@@ -27,7 +28,6 @@ class Snapshot:
 
         this.dealer = euchre.dealer
         this.hand = forPlayer.cards
-        this.trick = euchre.trick
         this.order = euchre.order   
         this.trickCount = euchre.trickCount
         this.handCount =  euchre.handCount

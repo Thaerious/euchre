@@ -18,11 +18,17 @@ class Euchre:
 
         this.deck = Deck()
 
-        this.trick = Trick()
         this.upCard = None
         this.downCard = None
         this.trump = None
-        this.maker = None
+        this.maker = None    
+        this.clearTricks()
+
+    def getTrick(this):
+        return this.tricks[-1]
+
+    def clearTricks(this):
+        this.tricks = [Trick()]
 
     # shuffle the deck, should be called after nextHand
     def shuffleDeck(this):
@@ -35,7 +41,7 @@ class Euchre:
     def nextHand(this):
         this.handCount = this.handCount + 1
         this.order = []
-        
+
         for i in range(this.handCount, this.handCount + 4):
             this.order.append(i % 4)
 
@@ -45,7 +51,6 @@ class Euchre:
         this.deck = Deck()
 
         this.trickCount = 0
-        this.trick = Trick()
         this.upCard = None
         this.downCard = None
         this.trump = None
@@ -135,18 +140,18 @@ class Euchre:
 
     # true if enough cards have been played to advance to the next trick
     def isTrickFinished(this):        
-        return len(this.trick) == len(this.order)
+        return len(this.getTrick()) == len(this.order)
 
     def __checkFollowSuit(this, player, card):
         if this.canPlay(player, card) == False:
-            leadSuit = this.trick[0].getSuit(this.trump)
+            leadSuit = this.getTrick()[0].getSuit(this.trump)
             raise EuchreException(f"card '{card}' must follow suit '{leadSuit}'")
 
     # true if the player is allowed to play card
     # only checks the cards, player order is not considered
     def canPlay(this, player, card):       
-        if len(this.trick) == 0: return True
-        leadSuit = this.trick[0].getSuit(this.trump)
+        if len(this.getTrick()) == 0: return True
+        leadSuit = this.getTrick()[0].getSuit(this.trump)
         if card.getSuit(this.trump) == leadSuit: return True        
 
         for playerCard in player.cards:
@@ -175,7 +180,12 @@ class Euchre:
 
         player.cards.remove(card)   
         player.played.append(card)
-        this.trick.append(card)
+        
+        if len(this.getTrick()) == 0: 
+            this.getTrick().lead = this.currentPlayer
+
+        this.getTrick().append(card)
+        
 
         if next: this.activateNextPlayer()
 
@@ -195,8 +205,7 @@ class Euchre:
             rotate(this.order)
 
         this.currentPlayer = i
-        this.trick = Trick()      
-        this.trickCount = this.trickCount + 1  
+        this.tricks.append(Trick())
 
         return True
 

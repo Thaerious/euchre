@@ -36,7 +36,8 @@ class Game:
     def state0(this, player, action, data):
         this.allowedActions(action, "start")
         this.euchre.shuffleDeck()
-        this.euchre.dealCards()        
+        this.euchre.dealCards()       
+        this.euchre.clearTricks() 
         this.state = this.state1
 
     def state1(this, player, action, data):         
@@ -105,14 +106,14 @@ class Game:
         this.state = this.state5
 
     def state5(this, player, action, card):
-        this.allowedActions(action, "play")
+        this.allowedActions(action, "play")       
 
+        this.euchre.playCard(card)
+ 
         # record the action
         index = this.euchre.players.index(player)
         this.lastAction[index] = (action, card)
 
-        this.euchre.playCard(card)
- 
         if this.euchre.nextTrick() == False: return
         this.lastAction = [None] * 4
 
@@ -124,6 +125,7 @@ class Game:
                 this.euchre.nextHand()
                 this.euchre.shuffleDeck()
                 this.euchre.dealCards()
+                this.euchre.clearTricks()
 
     def allowedActions(this, action, *allowedActions):
         for allowed in allowedActions:

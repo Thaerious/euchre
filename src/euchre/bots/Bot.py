@@ -22,7 +22,7 @@ class Bot:
         return ("make", suit)
 
     def state5(this):
-        cards = playable(this.snap.trump, this.snap.trick, this.snap.hand)
+        cards = playable(this.snap.trump, this.snap.tricks[-1], this.snap.hand)
         card = random.choice(cards)
         return ("Play", card)
 

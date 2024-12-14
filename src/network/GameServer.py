@@ -13,13 +13,15 @@ class GameServer:
         this.conn = conn
         this.addr = addr
         this.bot = Bot()
+        this.history = [("seed", seed)]
 
     def onConnect(this):
         # todo: read first packet and do validation
         
         this.euchre = Euchre(["Adam", "T100", "Skynet", "Robocop"])
         this.game = Game(this.euchre)
-        this.game.input(None, "start", None)        
+        this.game.input(None, "start", None)     
+        this.history.append(("start", None))   
         this.sendSnaps()
         this.loop()
 
@@ -67,6 +69,7 @@ class GameServer:
                 snap = Snapshot(this.game, this.euchre.getCurrentPlayer())
                 (action, data) = this.bot.decide(snap)
                 print(f"bot {this.euchre.getCurrentPlayer().name}: {action} {data}")
+                this.history.append((action, data))                
                 this.game.input(this.euchre.getCurrentPlayer(), action, data)
         except EuchreException as e:
             print(e)
@@ -91,6 +94,49 @@ class GameServer:
         action = packet[0]
         data = packet[1]
 
-        this.game.input(this.euchre.players.getPlayer("Adam"), action, data)
-        this.sendSnaps()
-        print(f"state : {this.game.getState()}")
+        if action == "save":
+            this.saveHistory()
+        elif action == "load":
+            this.loadHistory()
+        else:
+            this.history.append(packet) 
+            this.game.input(this.euchre.players.getPlayer("Adam"), action, data)
+            this.sendSnaps()        
+            print(f"state : {this.game.getState()}")
+
+    def loadHistory(this):
+        print("--- Loading History -------------------")
+        this.history = []
+
+        with open('history.txt', 'r') as file:
+            for line in file:
+                if line == None: continue                
+                line = line.strip()
+                parsed = line.split()
+                print(f"{line} -> {parsed}")
+                this.loadAction(parsed)
+        print("---------------------------------------")                
+
+    def loadAction(this, parsed):        
+        action = parsed[0] if len(parsed) > 0 else ""
+        data = parsed[1] if len(parsed) > 1 else ""
+        if action == "": return
+
+        this.history.append((action, data))
+
+        if action == "seed":
+            random.seed(int(data))
+        elif action == "start":
+            this.euchre = Euchre(["Adam", "T100", "Skynet", "Robocop"])
+            this.game = Game(this.euchre)
+            this.game.input(None, "start", None)  
+        else:
+            this.game.input(this.euchre.getCurrentPlayer(), action, data)
+
+
+    def saveHistory(this):
+        with open('history.txt', 'w') as file:
+            for line in this.history:
+                if line == None: continue
+                file.write(f"{line[0]} {line[1]}\n") 
+                       

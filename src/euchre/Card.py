@@ -25,6 +25,10 @@ class Hand(CardList):
         return cards   
 
 class Trick(CardList):
+    def __init__(this, stringList = []):
+        CardList.__init__(this, stringList)
+        this.lead = -1
+
     # Can 'card' be played if 'this' is the current trick.
     def canPlay(this, card, hand, trump):
         if not isinstance(card, Card): raise TypeError(f"expected Card, found {type(card)}")
@@ -44,6 +48,13 @@ class Trick(CardList):
             if cardInHand.getSuit(trump) == leadSuit: return False
 
         return True  
+
+    def __str__(this):
+        return f"({this.lead}, [{delString(this)}])"
+
+    def __repr__(this):
+        return f"({this.lead}, [{delString(this)}])"
+
 
 class Deck(CardList):
     def __init__(this):
