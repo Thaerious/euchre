@@ -210,7 +210,7 @@ class Euchre:
         return True
 
     def isHandFinished(this):
-        if len(this.tricks != 5): return False
+        if len(this.tricks) != 5: return False
         if len(this.tricks[-1]) != len(this.order): return False
         return True
 
