@@ -210,7 +210,9 @@ class Euchre:
         return True
 
     def isHandFinished(this):
-        return this.trickCount == 5
+        if len(this.tricks != 5): return False
+        if len(this.tricks[-1]) != len(this.order): return False
+        return True
 
     def __trickWinner(this):
         bestPlayer = this.getFirstPlayer()

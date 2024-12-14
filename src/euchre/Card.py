@@ -29,6 +29,21 @@ class Trick(CardList):
         CardList.__init__(this, stringList)
         this.lead = -1
 
+    # return the index of the winning player
+    def winner(this, trump):
+        winner = this.lead
+        bestCard = this[0]        
+
+        p = this.lead
+        for card in this:               
+            if (bestCard.compare(card, trump) < 0):
+                 winner = p
+                 bestCard = card            
+
+            p = (p + 1) % 4
+        
+        return winner
+
     # Can 'card' be played if 'this' is the current trick.
     def canPlay(this, card, hand, trump):
         if not isinstance(card, Card): raise TypeError(f"expected Card, found {type(card)}")

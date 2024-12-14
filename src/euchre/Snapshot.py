@@ -18,7 +18,6 @@ class Snapshot:
         this.state = int(game.state.__name__[5:])
         this.upCard = euchre.upCard
         this.trump = euchre.trump
-        this.lastAction = game.lastAction
         this.tricks = euchre.tricks
 
         if euchre.maker == None:
@@ -29,7 +28,6 @@ class Snapshot:
         this.dealer = euchre.dealer
         this.hand = forPlayer.cards
         this.order = euchre.order   
-        this.trickCount = euchre.trickCount
         this.handCount =  euchre.handCount
         this.score = [euchre.players[0].team.score, euchre.players[1].team.score]
 

@@ -12,7 +12,6 @@ class Game:
         this.euchre = euchre
         this.state = this.state0
         this.activePlayer = None
-        this.lastAction = [None] * 4
         this.updateHash()
 
     def updateHash(this):
@@ -43,10 +42,6 @@ class Game:
     def state1(this, player, action, data):         
         this.allowedActions(action, "pass", "order", "alone")
 
-        # record the action
-        index = this.euchre.players.index(player)
-        this.lastAction[index] = (action, None)
-
         if action == "pass":
             if this.euchre.activateNextPlayer() == this.euchre.getFirstPlayer():
                 this.state = this.state3
@@ -66,20 +61,12 @@ class Game:
     def state2(this, player, action, card):
         this.allowedActions(action, "down", "up")
 
-        # record the action
-        index = this.euchre.players.index(player)
-        this.lastAction[index] = (action, this.euchre.upCard)
-
         if action == "up": this.euchre.dealerSwapCard(card)
         this.euchre.activateFirstPlayer()
         this.state = this.state5
 
     def state3(this, player, action, suit):
         this.allowedActions(action, "pass", "make", "alone")
-
-        # record the action
-        index = this.euchre.players.index(player)
-        this.lastAction[index] = (action, suit)
 
         if action == "pass":            
             if this.euchre.activateNextPlayer() == this.euchre.getDealer():     
@@ -97,25 +84,16 @@ class Game:
     def state4(this, player, action, suit):
         this.allowedActions(action, "make", "alone")
 
-        # record the action
-        index = this.euchre.players.index(player)
-        this.lastAction[index] = (action, suit)
-
         this.euchre.makeTrump(suit)
         this.euchre.activateFirstPlayer()
         this.state = this.state5
 
     def state5(this, player, action, card):
-        this.allowedActions(action, "play")       
+        this.allowedActions(action, "play")
 
         this.euchre.playCard(card)
- 
-        # record the action
-        index = this.euchre.players.index(player)
-        this.lastAction[index] = (action, card)
 
         if this.euchre.nextTrick() == False: return
-        this.lastAction = [None] * 4
 
         if this.euchre.isHandFinished():
             this.euchre.scoreHand()

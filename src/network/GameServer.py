@@ -101,8 +101,6 @@ class GameServer:
         else:
             this.history.append(packet) 
             this.game.input(this.euchre.players.getPlayer("Adam"), action, data)
-            this.sendSnaps()        
-            print(f"state : {this.game.getState()}")
 
     def loadHistory(this):
         print("--- Loading History -------------------")

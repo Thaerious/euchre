@@ -3,6 +3,8 @@ import pickle
 import curses
 import queue
 import threading
+import time
+import traceback
 from euchre import *
 from euchre.Card import Hand
 from euchre.Snapshot import Snapshot
@@ -198,6 +200,13 @@ class View:
 
         this.socket.sendall(pickle.dumps((action, data)))            
 
+    def continueLoop(this):
+        while this.snapQ.qsize() > 0:
+            this.getNextSnap()
+            this.paintTrickOver(this.snap)
+            this.paintBoard(this.snap)
+            time.sleep(0.75)    
+
     def startUILoop(this):
         this.getNextSnap(True) 
 
@@ -217,15 +226,9 @@ class View:
             elif key == ord('s'):
                 this.socket.sendall(pickle.dumps(("save", None))) 
             elif key == ord('l'):
-                this.socket.sendall(pickle.dumps(("load", None)))                 
+                this.socket.sendall(pickle.dumps(("load", None)))
             elif key == ord('n'):
-                this.getNextSnap()
-            elif key == ord('N'):
-                while this.snapQ.qsize() > 0:
-                    this.getNextSnap()
-            elif key == ord('h'):
-                this.paintHistory()
-                this.paintBoard(this.snap)                   
+                this.continueLoop()
             elif key == curses.KEY_UP:
                 this.prevOption()
             elif key == curses.KEY_DOWN:
@@ -237,7 +240,8 @@ class View:
             elif key == 10:  
                 if this.snap.active == this.snap.forPlayer:                    
                     this.send()
-                    this.getNextSnap(True)                    
+                    # this.getNextSnap(True)
+                    this.continueLoop()
 
     def getNextSnap(this, wait = False):
         if wait == True:
@@ -246,37 +250,33 @@ class View:
             this.snap = this.snapQ.get() 
 
         if this.snap == None: return
+        this.handView = HandView(this.snap.hand)
 
         if this.snap.state == 1:
-            this.handView = HandView(this.snap.hand)
             this.actionOptions = OptionList(["Pass", "Order", "Alone"])
             this.dataOptions = None
             this.options = [this.actionOptions]
             this.selectOption(0)
 
         elif this.snap.state == 2:
-            this.handView = HandView(this.snap.hand)
             this.actionOptions = OptionList(["Up", "Down"])
             this.dataOptions = None            
             this.options = [this.handView, this.actionOptions]
             this.selectOption(1)
 
         elif this.snap.state == 3:
-            this.handView = HandView(this.snap.hand)
             this.actionOptions = OptionList(["Pass", "Make", "Alone"])
             this.dataOptions = OptionList(allowedSuits(this.snap))         
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
         elif this.snap.state == 4:
-            this.handView = HandView(this.snap.hand)
             this.actionOptions = OptionList(["Make", "Alone"])
             this.dataOptions = OptionList(allowedSuits(this.snap))  
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
         elif this.snap.state == 5:
-            this.handView = HandView(this.snap.hand)
             this.actionOptions = None
             this.dataOptions = None
             this.options = [this.handView]
@@ -312,36 +312,6 @@ class View:
         this.stdscr.refresh()
         this.stdscr.getch()
 
-    def paintHistory(this):
-        this.stdscr.clear()
-        x = 0
-
-        this.stdscr.addstr(x, 0, f"{this.snap.hash}", 2)
-        x = x + 2
-
-        for v in this.history:
-            if v == this.snap.hash:
-                this.stdscr.addstr(x, 0, f"{v}", 2)
-            else:
-                this.stdscr.addstr(x, 0, f"{v}", 1)
-            x = x + 1
-        
-        this.stdscr.addstr(x + 1, 0, "Press any key to continue")
-        this.stdscr.refresh()
-        this.stdscr.getch()  
-
-    def paintQueue(this):
-        this.stdscr.clear()
-        x = 0
-
-        for snap in this.snapQ.queue:
-            this.stdscr.addstr(x, 0, f"{snap.hash}")    
-            x = x + 1
-        
-        this.stdscr.addstr(x + 1, 0, "Press any key to continue")
-        this.stdscr.refresh()
-        this.stdscr.getch()  
-
     def paintSnap(this, snap):
         this.stdscr.clear()        
         string = str(snap)
@@ -350,15 +320,39 @@ class View:
         this.stdscr.refresh()
         this.stdscr.getch()      
 
+    def paintTrickOver(this, snap):
+        if this.snap.state != 5: return
+        if len(this.snap.tricks) < 2: return
+        if len(this.snap.tricks[-1]) > 0: return
+
+        with this.paintLock:
+            this.stdscr.clear()
+            if snap != None:
+                trick = snap.tricks[-2]
+                this.paintUpCard(snap)
+                this.paintSouth(snap, trick)
+                this.paintWest(snap, trick)
+                this.paintNorth(snap, trick)
+                this.paintEast(snap, trick)
+
+                winner = snap.names[trick.winner(snap.trump)]
+                this.stdscr.addstr(24, 0, f"The winner of this trick is {winner}")
+                this.stdscr.addstr(25, 0, "Press any key to continue")
+            this.statscr.addstr(0, 0, f"packets waiting: {this.snapQ.qsize()}", curses.color_pair(1))
+            this.stdscr.refresh()
+        this.stdscr.getch()
+        
+
     def paintBoard(this, snap):
         with this.paintLock:
             this.stdscr.clear()
             if snap != None:
+                trick = snap.tricks[-1]
                 this.paintUpCard(snap)
-                this.paintSouth(snap)
-                this.paintWest(snap)
-                this.paintNorth(snap)
-                this.paintEast(snap)
+                this.paintSouth(snap, trick)
+                this.paintWest(snap, trick)
+                this.paintNorth(snap, trick)
+                this.paintEast(snap, trick)
                 this.paintMenu(snap)       
             this.statscr.addstr(0, 0, f"packets waiting: {this.snapQ.qsize()}", curses.color_pair(1))
             this.stdscr.refresh()
@@ -370,43 +364,45 @@ class View:
             paintCard(this.stdscr, 6, 10, Card("X"))
         paintCard(this.stdscr, 6, 18, Card("  "))
 
-    def paintSouth(this, snap):
+    def paintSouth(this, snap, trick):
         if this.handView != None: this.handView.paint(this.stdscr, 17)
-        this.paintPlayer(snap, 0, 11, 14)           
+        this.paintPlayer(snap, 0, 11, 14, trick)           
 
-    def paintWest(this, snap):
-        this.paintPlayer(snap, 1, 6, 0) 
+    def paintWest(this, snap, trick):
+        this.paintPlayer(snap, 1, 6, 0, trick) 
 
-    def paintNorth(this, snap):
-        this.paintPlayer(snap, 2, 0, 14)
+    def paintNorth(this, snap, trick):
+        this.paintPlayer(snap, 2, 0, 14, trick)
 
-    def paintEast(this, snap):
-        this.paintPlayer(snap, 3, 6, 27)
+    def paintEast(this, snap, trick):
+        this.paintPlayer(snap, 3, 6, 27, trick)
 
-    def paintPlayer(this, snap, i, x, y):
+    def paintPlayer(this, snap, i, x, y, trick):
         playPosition = (snap.forPlayer + i) % 4
-        display1 = " "
-        display2 = " "
-
-        if snap.lastAction[playPosition] != None:
-            display1 = snap.lastAction[playPosition][0]
-            display2 = snap.lastAction[playPosition][1]
 
         # paint the player box yellow if active else white
+        name = snap.names[playPosition]
+        if snap.dealer == playPosition: name = f"({name})"
+        if snap.maker == playPosition: name = f"{name} {snap.trump}"
+
+        card = None
+        t = (playPosition - trick.lead) % 4
+        if len(trick) > t: card = trick[t]
+
         if playPosition == snap.active:
-            x = paintBox(this.stdscr, x, y, display1, display2, 3)
-            this.stdscr.addstr(x, y, f"{snap.names[playPosition]}", 3)
+            x = paintCard(this.stdscr, x, y, card, 3)
+            this.stdscr.addstr(x, y, f"{name}", 3)
         else:
-            x = paintBox(this.stdscr, x, y, display1, display2, 1)              
-            this.stdscr.addstr(x, y, f"{snap.names[playPosition]}", 1)
+            x = paintCard(this.stdscr, x, y, card, 1)              
+            this.stdscr.addstr(x, y, f"{name}", 1)
 
 def allowedSuits(snap):
     suits = ["♠", "♣", "♥", "♦"]
     suits.remove(snap.upCard.suit)
     return suits
 
-def paintCard(stdscr, x, y, card, color = None):
-    if color == None: color = curses.color_pair(1)
+def paintCard(stdscr, x, y, card, color = 255):
+    if card == None: return paintBox(stdscr, x, y, color)
 
     l = card.value.ljust(2)
     s = card.suit
@@ -419,15 +415,13 @@ def paintCard(stdscr, x, y, card, color = None):
     stdscr.addstr(x+4, y, f"└─────┘", color)
     return x + 5
 
-def paintBox(stdscr, x, y, v1, v2, color = 1):
-    if v1 == None: v1 = ""
-    if v2 == None: v2 = ""
-    v1 = v1.ljust(5)
-    v2 = str(v2).ljust(5)
+def paintBox(stdscr, x, y, color = 255):
+    if color == None: curses.color_pair(1)
+
     stdscr.addstr(x+0, y, f"┌─────┐", color)
     stdscr.addstr(x+1, y, f"│     │", color)
-    stdscr.addstr(x+2, y, f"│{v1}│", color)
-    stdscr.addstr(x+3, y, f"│{v2}│", color)
+    stdscr.addstr(x+2, y, f"│     │", color)
+    stdscr.addstr(x+3, y, f"│     │", color)
     stdscr.addstr(x+4, y, f"└─────┘", color)
     return x + 5
 
