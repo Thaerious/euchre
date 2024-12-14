@@ -204,14 +204,18 @@ class View:
             snap = this.getNextSnap()
             this.paintTrickOver(snap)
             this.paintBoard(snap)
+            time.sleep(0.75)
 
             while(this.snapQ.qsize() == 0):
                 if snap.active == snap.forPlayer:
-                    this.getInput(snap)
+                    if this.getInput(snap) == True: break
                     this.paintBoard(snap)
-                else:
-                    time.sleep(0.75)
 
+            
+
+    # Get and process keyboard input
+    # Returns true when a packet is sent (enter pressed)
+    # Otherwise returns false
     def getInput(this, snap):
         this.updateStatus("Waiting for user input")
         key = this.stdscr.getch()   
@@ -238,6 +242,9 @@ class View:
             this.currentOptions().prev()
         elif key == 10:                  
             this.send(snap)
+            return True
+        
+        return False
 
     # Retrieve the next snap from the queue
     # Enable / disable UI components based on the state
