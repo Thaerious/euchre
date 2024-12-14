@@ -112,9 +112,6 @@ class View:
         this.options = []
         this.selectedOption = -1
 
-        this.snap = None
-        this.history = []
-
     def currentOptions(this):
         if this.selectedOption >= 0:
             return this.options[this.selectedOption]
@@ -160,9 +157,10 @@ class View:
         this.listenThread = threading.Thread(target=this.listen)
         this.listenThread.daemon = True  # Ensure threads close when the main program exits
         this.listenThread.start()        
-        this.startUILoop()    
+        this.uiLoop()    
         this.listenThread.join()
 
+    # Load the snapshot queue with incoming packets
     def listen(this):
         while this.running == True:
             try:
@@ -175,17 +173,16 @@ class View:
                     if isinstance(dataObject, Snapshot): 
                         snap = dataObject                   
                         this.snapQ.put(snap)
-                        this.history.append(snap.hash)
                         this.socket.sendall(pickle.dumps(("ack", snap.hash)))                              
                         this.statscr.addstr(0, 0, f"packets waiting: {this.snapQ.qsize()}", curses.color_pair(1))
-                        this.statscr.refresh()                    
+                        this.statscr.refresh()
                     else:
                         this.paintException(dataObject)
             except socket.timeout:
                 # Timeout allows us to check this.running periodically
                 continue            
             
-    def send(this):
+    def send(this, snap):
         action = "play"
         data = None
 
@@ -195,92 +192,91 @@ class View:
         if this.dataOptions != None:
             data = this.dataOptions.get()
 
-        if this.snap.state == 5:
+        if snap.state == 5:
             data = str(this.handView.get())
 
         this.socket.sendall(pickle.dumps((action, data)))            
 
-    def continueLoop(this):
-        while this.snapQ.qsize() > 0:
-            this.getNextSnap()
-            this.paintTrickOver(this.snap)
-            this.paintBoard(this.snap)
-            time.sleep(0.75)    
-
-    def startUILoop(this):
-        this.getNextSnap(True) 
-
+    # Pull snapshots off the snapshot queue and display them
+    # Wait for user input when required
+    def uiLoop(this):
         while this.running == True:
-            this.paintBoard(this.snap)            
-            key = this.stdscr.getch()   
+            snap = this.getNextSnap()
+            this.paintTrickOver(snap)
+            this.paintBoard(snap)
 
-            print(key)
+            while(this.snapQ.qsize() == 0):
+                if snap.active == snap.forPlayer:
+                    this.getInput(snap)
+                    this.paintBoard(snap)
+                else:
+                    time.sleep(0.75)
 
-            if key == ord('x'):
-                this.stdscr.clear()                
-                this.stdscr.refresh()
-                this.running = False        
-            elif key == ord('p'):
-                this.paintSnap(this.snap)
-                this.paintBoard(this.snap)
-            elif key == ord('s'):
-                this.socket.sendall(pickle.dumps(("save", None))) 
-            elif key == ord('l'):
-                this.socket.sendall(pickle.dumps(("load", None)))
-            elif key == ord('n'):
-                this.continueLoop()
-            elif key == curses.KEY_UP:
-                this.prevOption()
-            elif key == curses.KEY_DOWN:
-                this.nextOption()
-            elif key == curses.KEY_RIGHT:
-                this.currentOptions().next()
-            elif key == curses.KEY_LEFT:
-                this.currentOptions().prev()
-            elif key == 10:  
-                if this.snap.active == this.snap.forPlayer:                    
-                    this.send()
-                    # this.getNextSnap(True)
-                    this.continueLoop()
+    def getInput(this, snap):
+        this.updateStatus("Waiting for user input")
+        key = this.stdscr.getch()   
 
-    def getNextSnap(this, wait = False):
-        if wait == True:
-            this.snap = this.snapQ.get() 
-        if this.snapQ.qsize() > 0:
-            this.snap = this.snapQ.get() 
+        if key == ord('x'):
+            this.stdscr.clear()                
+            this.stdscr.refresh()
+            this.running = False  
+            exit()      
+        elif key == ord('p'):
+            this.paintSnap(snap)
+            this.paintBoard(snap)
+        elif key == ord('s'):
+            this.socket.sendall(pickle.dumps(("save", None))) 
+        elif key == ord('l'):
+            this.socket.sendall(pickle.dumps(("load", None)))
+        elif key == curses.KEY_UP:
+            this.prevOption()
+        elif key == curses.KEY_DOWN:
+            this.nextOption()
+        elif key == curses.KEY_RIGHT:
+            this.currentOptions().next()
+        elif key == curses.KEY_LEFT:
+            this.currentOptions().prev()
+        elif key == 10:                  
+            this.send(snap)
 
-        if this.snap == None: return
-        this.handView = HandView(this.snap.hand)
+    # Retrieve the next snap from the queue
+    # Enable / disable UI components based on the state
+    def getNextSnap(this):
+        snap = this.snapQ.get()
 
-        if this.snap.state == 1:
+        this.handView = HandView(snap.hand)
+
+        if snap.state == 1:
             this.actionOptions = OptionList(["Pass", "Order", "Alone"])
             this.dataOptions = None
             this.options = [this.actionOptions]
             this.selectOption(0)
 
-        elif this.snap.state == 2:
+        elif snap.state == 2:
             this.actionOptions = OptionList(["Up", "Down"])
             this.dataOptions = None            
             this.options = [this.handView, this.actionOptions]
             this.selectOption(1)
 
-        elif this.snap.state == 3:
+        elif snap.state == 3:
             this.actionOptions = OptionList(["Pass", "Make", "Alone"])
-            this.dataOptions = OptionList(allowedSuits(this.snap))         
+            this.dataOptions = OptionList(allowedSuits(snap))         
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
-        elif this.snap.state == 4:
+        elif snap.state == 4:
             this.actionOptions = OptionList(["Make", "Alone"])
-            this.dataOptions = OptionList(allowedSuits(this.snap))  
+            this.dataOptions = OptionList(allowedSuits(snap))  
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
-        elif this.snap.state == 5:
+        elif snap.state == 5:
             this.actionOptions = None
             this.dataOptions = None
             this.options = [this.handView]
             this.selectOption(0)
+
+        return snap
 
     def paintMenu(this, snap, x = 22):
         if snap.active == snap.forPlayer:
@@ -320,10 +316,15 @@ class View:
         this.stdscr.refresh()
         this.stdscr.getch()      
 
+    def updateStatus(this, string):
+        with this.paintLock:
+            this.statscr.addstr(0, 0, string, curses.color_pair(1))
+            this.stdscr.refresh()
+
     def paintTrickOver(this, snap):
-        if this.snap.state != 5: return
-        if len(this.snap.tricks) < 2: return
-        if len(this.snap.tricks[-1]) > 0: return
+        if snap.state != 5: return
+        if len(snap.tricks) < 2: return
+        if len(snap.tricks[-1]) > 0: return
 
         with this.paintLock:
             this.stdscr.clear()
@@ -338,7 +339,6 @@ class View:
                 winner = snap.names[trick.winner(snap.trump)]
                 this.stdscr.addstr(24, 0, f"The winner of this trick is {winner}")
                 this.stdscr.addstr(25, 0, "Press any key to continue")
-            this.statscr.addstr(0, 0, f"packets waiting: {this.snapQ.qsize()}", curses.color_pair(1))
             this.stdscr.refresh()
         this.stdscr.getch()
         
@@ -353,8 +353,8 @@ class View:
                 this.paintWest(snap, trick)
                 this.paintNorth(snap, trick)
                 this.paintEast(snap, trick)
-                this.paintMenu(snap)       
-            this.statscr.addstr(0, 0, f"packets waiting: {this.snapQ.qsize()}", curses.color_pair(1))
+                this.paintMenu(snap)    
+                this.statscr.addstr(0, 0, snap.hash, curses.color_pair(1))   
             this.stdscr.refresh()
 
     def paintUpCard(this, snap):
