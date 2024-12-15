@@ -232,6 +232,7 @@ class View:
             this.socket.sendall(pickle.dumps(("save", None))) 
         elif key == ord('l'):
             this.socket.sendall(pickle.dumps(("load", None)))
+            return True
         elif key == curses.KEY_UP:
             this.prevOption()
         elif key == curses.KEY_DOWN:
