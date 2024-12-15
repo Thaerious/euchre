@@ -205,12 +205,14 @@ class Euchre:
             rotate(this.order)
 
         this.currentPlayer = i
-        this.tricks.append(Trick())
+        
+        if len(this.tricks) < 5:
+            this.tricks.append(Trick())
 
         return True
 
     def isHandFinished(this):
-        if len(this.tricks) != 5: return False
+        if len(this.tricks) < 5: return False
         if len(this.tricks[-1]) != len(this.order): return False
         return True
 

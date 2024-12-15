@@ -97,6 +97,7 @@ class Game:
 
         if this.euchre.isHandFinished():
             this.euchre.scoreHand()
+
             if this.euchre.isGameOver():
                 this.state = this.state0
             else:
@@ -104,6 +105,7 @@ class Game:
                 this.euchre.shuffleDeck()
                 this.euchre.dealCards()
                 this.euchre.clearTricks()
+                this.state = this.state1
 
     def allowedActions(this, action, *allowedActions):
         for allowed in allowedActions:

@@ -60,21 +60,18 @@ class GameServer:
         print(f"Connection with {this.addr} has been closed.") 
 
     def step(this):
-        try:
-            print("---------------------------------------")  
-            print(f" current player {this.euchre.getCurrentPlayer().name}")
-            if this.euchre.getCurrentPlayer().name == "Adam":
-                this.getNextPacket()
-            else:
-                snap = Snapshot(this.game, this.euchre.getCurrentPlayer())
-                (action, data) = this.bot.decide(snap)
-                print(f"bot {this.euchre.getCurrentPlayer().name}: {action} {data}")
-                this.history.append((action, data))                
-                this.game.input(this.euchre.getCurrentPlayer(), action, data)
-        except EuchreException as e:
-            print(e)
-        finally:
-            this.sendSnaps()
+        print("---------------------------------------")  
+        print(f" current player {this.euchre.getCurrentPlayer().name}")
+        if this.euchre.getCurrentPlayer().name == "Adam":
+            this.getNextPacket()
+        else:
+            snap = Snapshot(this.game, this.euchre.getCurrentPlayer())
+            (action, data) = this.bot.decide(snap)
+            print(f"bot {this.euchre.getCurrentPlayer().name}: {action} {data}")
+            this.history.append((action, data))                
+            this.game.input(this.euchre.getCurrentPlayer(), action, data)
+
+        this.sendSnaps()
 
     def getNextPacket(this):
         print("waiting for next packet")
@@ -99,8 +96,12 @@ class GameServer:
         elif action == "load":
             this.loadHistory()
         else:
-            this.history.append(packet) 
-            this.game.input(this.euchre.players.getPlayer("Adam"), action, data)
+            try:
+                this.game.input(this.euchre.players.getPlayer("Adam"), action, data)
+                this.history.append(packet) 
+            except EuchreException as ex:
+                print(ex)
+
 
     def loadHistory(this):
         print("--- Loading History -------------------")
