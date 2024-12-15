@@ -47,6 +47,7 @@ class Game:
                 this.state = this.state3
         elif action == "order":
             this.euchre.makeTrump()
+            this.euchre.addTrick()
             this.euchre.activateDealer()
             this.state = this.state2
         elif action == "alone":      
@@ -73,6 +74,7 @@ class Game:
                 this.state = this.state4
         elif action == "make":
             this.euchre.makeTrump(suit)
+            this.euchre.addTrick()
             this.state = this.state5
             this.euchre.activateFirstPlayer()
         elif action == "alone":

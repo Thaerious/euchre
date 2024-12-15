@@ -24,11 +24,18 @@ class Euchre:
         this.maker = None    
         this.clearTricks()
 
+    def hasTrick(this):
+        return len(this.tricks) > 0
+
     def getTrick(this):
         return this.tricks[-1]
 
     def clearTricks(this):
-        this.tricks = [Trick()]
+        this.tricks = []
+
+    def addTrick(this):
+        if this.trump is None: raise EuchreException(f"to add a trick, trump can not be None.  Must call #MakeTrump.")
+        this.tricks.append(Trick(this.trump))
 
     # shuffle the deck, should be called after nextHand
     def shuffleDeck(this):
@@ -206,9 +213,7 @@ class Euchre:
             rotate(this.order)
 
         this.currentPlayer = i
-
-        if len(this.tricks) < 5:
-            this.tricks.append(Trick())
+        this.addTrick()
 
         return True
 

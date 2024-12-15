@@ -25,50 +25,56 @@ class Hand(CardList):
         return cards   
 
 class Trick(CardList):
-    def __init__(this, stringList = []):
-        CardList.__init__(this, stringList)
+    def __init__(this, trump):
+        CardList.__init__(this)
         this.lead = -1
+        this.trump = trump
 
-    # return the index of the winning player
-    def winner(this, trump):
-        winner = this.lead
-        bestCard = this[0]        
-
-        p = this.lead
-        for card in this:               
-            if (bestCard.compare(card, trump) < 0):
-                 winner = p
-                 bestCard = card            
-
-            p = (p + 1) % 4
+    # return the winning card
+    def bestCard(this):
+        if len(this) < 1: return None
+        bestCard = this[0]
         
-        return winner
+        for card in this:               
+            if (bestCard.compare(card, this.trump) < 0):
+                 bestCard = card
+
+        return bestCard 
+                  
+    # return the index of the winning player
+    def winner(this):
+        if len(this) < 1: return None
+        bestCard = this.bestCard()        
+
+        for i, c in enumerate(this):
+            if c == bestCard: return (this.lead + i) % 4
+        
 
     # Can 'card' be played if 'this' is the current trick.
-    def canPlay(this, card, hand, trump):
+    def canPlay(this, card, hand):
         if not isinstance(card, Card): raise TypeError(f"expected Card, found {type(card)}")
         if not isinstance(hand, CardList): raise TypeError(f"expected CardList, found {type(hand)}")
-        if not isinstance(trump, str): raise TypeError(f"expected str, found {type(trump)}")
+        if not isinstance(this.trump, str): raise TypeError(f"expected str, found {type(this.trump)}")
 
         # empty trick
         if len(this) == 0: return True
 
         # subject card suit matches leading card suit
         leadSuit = this[0].suit
-        if card.getSuit(trump) == leadSuit: return True
+        if card.getSuit(this.trump) == leadSuit: return True
 
         # if any other card in the hand matches suit
         for cardInHand in hand:
             if cardInHand == card: continue
-            if cardInHand.getSuit(trump) == leadSuit: return False
+            if cardInHand.getSuit(this.trump) == leadSuit: return False
 
         return True  
 
     def __str__(this):
-        return f"({this.lead}, [{delString(this)}])"
+        return f"({this.lead}, {this.bestCard()}, {this.trump}, {this.winner()} [{delString(this)}])"
 
     def __repr__(this):
-        return f"({this.lead}, [{delString(this)}])"
+        return str(this)
 
 
 class Deck(CardList):

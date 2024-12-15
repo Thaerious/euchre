@@ -344,23 +344,25 @@ class View:
                 this.paintNorth(snap, trick)
                 this.paintEast(snap, trick)
 
-                winner = snap.names[trick.winner(snap.trump)]
+                winner = snap.names[trick.winner()]
                 this.stdscr.addstr(24, 0, f"The winner of this trick is {winner}")
                 this.stdscr.addstr(25, 0, "Press any key to continue")
             this.stdscr.refresh()
+                
         this.stdscr.getch()
-        
 
     def paintBoard(this, snap):
         with this.paintLock:
             this.stdscr.clear()
             if snap != None:
-                trick = snap.tricks[-1]
+                trick = snap.tricks[-1] if len(snap.tricks) > 0 else None
                 this.paintUpCard(snap)
                 this.paintSouth(snap, trick)
                 this.paintWest(snap, trick)
                 this.paintNorth(snap, trick)
                 this.paintEast(snap, trick)
+                this.paintTeam1(snap)
+                this.paintTeam2(snap)
                 this.paintMenu(snap)    
                 this.statscr.addstr(0, 0, snap.hash, curses.color_pair(1))   
             this.stdscr.refresh()
@@ -376,6 +378,32 @@ class View:
         if this.handView != None: this.handView.paint(this.stdscr, 17)
         this.paintPlayer(snap, 0, 11, 14, trick)           
 
+    def paintTeam1(this, snap):
+        x = 12
+        y = 21
+
+        for trick in snap.tricks:
+            if len(trick) < len(snap.order): break
+            winner = trick.winner()
+            partner = (snap.forPlayer + 2) % 4
+
+            if winner == snap.forPlayer or winner == partner:
+                this.stdscr.addstr(x+0, y, f"*", 1)
+                x = x + 1
+
+    def paintTeam2(this, snap):
+        x = 7
+        y = 35
+
+        for trick in snap.tricks:
+            if len(trick) < len(snap.order): break
+            winner = trick.winner()
+            partner = (snap.forPlayer + 2) % 4
+
+            if winner != snap.forPlayer and winner != partner:
+                this.stdscr.addstr(x+0, y, f"*", 1)
+                x = x + 1
+
     def paintWest(this, snap, trick):
         this.paintPlayer(snap, 1, 6, 0, trick) 
 
@@ -383,7 +411,7 @@ class View:
         this.paintPlayer(snap, 2, 0, 14, trick)
 
     def paintEast(this, snap, trick):
-        this.paintPlayer(snap, 3, 6, 27, trick)
+        this.paintPlayer(snap, 3, 6, 28, trick)
 
     def paintPlayer(this, snap, i, x, y, trick):
         playPosition = (snap.forPlayer + i) % 4
@@ -394,8 +422,9 @@ class View:
         if snap.maker == playPosition: name = f"{name} {snap.trump}"
 
         card = None
-        t = (playPosition - trick.lead) % 4
-        if len(trick) > t: card = trick[t]
+        if trick != None:
+            t = (playPosition - trick.lead) % 4
+            if len(trick) > t: card = trick[t]
 
         if playPosition == snap.active:
             x = paintCard(this.stdscr, x, y, card, 3)
