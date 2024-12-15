@@ -162,6 +162,7 @@ class Euchre:
     # the dealer removes card from their hand (it becomes downCard)
     # the upCard is added to the dealers hand
     def dealerSwapCard(this, card):
+        print(f"dealerSwapCard {card} {this.upCard}")
         this.getDealer().cards.remove(card)
         this.getDealer().cards.append(this.upCard)
         this.downCard = card
@@ -205,7 +206,7 @@ class Euchre:
             rotate(this.order)
 
         this.currentPlayer = i
-        
+
         if len(this.tricks) < 5:
             this.tricks.append(Trick())
 

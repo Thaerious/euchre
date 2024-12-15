@@ -192,7 +192,7 @@ class View:
         if this.dataOptions != None:
             data = this.dataOptions.get()
 
-        if snap.state == 5:
+        if snap.state == 5 or snap.state == 2:
             data = str(this.handView.get())
 
         this.socket.sendall(pickle.dumps((action, data)))            
