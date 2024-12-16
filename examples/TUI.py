@@ -8,6 +8,7 @@ import traceback
 from euchre import *
 from euchre.Card import Hand
 from euchre.Snapshot import Snapshot
+from euchre.bots.tools import *
 
 HOST = "127.0.0.1"  # The server's hostname or IP address
 PORT = 65432  # The port used by the server
@@ -381,8 +382,10 @@ class View:
     def paintScore(this, snap):
         x =  13
         y = 1
+        team = teamOf(snap.forPlayer)
+        other = otherTeam(team)
         this.stdscr.addstr(x+0, y, f"f:a", 1)
-        this.stdscr.addstr(x+1, y, f"{snap.score[0]}:{snap.score[1]}", 1)
+        this.stdscr.addstr(x+1, y, f"{snap.score[team]}:{snap.score[other]}", 1)
 
     def paintTeam1(this, snap):
         x = 12

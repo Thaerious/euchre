@@ -27,3 +27,9 @@ def canPlay(trump, trick, hand, card):
         if c.getSuit(trump) == leadSuit : return False
 
     return True
+
+def teamOf(pIndex):
+    return pIndex % 2
+
+def otherTeam(team):
+    return (team + 1) % 2

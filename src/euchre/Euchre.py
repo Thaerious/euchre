@@ -1,4 +1,4 @@
-from euchre.Player import Player, PlayerList, Team
+from euchre.Player import Player, PlayerList
 from euchre.Card import Card, Deck, Trick, Hand
 from euchre.delString import delString
 from euchre.rotate import rotate
@@ -12,7 +12,7 @@ class Euchre:
     def __init__(this, names):
         this.players = PlayerList(names)
         this.order = [0, 1, 2, 3]
-        this.currentPlayer = this.order[0]
+        this.currentPIndex = this.order[0]
         this.dealer = this.order[3]
         this.handCount = 0
         this.trickCount = 0
@@ -22,7 +22,8 @@ class Euchre:
         this.upCard = None
         this.downCard = None
         this.trump = None
-        this.maker = None    
+        this.maker = None 
+        this.score = [0, 0]   
         this.clearTricks()
 
     def hasTrick(this):
@@ -54,7 +55,7 @@ class Euchre:
         for i in range(this.handCount, this.handCount + 4):
             this.order.append(i % 4)
 
-        this.currentPlayer = this.order[0]
+        this.currentPIndex = this.order[0]
         this.dealer = this.order[3]
 
         this.deck = Deck()
@@ -68,33 +69,36 @@ class Euchre:
     # score the current hand
     # if the score is >= 10 for either team return True
     def scoreHand(this):
-        team = this.maker.team
+        makerTeam = teamOf(this.maker)
+        otherTeam = otherTeam(makerTeam)
+        tricks = [0, 0]
+        
+        for trick in this.tricks:
+            team = trick.winner() % 2
+            tricks[team] = tricks[team] + 1
 
-        print(team)
-
-        if team.tricks() == 5 and this.maker.alone:
-            team.score += 4
-        elif team.tricks() == 5:
-            team.score += 2
-        elif team.tricks() > 3:
-            team.score += 1
+        if tricks[makerTeam] == 5 and this.maker.alone:
+            this.score[makerTeam] += 4
+        elif tricks[makerTeam] == 5:
+            this.score[makerTeam] += 2
+        elif tricks[makerTeam] > 3:
+            this.score[makerTeam] += 1
         else:
-            team.score += 2
+            this.score[otherTeam] += 2
 
     def isGameOver(this):
-        team = this.maker.team
-        if team.score >= 10 or team.otherTeam.score >= 10:
+        if this.score[0] >= 10 or this.score[1] >= 10:
             return True
-        
-        return False
+        else:
+            return False
 
     # advance to the next player in the order
     # circles back to first player
     # returns the matching player object
     def activateNextPlayer(this):        
-        currentOrderIndex = this.order.index(this.currentPlayer)
+        currentOrderIndex = this.order.index(this.currentPIndex)
         nextOrderIndex = (currentOrderIndex + 1) % len(this.order)
-        this.currentPlayer = this.order[nextOrderIndex]
+        this.currentPIndex = this.order[nextOrderIndex]
         return this.getCurrentPlayer()       
 
     # deprecated
@@ -104,10 +108,10 @@ class Euchre:
 
     # retrieve the player object for the current player
     def getCurrentPlayer(this):
-        return this.players[this.currentPlayer]
+        return this.players[this.currentPIndex]
 
     def getMaker(this):
-        return this.maker
+        return this.players[this.maker]
 
     # retrieve the player object for the first player
     def getFirstPlayer(this):
@@ -120,11 +124,11 @@ class Euchre:
 
     # make the dealer the current player
     def activateDealer(this):
-        this.currentPlayer = this.dealer
+        this.currentPIndex = this.dealer
 
     # make the first player the current player
     def activateFirstPlayer(this):
-        this.currentPlayer = this.order[0]             
+        this.currentPIndex = this.order[0]             
 
     # deal cards out to players and upCard
     def dealCards(this):
@@ -145,7 +149,7 @@ class Euchre:
     # the current player declares trump (orders up or declares)
     # if suit is omitted the upCard suit is used
     def makeTrump(this, suit:str = None):
-        this.maker = this.getCurrentPlayer()
+        this.maker = this.currentPIndex
         if suit != None: this.trump = suit     
         else: this.trump = this.upCard.suit
 
@@ -181,8 +185,7 @@ class Euchre:
         player.cards.remove(card)   
         player.played.append(card)
         
-        this.getTrick().lead = this.currentPlayer
-        this.getTrick().append(this.currentPlayer, card)
+        this.getTrick().append(this.currentPIndex, card)
 
         if next: this.activateNextPlayer()
 
@@ -201,7 +204,7 @@ class Euchre:
         while this.order[0] != i:
             rotate(this.order)
 
-        this.currentPlayer = i
+        this.currentPIndex = i
         if len(this.tricks) < 5: this.addTrick()
 
         return True

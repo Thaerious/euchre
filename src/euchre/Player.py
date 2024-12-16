@@ -1,30 +1,10 @@
 from euchre.delString import delString
-from euchre.Card import Card, CardList, Hand
-
-class Team:
-    def __init__(this, player1, player2):
-        this.player1 = player1
-        this.player2 = player2
-        this.score = 0
-        this.otherTeam = None
-
-    def tricks(this):
-        return this.player1.tricks + this.player2.tricks
-
-    def isAlone(this):
-        return this.player1.alone | this.player2.alone
-
-    def __str__(this):
-        return f"[{this.player1.name}, {this.player2.name}]"
-
-    def __repr__(this):
-        return this.__str__()        
+from euchre.Card import Card, CardList, Hand    
 
 class Player:
     def __init__(this, name):
         this.name = name        
         this.partner = None
-        this.team = None
         this.clear()             
 
     def clear(this):
@@ -55,14 +35,6 @@ class PlayerList(list):
         this[1].partner = this[3]
         this[2].partner = this[0]
         this[3].partner = this[1]
-
-        this[0].team = Team(this[0], this[2])
-        this[2].team = this[0].team
-        this[1].team = Team(this[1], this[3])
-        this[3].team = this[1].team
-
-        this[0].team.otherTeam = this[1].team
-        this[1].team.otherTeam = this[0].team
 
     def getPlayer(this, name):
         for player in this:

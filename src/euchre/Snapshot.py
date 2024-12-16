@@ -14,22 +14,17 @@ class Snapshot:
         this.names = [player.name for player in euchre.players]
         this.tricks = [player.tricks for player in euchre.players]
         this.forPlayer = euchre.players.index(forPlayer)
-        this.active = euchre.currentPlayer
+        this.active = euchre.currentPIndex
         this.state = int(game.state.__name__[5:])
         this.upCard = euchre.upCard
         this.trump = euchre.trump
         this.tricks = euchre.tricks
-
-        if euchre.maker == None:
-            this.maker = None
-        else:
-            this.maker = euchre.players.index(euchre.maker)
-
+        this.maker = euchre.maker
         this.dealer = euchre.dealer
         this.hand = forPlayer.cards
         this.order = euchre.order   
         this.handCount =  euchre.handCount
-        this.score = [euchre.players[0].team.score, euchre.players[1].team.score]
+        this.score = euchre.score
 
         this.normalized = Normalized(euchre, forPlayer)
 

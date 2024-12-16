@@ -28,8 +28,11 @@ class Hand(CardList):
 class Trick(list):
     def __init__(this, trump):
         list.__init__(this)
-        this.lead = -1
         this.trump = trump
+
+    # retrieve the pIndex of the lead player
+    def getLead(this):
+        return this[0][0]
 
     # retrieve a card by index
     def getCard(this, index):
@@ -86,7 +89,7 @@ class Trick(list):
         return True  
 
     def __str__(this):
-        return f"({this.lead}, {this.bestCard()}, {this.trump}, {this.winner()} [{delString(this)}])"
+        return f"([{delString(this)}] : ({this.bestCard()}, {this.trump}, {this.winner()}) )"
 
     def __repr__(this):
         return str(this)
