@@ -99,9 +99,12 @@ class View:
         curses.start_color()
         curses.curs_set(0)
 
+        curses.init_color(8, 400, 400, 400)  # RGB values (0-1000)
+
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)  # Default color
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)  # Highlight color
-        curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)  # Current player color
+        curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)  # Current player color    
+        curses.init_pair(4, 8, curses.COLOR_BLACK)  # Gray text on black background
 
         height, width = stdscr.getmaxyx()
         this.statscr = this.stdscr.subwin(1, width, height - 1, 0)
@@ -364,6 +367,7 @@ class View:
                 this.paintTeam1(snap)
                 this.paintTeam2(snap)
                 this.paintMenu(snap)    
+                this.paintScore(snap)
                 this.statscr.addstr(0, 0, snap.hash, curses.color_pair(1))   
             this.stdscr.refresh()
 
@@ -377,6 +381,12 @@ class View:
     def paintSouth(this, snap, trick):
         if this.handView != None: this.handView.paint(this.stdscr, 17)
         this.paintPlayer(snap, 0, 11, 14, trick)           
+
+    def paintScore(this, snap):
+        x =  13
+        y = 1
+        this.stdscr.addstr(x+0, y, f"f:a", 1)
+        this.stdscr.addstr(x+1, y, f"{snap.score[0]}:{snap.score[1]}", 1)
 
     def paintTeam1(this, snap):
         x = 12
@@ -416,7 +426,17 @@ class View:
     def paintPlayer(this, snap, i, x, y, trick):
         playPosition = (snap.forPlayer + i) % 4
 
-        # paint the player box yellow if active else white
+        if i in snap.order == False:
+            this._paintPlayer(snap, i, x, y, trick, curses.color_pair(4)) 
+        elif playPosition == snap.active:
+            this._paintPlayer(snap, i, x, y, trick, curses.color_pair(3)) 
+        else:
+            this._paintPlayer(snap, i, x, y, trick, curses.color_pair(1)) 
+
+    def _paintPlayer(this, snap, i, x, y, trick, color):
+        playPosition = (snap.forPlayer + i) % 4
+
+        # Put name in parens if dealer, append trump to maker
         name = snap.names[playPosition]
         if snap.dealer == playPosition: name = f"({name})"
         if snap.maker == playPosition: name = f"{name} {snap.trump}"
@@ -426,19 +446,16 @@ class View:
             t = (playPosition - trick.lead) % 4
             if len(trick) > t: card = trick[t]
 
-        if playPosition == snap.active:
-            x = paintCard(this.stdscr, x, y, card, 3)
-            this.stdscr.addstr(x, y, f"{name}", 3)
-        else:
-            x = paintCard(this.stdscr, x, y, card, 1)              
-            this.stdscr.addstr(x, y, f"{name}", 1)
+        paintCard(this.stdscr, x, y, card, color)
+        this.stdscr.addstr(x+5, y, f"{name}", color)
 
 def allowedSuits(snap):
     suits = ["♠", "♣", "♥", "♦"]
     suits.remove(snap.upCard.suit)
     return suits
 
-def paintCard(stdscr, x, y, card, color = 255):
+def paintCard(stdscr, x, y, card, color = None):
+    if color == None: color = curses.color_pair(1)
     if card == None: return paintBox(stdscr, x, y, color)
 
     l = card.value.ljust(2)
@@ -452,7 +469,7 @@ def paintCard(stdscr, x, y, card, color = 255):
     stdscr.addstr(x+4, y, f"└─────┘", color)
     return x + 5
 
-def paintBox(stdscr, x, y, color = 255):
+def paintBox(stdscr, x, y, color = None):
     if color == None: curses.color_pair(1)
 
     stdscr.addstr(x+0, y, f"┌─────┐", color)

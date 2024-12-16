@@ -16,9 +16,10 @@ class GameServer:
         this.history = [("seed", seed)]
 
     def onConnect(this):
-        # todo: read first packet and do validation
-        
-        this.euchre = Euchre(["Adam", "T100", "Skynet", "Robocop"])
+        # todo: read first packet and do validation        
+        names = ["Adam", "T100", "Skynet", "Robocop"]
+        random.shuffle(names)
+        this.euchre = Euchre(names)        
         this.game = Game(this.euchre)
         this.game.input(None, "start", None)     
         this.history.append(("start", None))   
