@@ -52,6 +52,7 @@ class Game:
             this.state = this.state2
         elif action == "alone":      
             this.euchre.makeTrump()      
+            this.euchre.addTrick()
             this.euchre.goAlone()
             if this.euchre.getCurrentPlayer().partner != this.euchre.dealer:
                 this.euchre.activateDealer()
@@ -95,8 +96,10 @@ class Game:
 
         this.euchre.playCard(card)
 
+        print(f"this.euchre.nextTrick() == {this.euchre.nextTrick()}")
         if this.euchre.nextTrick() == False: return
 
+        print(f"this.euchre.isHandFinished() == {this.euchre.isHandFinished()}")
         if this.euchre.isHandFinished():
             this.euchre.scoreHand()
 

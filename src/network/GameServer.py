@@ -127,7 +127,9 @@ class GameServer:
         if action == "seed":
             random.seed(int(data))
         elif action == "start":
-            this.euchre = Euchre(["Adam", "T100", "Skynet", "Robocop"])
+            names = ["Adam", "T100", "Skynet", "Robocop"]
+            random.shuffle(names)
+            this.euchre = Euchre(names)  
             this.game = Game(this.euchre)
             this.game.input(None, "start", None)  
         else:

@@ -16,10 +16,10 @@ def playable(trump, trick, hand):
 # true if the player is allowed to play card
 # only checks the cards, player order is not considered
 def canPlay(trump, trick, hand, card):
-    if len(trick) == 0: 
+    if trick == None or len(trick) == 0: 
         return True
 
-    leadSuit = trick[0].getSuit(trump)
+    leadSuit = trick.getCard(0).getSuit(trump)
     if card.getSuit(trump) == leadSuit: 
         return True        
 

@@ -376,11 +376,7 @@ class View:
             paintCard(this.stdscr, 6, 10, snap.upCard)
         else:
             paintCard(this.stdscr, 6, 10, Card("X"))
-        paintCard(this.stdscr, 6, 18, Card("  "))
-
-    def paintSouth(this, snap, trick):
-        if this.handView != None: this.handView.paint(this.stdscr, 17)
-        this.paintPlayer(snap, 0, 11, 14, trick)           
+        paintCard(this.stdscr, 6, 18, Card("  "))       
 
     def paintScore(this, snap):
         x =  13
@@ -414,6 +410,10 @@ class View:
                 this.stdscr.addstr(x+0, y, f"*", 1)
                 x = x + 1
 
+    def paintSouth(this, snap, trick):
+        if this.handView != None: this.handView.paint(this.stdscr, 17)
+        this.paintPlayer(snap, 0, 11, 14, trick)  
+
     def paintWest(this, snap, trick):
         this.paintPlayer(snap, 1, 6, 0, trick) 
 
@@ -423,30 +423,35 @@ class View:
     def paintEast(this, snap, trick):
         this.paintPlayer(snap, 3, 6, 28, trick)
 
-    def paintPlayer(this, snap, i, x, y, trick):
-        playPosition = (snap.forPlayer + i) % 4
+    # snap : snapshot
+    # chair : chair position at table (s, w, n, e) = (0, 1, 2, 3)
+    def paintPlayer(this, snap, chair, x, y, trick):
+        # index = the index of the player in the snap.names array
+        # the same that is used in: active, dealer, forPlayer, maker, and order[]
+        pIndex = (snap.forPlayer + chair) % 4
 
-        if i in snap.order == False:
-            this._paintPlayer(snap, i, x, y, trick, curses.color_pair(4)) 
-        elif playPosition == snap.active:
-            this._paintPlayer(snap, i, x, y, trick, curses.color_pair(3)) 
+        if (pIndex in snap.order) == False:
+            paintBox(this.stdscr, x, y, "", curses.color_pair(4))
+            this._paintPlayerName(snap, pIndex, x, y, curses.color_pair(4)) 
+        elif pIndex == snap.active:
+            this._paintPlayer(snap, pIndex, x, y, trick, curses.color_pair(3)) 
+            this._paintPlayerName(snap, pIndex, x, y, curses.color_pair(3)) 
         else:
-            this._paintPlayer(snap, i, x, y, trick, curses.color_pair(1)) 
+            this._paintPlayer(snap, pIndex, x, y, trick, curses.color_pair(1)) 
+            this._paintPlayerName(snap, pIndex, x, y, curses.color_pair(1))             
 
-    def _paintPlayer(this, snap, i, x, y, trick, color):
-        playPosition = (snap.forPlayer + i) % 4
+    def _paintPlayer(this, snap, pIndex, x, y, trick, color):
+        if trick == None:
+            paintBox(this.stdscr, x, y, "", color)
+        else:
+            card = trick.getCardByPlayer(pIndex)
+            paintCard(this.stdscr, x, y, card, color)
 
+    def _paintPlayerName(this, snap, pIndex, x, y, color):
         # Put name in parens if dealer, append trump to maker
-        name = snap.names[playPosition]
-        if snap.dealer == playPosition: name = f"({name})"
-        if snap.maker == playPosition: name = f"{name} {snap.trump}"
-
-        card = None
-        if trick != None:
-            t = (playPosition - trick.lead) % 4
-            if len(trick) > t: card = trick[t]
-
-        paintCard(this.stdscr, x, y, card, color)
+        name = snap.names[pIndex]
+        if snap.dealer == pIndex: name = f"({name})"
+        if snap.maker == pIndex: name = f"{name} {snap.trump}"
         this.stdscr.addstr(x+5, y, f"{name}", color)
 
 def allowedSuits(snap):
@@ -456,7 +461,7 @@ def allowedSuits(snap):
 
 def paintCard(stdscr, x, y, card, color = None):
     if color == None: color = curses.color_pair(1)
-    if card == None: return paintBox(stdscr, x, y, color)
+    if card == None: return paintBox(stdscr, x, y, "", color)
 
     l = card.value.ljust(2)
     s = card.suit
@@ -469,12 +474,13 @@ def paintCard(stdscr, x, y, card, color = None):
     stdscr.addstr(x+4, y, f"└─────┘", color)
     return x + 5
 
-def paintBox(stdscr, x, y, color = None):
+def paintBox(stdscr, x, y, text, color = None):
     if color == None: curses.color_pair(1)
+    text = text.center(5)
 
     stdscr.addstr(x+0, y, f"┌─────┐", color)
     stdscr.addstr(x+1, y, f"│     │", color)
-    stdscr.addstr(x+2, y, f"│     │", color)
+    stdscr.addstr(x+2, y, f"│{text}│", color)
     stdscr.addstr(x+3, y, f"│     │", color)
     stdscr.addstr(x+4, y, f"└─────┘", color)
     return x + 5

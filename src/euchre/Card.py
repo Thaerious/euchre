@@ -24,30 +24,45 @@ class Hand(CardList):
                 
         return cards   
 
-class Trick(CardList):
+# A list of cards starting with the lead player
+class Trick(list):
     def __init__(this, trump):
-        CardList.__init__(this)
+        list.__init__(this)
         this.lead = -1
         this.trump = trump
+
+    # retrieve a card by index
+    def getCard(this, index):
+        return this[index][1]
+
+    # retrieve a card based on the player index that played it
+    def getCardByPlayer(this, pIndex):
+        for (p, card) in this:  
+            if p == pIndex: return card
+
+        return None
+
+    def append(this, pIndex, card):
+        list.append(this, (pIndex,card))
 
     # return the winning card
     def bestCard(this):
         if len(this) < 1: return None
-        bestCard = this[0]
+        bestCard = this.getCard(0)
         
-        for card in this:               
+        for (pIndex, card) in this:               
             if (bestCard.compare(card, this.trump) < 0):
                  bestCard = card
 
         return bestCard 
                   
-    # return the index of the winning player
+    # return the player index of the winning player
     def winner(this):
         if len(this) < 1: return None
         bestCard = this.bestCard()        
 
-        for i, c in enumerate(this):
-            if c == bestCard: return (this.lead + i) % 4
+        for (pIndex, card) in this:  
+            if card == bestCard: return pIndex
         
 
     # Can 'card' be played if 'this' is the current trick.
@@ -64,7 +79,7 @@ class Trick(CardList):
         if card.getSuit(this.trump) == leadSuit: return True
 
         # if any other card in the hand matches suit
-        for cardInHand in hand:
+        for (pIndex, cardInHand) in this:
             if cardInHand == card: continue
             if cardInHand.getSuit(this.trump) == leadSuit: return False
 
