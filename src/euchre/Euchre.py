@@ -2,7 +2,7 @@ from euchre.Player import Player, PlayerList
 from euchre.Card import Card, Deck, Trick, Hand
 from euchre.delString import delString
 from euchre.rotate import rotate
-from euchre.bots.tools import *
+import euchre.bots.tools as tools
 
 class EuchreException(Exception):
     def __init__(this, msg):
@@ -69,8 +69,8 @@ class Euchre:
     # score the current hand
     # if the score is >= 10 for either team return True
     def scoreHand(this):
-        makerTeam = teamOf(this.maker)
-        otherTeam = otherTeam(makerTeam)
+        makerTeam = tools.teamOf(this.maker)
+        otherTeam = tools.otherTeam(makerTeam)
         tricks = [0, 0]
         
         for trick in this.tricks:
@@ -158,7 +158,7 @@ class Euchre:
         return len(this.getTrick()) == len(this.order)
 
     def __checkFollowSuit(this, player, card):
-        if canPlay(this.trump, this.getTrick(), player.cards, card) == False:
+        if tools.canPlay(this.trump, this.getTrick(), player.cards, card) == False:
             leadSuit = this.getTrick()[0].getSuit(this.trump)
             raise EuchreException(f"card '{card}' must follow suit '{leadSuit}'")
 

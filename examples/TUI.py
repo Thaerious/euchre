@@ -428,6 +428,9 @@ class View:
 
     # snap : snapshot
     # chair : chair position at table (s, w, n, e) = (0, 1, 2, 3)
+    # x : x offset
+    # y : y offset
+    # trick : current trick
     def paintPlayer(this, snap, chair, x, y, trick):
         # index = the index of the player in the snap.names array
         # the same that is used in: active, dealer, forPlayer, maker, and order[]
@@ -445,7 +448,7 @@ class View:
 
     def _paintPlayer(this, snap, pIndex, x, y, trick, color):
         if trick == None:
-            paintBox(this.stdscr, x, y, "", color)
+            paintBox(this.stdscr, x, y, snap.lastAction[pIndex], color)
         else:
             card = trick.getCardByPlayer(pIndex)
             paintCard(this.stdscr, x, y, card, color)
@@ -479,6 +482,7 @@ def paintCard(stdscr, x, y, card, color = None):
 
 def paintBox(stdscr, x, y, text, color = None):
     if color == None: curses.color_pair(1)
+    if text == None: text = ""
     text = text.center(5)
 
     stdscr.addstr(x+0, y, f"┌─────┐", color)

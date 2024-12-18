@@ -13,6 +13,7 @@ class Game:
         this.state = this.state0
         this.activePlayer = None
         this.updateHash()
+        this.lastAction = [None, None, None, None]
 
     def updateHash(this):
         this.hash = ''.join(random.choices('0123456789abcdef', k=8))
@@ -30,6 +31,7 @@ class Game:
 
         # activate the current state
         this.updateHash()
+        this.lastAction[this.euchre.currentPIndex] = action
         this.state(player, action, data)
 
     def state0(this, player, action, data):
@@ -110,6 +112,7 @@ class Game:
                 this.euchre.shuffleDeck()
                 this.euchre.dealCards()
                 this.euchre.clearTricks()
+                this.lastAction = [None, None, None, None]
                 this.state = this.state1
 
     def allowedActions(this, action, *allowedActions):
