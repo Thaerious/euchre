@@ -8,6 +8,9 @@ PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 class ConnectionServer:
     def start(this):
         this.running = True
+
+        this.server = await asyncio.start_server(handle_connection, HOST, PORT)
+
         this.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         this.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         this.socket.bind((HOST, PORT))

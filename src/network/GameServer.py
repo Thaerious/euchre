@@ -3,37 +3,94 @@ from euchre.Euchre import EuchreException
 from euchre.bots.Bot import Bot
 import pickle
 import random
+import asyncio
 
 class GameServer:
-    def __init__(this, conn, addr):
-        # seed = random.randint(1, 10000)
-        seed = 5589
-        print(f"seed {seed}")
-        random.seed(seed)
-        this.conn = conn
-        this.addr = addr
-        this.bot = Bot()
-        this.history = [("seed", seed)]
+    def __init__(this):
+        this.isRunning = True
 
-    def onConnect(this):
-        # todo: read first packet and do validation        
+    async def connect(this, reader, writer):
+        this.reader = reader
+        this.writer = writer
+
+        this.initGame()
+        await this.initIO()
+        this.sendSnaps()
+
+    def initGame(this, seed = 5589):
+        random.seed(seed)
+        this.bot = Bot()
         names = ["Adam", "T100", "Skynet", "Robocop"]
         random.shuffle(names)
         this.euchre = Euchre(names)        
-        this.game = Game(this.euchre)
+        this.game = Game(this.euchre)        
         this.game.input(None, "start", None)     
-        this.history.append(("start", None))   
-        this.sendSnaps()
-        this.loop()
+        this.history = [("seed", seed), ("start", None)]
 
-    def sendSnaps(this):
+    async def initIO(this):
+        async with asyncio.TaskGroup() as tg:
+            t1 = tg.create_task(this.readStdin())
+            t2 = tg.create_task(this.readSocket())
+
+    async def readStdin(this):
+        while this.isRunning:
+            line = await reader.readline()
+            if not line: break
+            parts = line.split()
+
+            if parts[0] == "print":
+                print(euchre)
+            elif parts[0] == "exit":
+                this.isRunning = False           
+
+    async def readSocket(this):
+        try:
+            with this.conn:  # Automatically close the connection when done
+                while this.running:
+                    await this.receivePacket()
+        except ConnectionResetError:
+            this.running = False
+            print(f"Connection with {this.addr} was reset by the client.")
+            return false
+
+        print(f"Connection with {this.addr} has been closed.") 
+
+    async def receivePacket(this):
+        print("---------------------------------------")  
+        print(f" current player {this.euchre.getCurrentPlayer().name}")
+        if this.euchre.getCurrentPlayer().name == "Adam":
+            await this.getNextPacket()
+        else:
+            snap = Snapshot(this.game, this.euchre.getCurrentPlayer())
+            (action, data) = this.bot.decide(snap)
+            print(f"bot {this.euchre.getCurrentPlayer().name}: {action} {data}")
+            this.history.append((action, data))                
+            this.game.input(this.euchre.getCurrentPlayer(), action, data)
+
+        this.sendSnaps()
+
+    # Translate raw bytes from input stream into a python object (snapshot).
+    async def getNextPacket(this):
+        data = await this.reader.read(1024) # Receive data from the client
+        if not data:                 # Client has closed the connection
+            print("connection terminated")
+            this.running = False
+            return
+
+        print(f"Data received: {len(data)}") 
+        packet = pickle.loads(data)
+        print(packet) 
+        this.hndPacket(packet)
+
+    async def sendSnaps(this):
         snap = Snapshot(this.game, this.euchre.players.getPlayer("Adam"))
-        this.conn.sendall(pickle.dumps(snap))   
+        this.writer.write(pickle.dumps(snap))           
+        await this.writer.drain()
 
         print(f"data sent hash : {this.game.hash}")
 
-        data = this.conn.recv(1024)  # Receive ack from client
-        if not data:                 # Client has closed the connection
+        data = await this.reader.read(1024)  # Receive ack from client
+        if not data:                   # Client has closed the connection
             print("connection terminated")
             this.running = False
             return
@@ -46,47 +103,6 @@ class GameServer:
             return             
         else:
             print(packet)          
-
-    def loop(this):
-        try:
-            this.running = True
-            with this.conn:  # Automatically close the connection when done
-                while this.running:
-                    this.step()
-        except ConnectionResetError:
-            this.running = False
-            print(f"Connection with {this.addr} was reset by the client.")
-            return false
-
-        print(f"Connection with {this.addr} has been closed.") 
-
-    def step(this):
-        print("---------------------------------------")  
-        print(f" current player {this.euchre.getCurrentPlayer().name}")
-        if this.euchre.getCurrentPlayer().name == "Adam":
-            this.getNextPacket()
-        else:
-            snap = Snapshot(this.game, this.euchre.getCurrentPlayer())
-            (action, data) = this.bot.decide(snap)
-            print(f"bot {this.euchre.getCurrentPlayer().name}: {action} {data}")
-            this.history.append((action, data))                
-            this.game.input(this.euchre.getCurrentPlayer(), action, data)
-
-        this.sendSnaps()
-
-    def getNextPacket(this):
-        print("waiting for next packet")
-
-        data = this.conn.recv(1024)  # Receive data from the client
-        if not data:                 # Client has closed the connection
-            print("connection terminated")
-            this.running = False
-            return
-
-        print(f"Data received: {len(data)}") 
-        packet = pickle.loads(data)
-        print(packet) 
-        this.hndPacket(packet)
 
     def hndPacket(this, packet):
         action = packet[0]
