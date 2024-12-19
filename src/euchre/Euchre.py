@@ -29,10 +29,6 @@ class Euchre:
     def hasTrick(this):
         return len(this.tricks) > 0
 
-    def getTrick(this):
-        if len(this.tricks) == 0: return None
-        return this.tricks[-1]
-
     def clearTricks(this):
         this.tricks = []
 
@@ -111,6 +107,7 @@ class Euchre:
         return this.players[this.currentPIndex]
 
     def getMaker(this):
+        if this.maker == None: return None
         return this.players[this.maker]
 
     # retrieve the player object for the first player
@@ -155,17 +152,16 @@ class Euchre:
 
     # true if enough cards have been played to advance to the next trick
     def isTrickFinished(this):        
-        return len(this.getTrick()) == len(this.order)
+        return len(this.tricks[-1]) == len(this.order)
 
     def __checkFollowSuit(this, player, card):
-        if tools.canPlay(this.trump, this.getTrick(), player.cards, card) == False:
-            leadSuit = this.getTrick()[0].getSuit(this.trump)
+        if tools.canPlay(this.trump, this.tricks[-1], player.cards, card) == False:
+            leadSuit = this.tricks[-1].getLeadSuit()
             raise EuchreException(f"card '{card}' must follow suit '{leadSuit}'")
 
     # the dealer removes card from their hand (it becomes downCard)
     # the upCard is added to the dealers hand
     def dealerSwapCard(this, card):
-        print(f"dealerSwapCard {card} {this.upCard}")
         this.getDealer().cards.remove(card)
         this.getDealer().cards.append(this.upCard)
         this.downCard = card
@@ -185,7 +181,7 @@ class Euchre:
         player.cards.remove(card)   
         player.played.append(card)
         
-        this.getTrick().append(this.currentPIndex, card)
+        this.tricks[-1].append(this.currentPIndex, card)
 
         if next: this.activateNextPlayer()
 
@@ -238,10 +234,12 @@ class Euchre:
             if callable(attrValue) and attr.startswith("get"):
                 sb = sb + f"{attr}() : {str(attrValue())}\n"
             elif callable(attrValue) == False:
-                sb = sb + f"{attr} : {str(attrValue)}\n"
+                sb = sb + f".{attr} : {str(attrValue)}\n"
 
+        sb = sb + "players:[\n"
         for player in this.players:
-            sb = sb + f"{str(player)}\n"
+            sb = sb + f"\t{str(player)}\n"
+        sb = sb + "]\n"
 
         return sb
         

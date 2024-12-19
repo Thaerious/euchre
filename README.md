@@ -1,16 +1,1 @@
-
-
-### Euchre Object
- - trick
- - upCard
- - downCard
- - trump
- - maker
- - deck
- - players
-   - name
-   - partner
-   - team
-   - cards []
-   - played []
- - playing
+When developing don't forget to install the local module with 'pip install -e .'

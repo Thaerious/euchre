@@ -98,7 +98,6 @@ class Game:
 
         this.euchre.playCard(card)
 
-        print(f"this.euchre.nextTrick() == {this.euchre.nextTrick()}")
         if this.euchre.nextTrick() == False: return
 
         print(f"this.euchre.isHandFinished() == {this.euchre.isHandFinished()}")

@@ -12,6 +12,7 @@ src/euchre/rotate.py
 src/euchre/bots/Bot.py
 src/euchre/bots/T100.py
 src/euchre/bots/__init__.py
+src/euchre/bots/tools.py
 src/euchre/bots/evals/CountSuitInHand.py
 src/euchre/bots/evals/CountTrumpInHand.py
 src/euchre/bots/evals/RulePart.py
@@ -20,7 +21,12 @@ src/euchre_project.egg-info/PKG-INFO
 src/euchre_project.egg-info/SOURCES.txt
 src/euchre_project.egg-info/dependency_links.txt
 src/euchre_project.egg-info/top_level.txt
+src/network/Client.py
+src/network/ConnectionServer.py
+src/network/GameServer.py
+src/network/__init__.py
 tests/test_bot_count_suit.py
 tests/test_card.py
 tests/test_del_string.py
 tests/test_euchre.py
+tests/test_tools.py

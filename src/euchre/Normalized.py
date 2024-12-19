@@ -38,7 +38,7 @@ class Normalized:
 
         # trick cards set to 4
         if euchre.hasTrick():
-            for i, card in enumerate(euchre.getTrick()):
+            for i, card in enumerate(euchre.tricks[-1]):
                 this.deck[str(card)] = 20 + i   
 
     def __str__(this):

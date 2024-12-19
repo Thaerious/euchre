@@ -177,7 +177,7 @@ class View:
                     if isinstance(dataObject, Snapshot): 
                         snap = dataObject                   
                         this.snapQ.put(snap)
-                        this.socket.sendall(pickle.dumps(("ack", snap.hash)))                              
+                        # this.socket.sendall(pickle.dumps(("ack", snap.hash)))                              
                         this.statscr.addstr(0, 0, f"packets waiting: {this.snapQ.qsize()}", curses.color_pair(1))
                         this.statscr.refresh()
                     else:

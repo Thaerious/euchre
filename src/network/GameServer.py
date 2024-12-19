@@ -4,6 +4,7 @@ from euchre.bots.Bot import Bot
 import pickle
 import random
 import asyncio
+import sys
 
 class GameServer:
     def __init__(this):
@@ -15,7 +16,7 @@ class GameServer:
 
         this.initGame()
         await this.initIO()
-        this.sendSnaps()
+        await this.sendSnaps()
 
     def initGame(this, seed = 5589):
         random.seed(seed)
@@ -33,41 +34,52 @@ class GameServer:
             t2 = tg.create_task(this.readSocket())
 
     async def readStdin(this):
+        loop = asyncio.get_running_loop()
+        reader = asyncio.StreamReader()
+        protocol = asyncio.StreamReaderProtocol(reader)
+        await loop.connect_read_pipe(lambda: protocol, sys.stdin)
+
         while this.isRunning:
+            print("\b\b> ", end="", flush=True)
             line = await reader.readline()
             if not line: break
+
+            line = line.decode().strip()
             parts = line.split()
 
+            if len(parts) == 0:
+                continue
+
             if parts[0] == "print":
-                print(euchre)
+                print(" ----- euchre object -----")
+                print(this.euchre)
+                print(f"hash: {this.game.hash}")
             elif parts[0] == "exit":
-                this.isRunning = False           
+                exit()       
 
     async def readSocket(this):
         try:
-            with this.conn:  # Automatically close the connection when done
-                while this.running:
-                    await this.receivePacket()
+            while this.isRunning:
+                await this.receivePacket()
         except ConnectionResetError:
-            this.running = False
-            print(f"Connection with {this.addr} was reset by the client.")
-            return false
+            this.isRunning = False
+            print(f"Connection was reset by the client.")
+            return False
 
-        print(f"Connection with {this.addr} has been closed.") 
+        print(f"Connection with client has been closed.") 
 
     async def receivePacket(this):
-        print("---------------------------------------")  
-        print(f" current player {this.euchre.getCurrentPlayer().name}")
         if this.euchre.getCurrentPlayer().name == "Adam":
             await this.getNextPacket()
         else:
             snap = Snapshot(this.game, this.euchre.getCurrentPlayer())
             (action, data) = this.bot.decide(snap)
-            print(f"bot {this.euchre.getCurrentPlayer().name}: {action} {data}")
+            print(f"\b\b{this.euchre.getCurrentPlayer().name} : ('{action}', {data})")
+            print("> ", end="", flush=True) 
             this.history.append((action, data))                
             this.game.input(this.euchre.getCurrentPlayer(), action, data)
 
-        this.sendSnaps()
+        await this.sendSnaps()
 
     # Translate raw bytes from input stream into a python object (snapshot).
     async def getNextPacket(this):
@@ -77,32 +89,15 @@ class GameServer:
             this.running = False
             return
 
-        print(f"Data received: {len(data)}") 
         packet = pickle.loads(data)
-        print(packet) 
+        print(f"\b\bAdam : {packet}") 
+        print("> ", end="", flush=True)
         this.hndPacket(packet)
 
     async def sendSnaps(this):
         snap = Snapshot(this.game, this.euchre.players.getPlayer("Adam"))
         this.writer.write(pickle.dumps(snap))           
-        await this.writer.drain()
-
-        print(f"data sent hash : {this.game.hash}")
-
-        data = await this.reader.read(1024)  # Receive ack from client
-        if not data:                   # Client has closed the connection
-            print("connection terminated")
-            this.running = False
-            return
-
-        packet = pickle.loads(data)   
-
-        if packet[0] != "ack":
-            print(f"expected 'ack', received '{packet[0]}'")
-            this.running = False
-            return             
-        else:
-            print(packet)          
+        await this.writer.drain()      
 
     def hndPacket(this, packet):
         action = packet[0]

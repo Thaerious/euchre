@@ -19,7 +19,7 @@ def canPlay(trump, trick, hand, card):
     if trick == None or len(trick) == 0: 
         return True
 
-    leadSuit = trick.getCard(0).getSuit(trump)
+    leadSuit = trick.getLeadSuit()
     if card.getSuit(trump) == leadSuit: 
         return True        
 

@@ -34,6 +34,9 @@ class Trick(list):
     def getLead(this):
         return this[0][0]
 
+    def getLeadSuit(this):
+        return this.getCard(0).getSuit(this.trump)
+
     # retrieve a card by index
     def getCard(this, index):
         return this[index][1]
