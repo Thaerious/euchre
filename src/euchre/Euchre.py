@@ -73,7 +73,7 @@ class Euchre:
             team = trick.winner() % 2
             tricks[team] = tricks[team] + 1
 
-        if tricks[makerTeam] == 5 and this.maker.alone:
+        if tricks[makerTeam] == 5 and this.getMaker().alone:
             this.score[makerTeam] += 4
         elif tricks[makerTeam] == 5:
             this.score[makerTeam] += 2

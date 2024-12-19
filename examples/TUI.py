@@ -131,8 +131,7 @@ class View:
     def nextOption(this):
         next = this.selectedOption + 1
         if next >= len(this.options): next = len(this.options) - 1
-        this.selectOption(next)
-        
+        this.selectOption(next)        
 
     def prevOption(this):
         prev = this.selectedOption - 1
@@ -222,7 +221,7 @@ class View:
     # Otherwise returns false
     def getInput(this, snap):
         this.updateStatus("Waiting for user input")
-        key = this.stdscr.getch()   
+        key = this.stdscr.getch()
 
         if key == ord('x'):
             this.stdscr.clear()                
@@ -231,12 +230,7 @@ class View:
             exit()      
         elif key == ord('p'):
             this.paintSnap(snap)
-            this.paintBoard(snap)
-        elif key == ord('s'):
-            this.socket.sendall(pickle.dumps(("save", None))) 
-        elif key == ord('l'):
-            this.socket.sendall(pickle.dumps(("load", None)))
-            return True
+            this.paintBoard(snap)              
         elif key == curses.KEY_UP:
             this.prevOption()
         elif key == curses.KEY_DOWN:
