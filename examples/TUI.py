@@ -1,10 +1,9 @@
 import socket
 import pickle
 import curses
-import queue
 import threading
-import time
-import traceback
+import struct
+from datetime import datetime
 from euchre import *
 from euchre.Card import Hand
 from euchre.Snapshot import Snapshot
@@ -93,7 +92,6 @@ class HandView(OptionList):
 
 class View:
     def __init__(this, stdscr):
-        this.stdscr = stdscr
         this.paintLock = threading.Lock()
 
         stdscr.keypad(True)
@@ -108,7 +106,9 @@ class View:
         curses.init_pair(4, 8, curses.COLOR_BLACK)  # Gray text on black background
 
         height, width = stdscr.getmaxyx()
-        this.statscr = this.stdscr.subwin(1, width, height - 1, 0)
+        this.stdscr = stdscr
+        this.boardscr = stdscr.subwin(height - 1, width, 0, 0) 
+        this.statscr = stdscr.subwin(1, width, height - 1, 0)
 
         this.running = True
         this.snap = None
@@ -128,7 +128,7 @@ class View:
         this.updateUIState()
         this.paintBoard()
 
-        this.socket.settimeout(0.1)
+        this.socket.settimeout(1)
 
         this.socketThead = threading.Thread(target=this.listenSocket)
         this.socketThead.daemon = True  # Ensure threads close when the main program exits
@@ -156,12 +156,15 @@ class View:
                 raise e  # Re-raise exceptions to ensure proper cleanup
 
     def loadNextSnapshot(this):
-        data = this.socket.recv(4096)
+        len_b = this.socket.recv(4)
+        len = struct.unpack("!I", len_b)[0]
+        data = this.socket.recv(len)
         if not data: raise Exception("Remotely Closed Socket")
         dataObject = pickle.loads(data)
 
         if isinstance(dataObject, Snapshot):
             this.snap = dataObject
+            this.updateStatus(f"{len} {this.snap.hash} {datetime.now().strftime("%H:%M:%S")}")
         else:
             raise Exception("Expected Snapshot")
 
@@ -177,7 +180,7 @@ class View:
                 elif key == ord('x'):
                     this.running = False
                 elif key == ord('p'):
-                    this.paintSnap()
+                    this.paintSnap()                 
                 elif key == curses.KEY_UP:
                     this.prevOption()
                     this.paintBoard()
@@ -199,7 +202,7 @@ class View:
             raise e  # Re-raise exceptions to ensure proper cleanup
 
     def shutdown(this, exception):
-        this.stdscr.cl
+        this.boardscr.cl
 
     def currentOptions(this):
         if this.selectedOption >= 0:
@@ -224,13 +227,13 @@ class View:
         this.selectOption(prev)
 
     def start(this):
-        this.stdscr.clear()
+        this.boardscr.clear()
 
-        this.stdscr.addstr(0, 0, f"┌─────────────────────────┐", curses.color_pair(1))
-        this.stdscr.addstr(1, 0, f"│Press Enter to Start Game│", curses.color_pair(1))
-        this.stdscr.addstr(2, 0, f"└─────────────────────────┘", curses.color_pair(1))
+        this.boardscr.addstr(0, 0, f"┌─────────────────────────┐", curses.color_pair(1))
+        this.boardscr.addstr(1, 0, f"│Press Enter to Start Game│", curses.color_pair(1))
+        this.boardscr.addstr(2, 0, f"└─────────────────────────┘", curses.color_pair(1))
 
-        key = this.stdscr.getch()
+        key = this.boardscr.getch()
         if key == 10:  # Enter key
             this.connect()
 
@@ -247,7 +250,9 @@ class View:
         if this.snap.state == 5 or this.snap.state == 2:
             data = str(this.handView.get())
 
-        this.socket.sendall(pickle.dumps((action, data)))
+        serialized = pickle.dumps((action, data))
+        len_b = struct.pack("!I", len(serialized))
+        this.socket.sendall(len_b + serialized)
 
     # Retrieve the next snap from the queue
     # Enable / disable UI components based on the state
@@ -268,13 +273,13 @@ class View:
 
         elif this.snap.state == 3:
             this.actionOptions = OptionList(["Pass", "Make", "Alone"])
-            this.dataOptions = OptionList(this.allowedSuits(this.snap))
+            this.dataOptions = OptionList(this.allowedSuits())
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
         elif this.snap.state == 4:
             this.actionOptions = OptionList(["Make", "Alone"])
-            this.dataOptions = OptionList(this.allowedSuits(this.snap))
+            this.dataOptions = OptionList(this.allowedSuits())
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
@@ -293,34 +298,35 @@ class View:
             this.paintIdleMenu(x)
 
     def paintActiveMenu(this, x = 21):
-        this.stdscr.addstr(x + 0, 0, stateLabels[this.snap.state])
+        this.boardscr.addstr(x + 0, 0, stateLabels[this.snap.state])
         x = x + 1
 
         if this.dataOptions != None:
-            x = this.dataOptions.paint(this.stdscr, x)
+            x = this.dataOptions.paint(this.boardscr, x)
 
         if this.actionOptions != None:
-            x = this.actionOptions.paint(this.stdscr, x)
+            x = this.actionOptions.paint(this.boardscr, x)
 
-        this.stdscr.addstr(x + 1, 0, "[p] Print this.snapshot")
-        this.stdscr.addstr(x + 2, 0, "[x] Exit")
+        this.boardscr.addstr(x + 1, 0, "[p] Print this.snapshot")
+        this.boardscr.addstr(x + 2, 0, "[x] Exit")
 
     def paintIdleMenu(this, x = 21):
-        this.stdscr.addstr(x + 0, 0, "[p] Print snapshot")
-        this.stdscr.addstr(x + 1, 0, "[x] Exit")
+        this.boardscr.addstr(x + 0, 0, "[p] Print snapshot")
+        this.boardscr.addstr(x + 1, 0, "[x] Exit")
 
     def paintSnap(this):
         this.infoScreen = True
-        this.stdscr.clear()
+        this.boardscr.clear()
         string = str(this.snap)
-        this.stdscr.addstr(string)
-        this.stdscr.addstr(string.count('\n') + 1, 0, "Press any key to continue")
-        this.stdscr.refresh()
+        this.boardscr.addstr(string)
+        this.boardscr.addstr(string.count('\n') + 1, 0, "Press any key to continue")
+        this.boardscr.refresh()
 
     def updateStatus(this, string):
         with this.paintLock:
+            this.statscr.erase()
             this.statscr.addstr(0, 0, string, curses.color_pair(1))
-            this.stdscr.refresh()
+            this.statscr.refresh()
 
     def paintTrickOver(this):
         if this.snap.state != 5: return
@@ -329,7 +335,7 @@ class View:
         this.infoScreen = True
 
         with this.paintLock:
-            this.stdscr.clear()
+            this.boardscr.clear()
             if this.snap != None:
                 trick = this.snap.tricks[-2]
                 this.paintUpCard()
@@ -341,17 +347,16 @@ class View:
                 trick = this.snap.tricks[-1] if len(this.snap.tricks) > 0 else None
                 winner = this.snap.names[trick.winner()]
 
-                this.stdscr.addstr(24, 0, f"The winner of this trick is {winner}")
-                this.stdscr.addstr(25, 0, "Press any key to continue")
-            this.stdscr.refresh()
+                this.boardscr.addstr(24, 0, f"The winner of this trick is {winner}")
+                this.boardscr.addstr(25, 0, "Press any key to continue")
+            this.boardscr.refresh()
 
     def paintBoard(this):
-        this.paintTrickOver()
+        # this.paintTrickOver()
 
         with this.paintLock:
-            this.stdscr.clear()
+            this.boardscr.clear()
             if this.snap != None:
-                trick = this.snap.tricks[-1] if len(this.snap.tricks) > 0 else None
                 this.paintUpCard()
                 this.paintSouth()
                 this.paintWest()
@@ -361,22 +366,22 @@ class View:
                 this.paintTeam2()
                 this.paintMenu()
                 this.paintScore()
-            this.stdscr.refresh()
+            this.boardscr.refresh()
 
     def paintUpCard(this):
         if this.snap.upCard is not None:
-            paintCard(this.stdscr, 6, 10, this.snap.upCard)
+            paintCard(this.boardscr, 6, 10, this.snap.upCard)
         else:
-            paintCard(this.stdscr, 6, 10, Card("X"))
-        paintCard(this.stdscr, 6, 18, Card("  "))
+            paintCard(this.boardscr, 6, 10, Card("X"))
+        paintCard(this.boardscr, 6, 18, Card("  "))
 
     def paintScore(this):
         x =  13
         y = 1
         team = teamOf(this.snap.forPlayer)
         other = otherTeam(team)
-        this.stdscr.addstr(x+0, y, f"f:a", 1)
-        this.stdscr.addstr(x+1, y, f"{this.snap.score[team]}:{this.snap.score[other]}", 1)
+        this.boardscr.addstr(x+0, y, f"f:a", 1)
+        this.boardscr.addstr(x+1, y, f"{this.snap.score[team]}:{this.snap.score[other]}", 1)
 
     def paintTeam1(this):
         x = 12
@@ -388,7 +393,7 @@ class View:
             partner = (this.snap.forPlayer + 2) % 4
 
             if winner == this.snap.forPlayer or winner == partner:
-                this.stdscr.addstr(x+0, y, f"*", 1)
+                this.boardscr.addstr(x+0, y, f"*", 1)
                 x = x + 1
 
     def paintTeam2(this):
@@ -401,11 +406,11 @@ class View:
             partner = (this.snap.forPlayer + 2) % 4
 
             if winner != this.snap.forPlayer and winner != partner:
-                this.stdscr.addstr(x+0, y, f"*", 1)
+                this.boardscr.addstr(x+0, y, f"*", 1)
                 x = x + 1
 
     def paintSouth(this):
-        if this.handView != None: this.handView.paint(this.stdscr, 17)
+        if this.handView != None: this.handView.paint(this.boardscr, 17)
         this.paintPlayer(0, 11, 14)
 
     def paintWest(this):
@@ -428,7 +433,7 @@ class View:
         pIndex = (this.snap.forPlayer + chair) % 4
 
         if (pIndex in this.snap.order) == False:
-            paintBox(this.stdscr, x, y, "", curses.color_pair(4))
+            paintBox(this.boardscr, x, y, "", curses.color_pair(4))
             this._paintPlayerName(pIndex, x, y, curses.color_pair(4))
         elif pIndex == this.snap.active:
             this._paintPlayer(pIndex, x, y, curses.color_pair(3))
@@ -441,48 +446,48 @@ class View:
         trick = this.snap.tricks[-1] if len(this.snap.tricks) > 0 else None
 
         if trick == None:
-            paintBox(this.stdscr, x, y, this.snap.lastAction[pIndex], color)
+            paintBox(this.boardscr, x, y, this.snap.lastAction[pIndex], color)
         else:
             card = trick.getCardByPlayer(pIndex)
-            paintCard(this.stdscr, x, y, card, color)
+            paintCard(this.boardscr, x, y, card, color)
 
     def _paintPlayerName(this, pIndex, x, y, color):
         # Put name in parens if dealer, append trump to maker
         name = this.snap.names[pIndex]
         if this.snap.dealer == pIndex: name = f"({name})"
         if this.snap.maker == pIndex: name = f"{name} {this.snap.trump}"
-        this.stdscr.addstr(x+5, y, f"{name}", color)
+        this.boardscr.addstr(x+5, y, f"{name}", color)
 
     def allowedSuits(this):
         suits = ["♠", "♣", "♥", "♦"]
         suits.remove(this.snap.upCard.suit)
         return suits
 
-def paintCard(stdscr, x, y, card, color = None):
+def paintCard(screen, x, y, card, color = None):
     if color == None: color = curses.color_pair(1)
-    if card == None: return paintBox(stdscr, x, y, "", color)
+    if card == None: return paintBox(screen, x, y, "", color)
 
     l = card.value.ljust(2)
     s = card.suit
     r = card.value.rjust(2)
 
-    stdscr.addstr(x+0, y, f"┌─────┐", color)
-    stdscr.addstr(x+1, y, f"│{l}   │", color)
-    stdscr.addstr(x+2, y, f"│  {s}  │", color)
-    stdscr.addstr(x+3, y, f"│   {r}│", color)
-    stdscr.addstr(x+4, y, f"└─────┘", color)
+    screen.addstr(x+0, y, f"┌─────┐", color)
+    screen.addstr(x+1, y, f"│{l}   │", color)
+    screen.addstr(x+2, y, f"│  {s}  │", color)
+    screen.addstr(x+3, y, f"│   {r}│", color)
+    screen.addstr(x+4, y, f"└─────┘", color)
     return x + 5
 
-def paintBox(stdscr, x, y, text, color = None):
+def paintBox(screen, x, y, text, color = None):
     if color == None: curses.color_pair(1)
     if text == None: text = ""
     text = text.center(5)
 
-    stdscr.addstr(x+0, y, f"┌─────┐", color)
-    stdscr.addstr(x+1, y, f"│     │", color)
-    stdscr.addstr(x+2, y, f"│{text}│", color)
-    stdscr.addstr(x+3, y, f"│     │", color)
-    stdscr.addstr(x+4, y, f"└─────┘", color)
+    screen.addstr(x+0, y, f"┌─────┐", color)
+    screen.addstr(x+1, y, f"│     │", color)
+    screen.addstr(x+2, y, f"│{text}│", color)
+    screen.addstr(x+3, y, f"│     │", color)
+    screen.addstr(x+4, y, f"└─────┘", color)
     return x + 5
 
 def Main(stdscr):

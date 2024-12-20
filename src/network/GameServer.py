@@ -5,6 +5,7 @@ import pickle
 import random
 import asyncio
 import sys
+import struct
 
 class GameServer:
     def __init__(this):
@@ -54,7 +55,7 @@ class GameServer:
                 print(" ----- euchre object -----")
                 print(this.euchre)
                 print(f"hash: {this.game.hash}")
-            if parts[0] == "push":
+            elif parts[0] == "refresh":
                 await this.sendSnaps()
             elif parts[0] == "exit":
                 exit()       
@@ -65,7 +66,6 @@ class GameServer:
             elif parts[0] == "history":
                 for entry in this.history:
                     print(entry)            
-
 
     async def readSocket(this):
         try:
@@ -94,7 +94,11 @@ class GameServer:
 
     # Translate raw bytes from input stream into a python object (snapshot).
     async def getNextPacket(this):
-        data = await this.reader.read(1024) # Receive data from the client
+        
+        len_b = await this.reader.readexactly(4)
+        len = struct.unpack("!I", len_b)[0]
+        data = await this.reader.readexactly(len) # Receive data from the client
+
         if not data:                 # Client has closed the connection
             print("connection terminated")
             this.running = False
@@ -107,9 +111,12 @@ class GameServer:
 
     async def sendSnaps(this):
         snap = Snapshot(this.game, this.euchre.players.getPlayer("Adam"))
-        this.writer.write(pickle.dumps(snap))             
+        serialized = pickle.dumps(snap)
+        len_b = struct.pack("!I", len(serialized))
+
+        this.writer.write(len_b + serialized)             
         await this.writer.drain()      
-        print(f"\b\bsent {snap.hash}")       
+        print(f"\b\bsent {len(serialized)} {snap.hash}")       
 
     def hndPacket(this, packet):
         action = packet[0]
