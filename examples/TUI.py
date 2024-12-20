@@ -87,9 +87,9 @@ class HandView(OptionList):
             else:
                 paintCard(stdscr, x, y, card, curses.color_pair(1))
 
-            y = y + 4    
+            y = y + 4
 
-        return x + 5        
+        return x + 5
 
 class View:
     def __init__(this, stdscr):
@@ -104,17 +104,102 @@ class View:
 
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)  # Default color
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)  # Highlight color
-        curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)  # Current player color    
+        curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)  # Current player color
         curses.init_pair(4, 8, curses.COLOR_BLACK)  # Gray text on black background
 
         height, width = stdscr.getmaxyx()
         this.statscr = this.stdscr.subwin(1, width, height - 1, 0)
 
+        this.running = True
+        this.snap = None
         this.handView = None
         this.actionOptions = None
-        this.dataOptions = None       
+        this.dataOptions = None
+        this.infoScreen = False
         this.options = []
         this.selectedOption = -1
+
+    def connect(this):
+        this.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        this.socket.connect((HOST, PORT))
+
+        # retrieve one snapshot before continuing
+        this.loadNextSnapshot()
+        this.updateUIState()
+        this.paintBoard()
+
+        this.socket.settimeout(0.1)
+
+        this.socketThead = threading.Thread(target=this.listenSocket)
+        this.socketThead.daemon = True  # Ensure threads close when the main program exits
+        this.socketThead.start()
+
+        this.stdinThead = threading.Thread(target=this.listenStdin)
+        this.stdinThead.daemon = True  # Ensure threads close when the main program exits
+        this.stdinThead.start()
+
+        this.socketThead.join()
+        this.stdinThead.join()
+
+    # Load the snapshot queue with incoming packets
+    def listenSocket(this):
+        while this.running == True:
+            try:
+                this.loadNextSnapshot()
+                this.updateUIState()
+                this.paintBoard()
+            except socket.timeout:
+                # Timeout allows us to check this.running periodically
+                continue
+            except Exception as e:
+                curses.endwin()
+                raise e  # Re-raise exceptions to ensure proper cleanup
+
+    def loadNextSnapshot(this):
+        data = this.socket.recv(4096)
+        if not data: raise Exception("Remotely Closed Socket")
+        dataObject = pickle.loads(data)
+
+        if isinstance(dataObject, Snapshot):
+            this.snap = dataObject
+        else:
+            raise Exception("Expected Snapshot")
+
+
+    def listenStdin(this):
+        try:
+            while this.running == True:
+                key = this.stdscr.getch()
+
+                if this.infoScreen: # when 'any key' clears screen
+                    this.infoScreen = False
+                    this.paintBoard()
+                elif key == ord('x'):
+                    this.running = False
+                elif key == ord('p'):
+                    this.paintSnap()
+                elif key == curses.KEY_UP:
+                    this.prevOption()
+                    this.paintBoard()
+                elif key == curses.KEY_DOWN:
+                    this.nextOption()
+                    this.paintBoard()
+                elif key == curses.KEY_RIGHT:
+                    this.currentOptions().next()
+                    this.paintBoard()
+                elif key == curses.KEY_LEFT:
+                    this.currentOptions().prev()
+                    this.paintBoard()
+                elif key == 10:
+                    this.send()
+                    this.paintBoard()
+            
+        except Exception as e:
+            curses.endwin()
+            raise e  # Re-raise exceptions to ensure proper cleanup
+
+    def shutdown(this, exception):
+        this.stdscr.cl
 
     def currentOptions(this):
         if this.selectedOption >= 0:
@@ -131,7 +216,7 @@ class View:
     def nextOption(this):
         next = this.selectedOption + 1
         if next >= len(this.options): next = len(this.options) - 1
-        this.selectOption(next)        
+        this.selectOption(next)
 
     def prevOption(this):
         prev = this.selectedOption - 1
@@ -146,46 +231,10 @@ class View:
         this.stdscr.addstr(2, 0, f"└─────────────────────────┘", curses.color_pair(1))
 
         key = this.stdscr.getch()
-        if key == 10:  # Enter key                       
+        if key == 10:  # Enter key
             this.connect()
 
-    def connect(this):
-        this.running = True
-
-        this.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        this.socket.connect((HOST, PORT))     
-        this.socket.settimeout(1.0)   
-        this.snapQ = queue.Queue()
-
-        this.listenThread = threading.Thread(target=this.listen)
-        this.listenThread.daemon = True  # Ensure threads close when the main program exits
-        this.listenThread.start()        
-        this.uiLoop()    
-        this.listenThread.join()
-
-    # Load the snapshot queue with incoming packets
-    def listen(this):
-        while this.running == True:
-            try:
-                data = this.socket.recv(4096)
-                if not data: break # Handle the case where the connection is closed
-
-                with this.paintLock:
-                    dataObject = pickle.loads(data)
-
-                    if isinstance(dataObject, Snapshot): 
-                        snap = dataObject                   
-                        this.snapQ.put(snap)
-                        # this.socket.sendall(pickle.dumps(("ack", snap.hash)))                              
-                        this.statscr.addstr(0, 0, f"packets waiting: {this.snapQ.qsize()}", curses.color_pair(1))
-                        this.statscr.refresh()
-                    else:
-                        this.paintException(dataObject)
-            except socket.timeout:
-                # Timeout allows us to check this.running periodically
-                continue            
-            
-    def send(this, snap):
+    def send(this):
         action = "play"
         data = None
 
@@ -195,269 +244,219 @@ class View:
         if this.dataOptions != None:
             data = this.dataOptions.get()
 
-        if snap.state == 5 or snap.state == 2:
+        if this.snap.state == 5 or this.snap.state == 2:
             data = str(this.handView.get())
 
-        this.socket.sendall(pickle.dumps((action, data)))            
-
-    # Pull snapshots off the snapshot queue and display them
-    # Wait for user input when required
-    def uiLoop(this):
-        while this.running == True:
-            snap = this.getNextSnap()
-            this.paintTrickOver(snap)
-            this.paintBoard(snap)
-            time.sleep(0.75)
-
-            while(this.snapQ.qsize() == 0):
-                if snap.active == snap.forPlayer:
-                    if this.getInput(snap) == True: break
-                    this.paintBoard(snap)
-
-            
-
-    # Get and process keyboard input
-    # Returns true when a packet is sent (enter pressed)
-    # Otherwise returns false
-    def getInput(this, snap):
-        this.updateStatus("Waiting for user input")
-        key = this.stdscr.getch()
-
-        if key == ord('x'):
-            this.stdscr.clear()                
-            this.stdscr.refresh()
-            this.running = False  
-            exit()      
-        elif key == ord('p'):
-            this.paintSnap(snap)
-            this.paintBoard(snap)              
-        elif key == curses.KEY_UP:
-            this.prevOption()
-        elif key == curses.KEY_DOWN:
-            this.nextOption()
-        elif key == curses.KEY_RIGHT:
-            this.currentOptions().next()
-        elif key == curses.KEY_LEFT:
-            this.currentOptions().prev()
-        elif key == 10:                  
-            this.send(snap)
-            return True
-        
-        return False
+        this.socket.sendall(pickle.dumps((action, data)))
 
     # Retrieve the next snap from the queue
     # Enable / disable UI components based on the state
-    def getNextSnap(this):
-        snap = this.snapQ.get()
+    def updateUIState(this):
+        this.handView = HandView(this.snap.hand)
 
-        this.handView = HandView(snap.hand)
-
-        if snap.state == 1:
+        if this.snap.state == 1:
             this.actionOptions = OptionList(["Pass", "Order", "Alone"])
             this.dataOptions = None
             this.options = [this.actionOptions]
             this.selectOption(0)
 
-        elif snap.state == 2:
+        elif this.snap.state == 2:
             this.actionOptions = OptionList(["Up", "Down"])
-            this.dataOptions = None            
+            this.dataOptions = None
             this.options = [this.handView, this.actionOptions]
             this.selectOption(1)
 
-        elif snap.state == 3:
+        elif this.snap.state == 3:
             this.actionOptions = OptionList(["Pass", "Make", "Alone"])
-            this.dataOptions = OptionList(allowedSuits(snap))         
+            this.dataOptions = OptionList(this.allowedSuits(this.snap))
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
-        elif snap.state == 4:
+        elif this.snap.state == 4:
             this.actionOptions = OptionList(["Make", "Alone"])
-            this.dataOptions = OptionList(allowedSuits(snap))  
+            this.dataOptions = OptionList(this.allowedSuits(this.snap))
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
-        elif snap.state == 5:
+        elif this.snap.state == 5:
             this.actionOptions = None
             this.dataOptions = None
             this.options = [this.handView]
             this.selectOption(0)
 
-        return snap
+        return this.snap
 
-    def paintMenu(this, snap, x = 22):
-        if snap.active == snap.forPlayer:
-            this.paintActiveMenu(snap, x)
+    def paintMenu(this, x = 22):
+        if this.snap.active == this.snap.forPlayer:
+            this.paintActiveMenu(x)
         else:
-            this.paintIdleMenu(snap, x)
+            this.paintIdleMenu(x)
 
-    def paintActiveMenu(this, snap, x = 21):        
-        this.stdscr.addstr(x + 0, 0, stateLabels[snap.state])
+    def paintActiveMenu(this, x = 21):
+        this.stdscr.addstr(x + 0, 0, stateLabels[this.snap.state])
         x = x + 1
 
-        if this.dataOptions != None: 
+        if this.dataOptions != None:
             x = this.dataOptions.paint(this.stdscr, x)
 
-        if this.actionOptions != None: 
+        if this.actionOptions != None:
             x = this.actionOptions.paint(this.stdscr, x)
 
-        this.stdscr.addstr(x + 1, 0, "[p] Print snapshot")
-        this.stdscr.addstr(x + 2, 0, "[x] Exit")    
+        this.stdscr.addstr(x + 1, 0, "[p] Print this.snapshot")
+        this.stdscr.addstr(x + 2, 0, "[x] Exit")
 
-    def paintIdleMenu(this, snap, x = 21):
+    def paintIdleMenu(this, x = 21):
         this.stdscr.addstr(x + 0, 0, "[p] Print snapshot")
         this.stdscr.addstr(x + 1, 0, "[x] Exit")
 
-    def paintException(exception):   
+    def paintSnap(this):
+        this.infoScreen = True
         this.stdscr.clear()
-        print(exception.message)
-        this.stdscr.addstr(x + 1, 0, "Press any key to continue")
-        this.stdscr.refresh()
-        this.stdscr.getch()
-
-    def paintSnap(this, snap):
-        this.stdscr.clear()        
-        string = str(snap)
+        string = str(this.snap)
         this.stdscr.addstr(string)
         this.stdscr.addstr(string.count('\n') + 1, 0, "Press any key to continue")
         this.stdscr.refresh()
-        this.stdscr.getch()      
 
     def updateStatus(this, string):
         with this.paintLock:
             this.statscr.addstr(0, 0, string, curses.color_pair(1))
             this.stdscr.refresh()
 
-    def paintTrickOver(this, snap):
-        if snap.state != 5: return
-        if len(snap.tricks) < 2: return
-        if len(snap.tricks[-1]) > 0: return
+    def paintTrickOver(this):
+        if this.snap.state != 5: return
+        if len(this.snap.tricks) < 2: return
+        if len(this.snap.tricks[-1]) > 0: return
+        this.infoScreen = True
 
         with this.paintLock:
             this.stdscr.clear()
-            if snap != None:
-                trick = snap.tricks[-2]
-                this.paintUpCard(snap)
-                this.paintSouth(snap, trick)
-                this.paintWest(snap, trick)
-                this.paintNorth(snap, trick)
-                this.paintEast(snap, trick)
+            if this.snap != None:
+                trick = this.snap.tricks[-2]
+                this.paintUpCard()
+                this.paintSouth()
+                this.paintWest()
+                this.paintNorth()
+                this.paintEast()
 
-                winner = snap.names[trick.winner()]
+                trick = this.snap.tricks[-1] if len(this.snap.tricks) > 0 else None
+                winner = this.snap.names[trick.winner()]
+
                 this.stdscr.addstr(24, 0, f"The winner of this trick is {winner}")
                 this.stdscr.addstr(25, 0, "Press any key to continue")
             this.stdscr.refresh()
-                
-        this.stdscr.getch()
 
-    def paintBoard(this, snap):
+    def paintBoard(this):
+        this.paintTrickOver()
+
         with this.paintLock:
             this.stdscr.clear()
-            if snap != None:
-                trick = snap.tricks[-1] if len(snap.tricks) > 0 else None
-                this.paintUpCard(snap)
-                this.paintSouth(snap, trick)
-                this.paintWest(snap, trick)
-                this.paintNorth(snap, trick)
-                this.paintEast(snap, trick)
-                this.paintTeam1(snap)
-                this.paintTeam2(snap)
-                this.paintMenu(snap)    
-                this.paintScore(snap)
-                this.statscr.addstr(0, 0, snap.hash, curses.color_pair(1))   
+            if this.snap != None:
+                trick = this.snap.tricks[-1] if len(this.snap.tricks) > 0 else None
+                this.paintUpCard()
+                this.paintSouth()
+                this.paintWest()
+                this.paintNorth()
+                this.paintEast()
+                this.paintTeam1()
+                this.paintTeam2()
+                this.paintMenu()
+                this.paintScore()
             this.stdscr.refresh()
 
-    def paintUpCard(this, snap):
-        if snap.upCard is not None:
-            paintCard(this.stdscr, 6, 10, snap.upCard)
+    def paintUpCard(this):
+        if this.snap.upCard is not None:
+            paintCard(this.stdscr, 6, 10, this.snap.upCard)
         else:
             paintCard(this.stdscr, 6, 10, Card("X"))
-        paintCard(this.stdscr, 6, 18, Card("  "))       
+        paintCard(this.stdscr, 6, 18, Card("  "))
 
-    def paintScore(this, snap):
+    def paintScore(this):
         x =  13
         y = 1
-        team = teamOf(snap.forPlayer)
+        team = teamOf(this.snap.forPlayer)
         other = otherTeam(team)
         this.stdscr.addstr(x+0, y, f"f:a", 1)
-        this.stdscr.addstr(x+1, y, f"{snap.score[team]}:{snap.score[other]}", 1)
+        this.stdscr.addstr(x+1, y, f"{this.snap.score[team]}:{this.snap.score[other]}", 1)
 
-    def paintTeam1(this, snap):
+    def paintTeam1(this):
         x = 12
         y = 21
 
-        for trick in snap.tricks:
-            if len(trick) < len(snap.order): break
+        for trick in this.snap.tricks:
+            if len(trick) < len(this.snap.order): break
             winner = trick.winner()
-            partner = (snap.forPlayer + 2) % 4
+            partner = (this.snap.forPlayer + 2) % 4
 
-            if winner == snap.forPlayer or winner == partner:
+            if winner == this.snap.forPlayer or winner == partner:
                 this.stdscr.addstr(x+0, y, f"*", 1)
                 x = x + 1
 
-    def paintTeam2(this, snap):
+    def paintTeam2(this):
         x = 7
         y = 35
 
-        for trick in snap.tricks:
-            if len(trick) < len(snap.order): break
+        for trick in this.snap.tricks:
+            if len(trick) < len(this.snap.order): break
             winner = trick.winner()
-            partner = (snap.forPlayer + 2) % 4
+            partner = (this.snap.forPlayer + 2) % 4
 
-            if winner != snap.forPlayer and winner != partner:
+            if winner != this.snap.forPlayer and winner != partner:
                 this.stdscr.addstr(x+0, y, f"*", 1)
                 x = x + 1
 
-    def paintSouth(this, snap, trick):
+    def paintSouth(this):
         if this.handView != None: this.handView.paint(this.stdscr, 17)
-        this.paintPlayer(snap, 0, 11, 14, trick)  
+        this.paintPlayer(0, 11, 14)
 
-    def paintWest(this, snap, trick):
-        this.paintPlayer(snap, 1, 6, 0, trick) 
+    def paintWest(this):
+        this.paintPlayer(1, 6, 0)
 
-    def paintNorth(this, snap, trick):
-        this.paintPlayer(snap, 2, 0, 14, trick)
+    def paintNorth(this):
+        this.paintPlayer(2, 0, 14)
 
-    def paintEast(this, snap, trick):
-        this.paintPlayer(snap, 3, 6, 28, trick)
+    def paintEast(this):
+        this.paintPlayer(3, 6, 28)
 
     # snap : snapshot
     # chair : chair position at table (s, w, n, e) = (0, 1, 2, 3)
     # x : x offset
     # y : y offset
     # trick : current trick
-    def paintPlayer(this, snap, chair, x, y, trick):
+    def paintPlayer(this, chair, x, y):
         # index = the index of the player in the snap.names array
         # the same that is used in: active, dealer, forPlayer, maker, and order[]
-        pIndex = (snap.forPlayer + chair) % 4
+        pIndex = (this.snap.forPlayer + chair) % 4
 
-        if (pIndex in snap.order) == False:
+        if (pIndex in this.snap.order) == False:
             paintBox(this.stdscr, x, y, "", curses.color_pair(4))
-            this._paintPlayerName(snap, pIndex, x, y, curses.color_pair(4)) 
-        elif pIndex == snap.active:
-            this._paintPlayer(snap, pIndex, x, y, trick, curses.color_pair(3)) 
-            this._paintPlayerName(snap, pIndex, x, y, curses.color_pair(3)) 
+            this._paintPlayerName(pIndex, x, y, curses.color_pair(4))
+        elif pIndex == this.snap.active:
+            this._paintPlayer(pIndex, x, y, curses.color_pair(3))
+            this._paintPlayerName(pIndex, x, y, curses.color_pair(3))
         else:
-            this._paintPlayer(snap, pIndex, x, y, trick, curses.color_pair(1)) 
-            this._paintPlayerName(snap, pIndex, x, y, curses.color_pair(1))             
+            this._paintPlayer(pIndex, x, y, curses.color_pair(1))
+            this._paintPlayerName(pIndex, x, y, curses.color_pair(1))
 
-    def _paintPlayer(this, snap, pIndex, x, y, trick, color):
+    def _paintPlayer(this, pIndex, x, y, color):
+        trick = this.snap.tricks[-1] if len(this.snap.tricks) > 0 else None
+
         if trick == None:
-            paintBox(this.stdscr, x, y, snap.lastAction[pIndex], color)
+            paintBox(this.stdscr, x, y, this.snap.lastAction[pIndex], color)
         else:
             card = trick.getCardByPlayer(pIndex)
             paintCard(this.stdscr, x, y, card, color)
 
-    def _paintPlayerName(this, snap, pIndex, x, y, color):
+    def _paintPlayerName(this, pIndex, x, y, color):
         # Put name in parens if dealer, append trump to maker
-        name = snap.names[pIndex]
-        if snap.dealer == pIndex: name = f"({name})"
-        if snap.maker == pIndex: name = f"{name} {snap.trump}"
+        name = this.snap.names[pIndex]
+        if this.snap.dealer == pIndex: name = f"({name})"
+        if this.snap.maker == pIndex: name = f"{name} {this.snap.trump}"
         this.stdscr.addstr(x+5, y, f"{name}", color)
 
-def allowedSuits(snap):
-    suits = ["♠", "♣", "♥", "♦"]
-    suits.remove(snap.upCard.suit)
-    return suits
+    def allowedSuits(this):
+        suits = ["♠", "♣", "♥", "♦"]
+        suits.remove(this.snap.upCard.suit)
+        return suits
 
 def paintCard(stdscr, x, y, card, color = None):
     if color == None: color = curses.color_pair(1)
@@ -487,9 +486,13 @@ def paintBox(stdscr, x, y, text, color = None):
     return x + 5
 
 def Main(stdscr):
-    view = View(stdscr)
-    view.connect()
-    
+    try:
+        view = View(stdscr)
+        view.connect()
+    except Exception as e:
+        raise e  # Re-raise exceptions to ensure proper cleanup
+    finally:
+        curses.endwin()  # Restore terminal to normal state
 
 if __name__ == "__main__":
     curses.wrapper(Main)

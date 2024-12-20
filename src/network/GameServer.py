@@ -54,6 +54,8 @@ class GameServer:
                 print(" ----- euchre object -----")
                 print(this.euchre)
                 print(f"hash: {this.game.hash}")
+            if parts[0] == "push":
+                await this.sendSnaps()
             elif parts[0] == "exit":
                 exit()       
             elif parts[0] == "save":
@@ -105,8 +107,9 @@ class GameServer:
 
     async def sendSnaps(this):
         snap = Snapshot(this.game, this.euchre.players.getPlayer("Adam"))
-        this.writer.write(pickle.dumps(snap))           
+        this.writer.write(pickle.dumps(snap))             
         await this.writer.drain()      
+        print(f"\b\bsent {snap.hash}")       
 
     def hndPacket(this, packet):
         action = packet[0]
