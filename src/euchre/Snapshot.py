@@ -26,6 +26,7 @@ class Snapshot:
         this.handCount =  euchre.handCount
         this.score = euchre.score
         this.lastAction = game.lastAction
+        this.lastPlayer = game.lastPlayer
 
         this.normalized = Normalized(euchre, forPlayer)
 

@@ -3,6 +3,7 @@ import pickle
 import curses
 import threading
 import struct
+import time
 from datetime import datetime
 from euchre import *
 from euchre.Card import Hand
@@ -147,7 +148,11 @@ class View:
             try:
                 this.loadNextSnapshot()
                 this.updateUIState()
-                this.paintBoard()
+                if this.snap.lastPlayer != this.snap.forPlayer: 
+                    time.sleep(0.75)
+
+                if not this.paintTrickOver():
+                    this.paintBoard()
             except socket.timeout:
                 # Timeout allows us to check this.running periodically
                 continue
@@ -155,6 +160,7 @@ class View:
                 curses.endwin()
                 raise e  # Re-raise exceptions to ensure proper cleanup
 
+    # retreive the next packet from the socket and translate it into a snapshot    
     def loadNextSnapshot(this):
         len_b = this.socket.recv(4)
         len = struct.unpack("!I", len_b)[0]
@@ -329,9 +335,10 @@ class View:
             this.statscr.refresh()
 
     def paintTrickOver(this):
-        if this.snap.state != 5: return
-        if len(this.snap.tricks) < 2: return
-        if len(this.snap.tricks[-1]) > 0: return
+        this.updateStatus(f"{this.snap.state} {this.snap.lastAction[this.snap.lastPlayer]}")
+
+        if this.snap.state != 1: return False
+        if this.snap.lastAction[this.snap.lastPlayer] != "play": return False
         this.infoScreen = True
 
         with this.paintLock:
@@ -350,10 +357,9 @@ class View:
                 this.boardscr.addstr(24, 0, f"The winner of this trick is {winner}")
                 this.boardscr.addstr(25, 0, "Press any key to continue")
             this.boardscr.refresh()
+        return True
 
     def paintBoard(this):
-        # this.paintTrickOver()
-
         with this.paintLock:
             this.boardscr.clear()
             if this.snap != None:

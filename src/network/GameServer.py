@@ -6,11 +6,9 @@ import random
 import asyncio
 import sys
 import struct
+import traceback
 
 class GameServer:
-    def __init__(this):
-        this.isRunning = True
-
     async def connect(this, reader, writer):
         this.reader = reader
         this.writer = writer
@@ -31,50 +29,62 @@ class GameServer:
 
     async def initIO(this):
         async with asyncio.TaskGroup() as tg:
-            t1 = tg.create_task(this.readStdin())
-            t2 = tg.create_task(this.readSocket())
+            tg.create_task(this.readStdin())
+            tg.create_task(this.readSocket())
 
     async def readStdin(this):
+        this.stdinRunning = True
+
         loop = asyncio.get_running_loop()
         reader = asyncio.StreamReader()
         protocol = asyncio.StreamReaderProtocol(reader)
         await loop.connect_read_pipe(lambda: protocol, sys.stdin)
 
-        while this.isRunning:
-            print("\b\b> ", end="", flush=True)
-            line = await reader.readline()
-            if not line: break
+        while this.stdinRunning:
+            try:
+                print("\b\b> ", end="", flush=True)
+                line = await reader.readline()
+                if not line: break
 
-            line = line.decode().strip()
-            parts = line.split()
+                line = line.decode().strip()
+                parts = line.split()
+                await this.processInput(parts)
+            except Exception as ex:                
+                this.socketRunning = False
+                traceback.print_exc()
 
-            if len(parts) == 0:
-                continue
-
-            if parts[0] == "print":
-                print(" ----- euchre object -----")
-                print(this.euchre)
-                print(f"hash: {this.game.hash}")
-            elif parts[0] == "refresh":
-                await this.sendSnaps()
-            elif parts[0] == "exit":
-                exit()       
-            elif parts[0] == "save":
-                this.saveHistory()
-            elif parts[0] == "load":
-                this.loadHistory()
-            elif parts[0] == "history":
-                for entry in this.history:
-                    print(entry)            
-
+    async def processInput(this, parts):
+        if len(parts) == 0:
+            return
+        elif parts[0] == "print":
+            print(this.euchre)
+            print(f"hash: {this.game.hash}")
+        elif parts[0] == "refresh":
+            await this.sendSnaps()
+        elif parts[0] == "exit":
+            exit()       
+        elif parts[0] == "save":
+            this.saveHistory()
+        elif parts[0] == "load":
+            this.loadHistory()
+            await this.sendSnaps()
+        elif parts[0] == "history":
+            for entry in this.history:
+                print(entry)
+                
     async def readSocket(this):
-        try:
-            while this.isRunning:
+        this.socketRunning = True
+
+        while this.socketRunning:
+            try:
                 await this.receivePacket()
-        except ConnectionResetError:
-            this.isRunning = False
-            print(f"Connection was reset by the client.")
-            return False
+            except ConnectionResetError:
+                this.isRunning = False
+                print(f"Connection was reset by the client.")
+                return False
+            except Exception as ex:
+                this.socketRunning = False
+                traceback.print_exc()
 
         print(f"Connection with client has been closed.") 
 
@@ -84,6 +94,8 @@ class GameServer:
         else:
             snap = Snapshot(this.game, this.euchre.getCurrentPlayer())
             (action, data) = this.bot.decide(snap)
+            (action, data) = (action.lower(), data)
+
             name = this.euchre.getCurrentPlayer().name
             print(f"\b\b{name} : ('{action}', {data})")
             print("> ", end="", flush=True)                             
@@ -93,8 +105,7 @@ class GameServer:
         await this.sendSnaps()
 
     # Translate raw bytes from input stream into a python object (snapshot).
-    async def getNextPacket(this):
-        
+    async def getNextPacket(this):        
         len_b = await this.reader.readexactly(4)
         len = struct.unpack("!I", len_b)[0]
         data = await this.reader.readexactly(len) # Receive data from the client
@@ -119,8 +130,7 @@ class GameServer:
         print(f"\b\bsent {len(serialized)} {snap.hash}")       
 
     def hndPacket(this, packet):
-        action = packet[0]
-        data = packet[1]
+        (action, data) = (packet[0].lower(), packet[1])
 
         try:
             this.game.input(this.euchre.players.getPlayer("Adam"), action, data)
@@ -140,7 +150,6 @@ class GameServer:
                 parsed = line.split()
                 print(f"{line} -> {parsed}")
                 this.loadAction(parsed)
-                this.sendSnaps()
         print("---------------------------------------")                
 
     def loadAction(this, parsed):        

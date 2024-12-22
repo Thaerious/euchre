@@ -14,6 +14,7 @@ class Game:
         this.activePlayer = None
         this.updateHash()
         this.lastAction = [None, None, None, None]
+        this.lastPlayer = None
 
     def updateHash(this):
         this.hash = ''.join(random.choices('0123456789abcdef', k=8))
@@ -32,6 +33,7 @@ class Game:
         # activate the current state
         this.updateHash()
         this.lastAction[this.euchre.currentPIndex] = action
+        this.lastPlayer = this.euchre.currentPIndex
         this.state(player, action, data)
 
     def state0(this, player, action, data):
@@ -82,6 +84,7 @@ class Game:
             this.euchre.activateFirstPlayer()
         elif action == "alone":
             this.euchre.makeTrump(suit)
+            this.euchre.addTrick()
             this.euchre.goAlone()
             this.euchre.activateFirstPlayer()
             this.state = this.state5
@@ -90,17 +93,16 @@ class Game:
         this.allowedActions(action, "make", "alone")
 
         this.euchre.makeTrump(suit)
+        this.euchre.addTrick()
+        if action == "alone": this.euchre.goAlone()
         this.euchre.activateFirstPlayer()
         this.state = this.state5
 
     def state5(this, player, action, card):
         this.allowedActions(action, "play")
-
         this.euchre.playCard(card)
-
         if this.euchre.nextTrick() == False: return
 
-        print(f"this.euchre.isHandFinished() == {this.euchre.isHandFinished()}")
         if this.euchre.isHandFinished():
             this.euchre.scoreHand()
 
@@ -111,7 +113,6 @@ class Game:
                 this.euchre.shuffleDeck()
                 this.euchre.dealCards()
                 this.euchre.clearTricks()
-                this.lastAction = [None, None, None, None]
                 this.state = this.state1
 
     def allowedActions(this, action, *allowedActions):
