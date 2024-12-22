@@ -112,7 +112,7 @@ class View:
         this.statscr = stdscr.subwin(1, width, height - 1, 0)
 
         this.running = True
-        this.snap = None
+        this.snaps = []
         this.handView = None
         this.actionOptions = None
         this.dataOptions = None
@@ -148,7 +148,7 @@ class View:
             try:
                 this.loadNextSnapshot()
                 this.updateUIState()
-                if this.snap.lastPlayer != this.snap.forPlayer: 
+                if this.snaps[-1].lastPlayer != this.snaps[-1].forPlayer: 
                     time.sleep(0.75)
 
                 if not this.paintTrickOver():
@@ -169,8 +169,8 @@ class View:
         dataObject = pickle.loads(data)
 
         if isinstance(dataObject, Snapshot):
-            this.snap = dataObject
-            this.updateStatus(f"{len} {this.snap.hash} {datetime.now().strftime("%H:%M:%S")}")
+            this.snaps.append(dataObject)
+            this.updateStatus(f"{len} {dataObject.hash} {datetime.now().strftime("%H:%M:%S")}")
         else:
             raise Exception("Expected Snapshot")
 
@@ -243,7 +243,10 @@ class View:
         if key == 10:  # Enter key
             this.connect()
 
-    def send(this):
+    def send(this, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+        
         action = "play"
         data = None
 
@@ -253,7 +256,7 @@ class View:
         if this.dataOptions != None:
             data = this.dataOptions.get()
 
-        if this.snap.state == 5 or this.snap.state == 2:
+        if snap.state == 5 or snap.state == 2:
             data = str(this.handView.get())
 
         serialized = pickle.dumps((action, data))
@@ -262,49 +265,58 @@ class View:
 
     # Retrieve the next snap from the queue
     # Enable / disable UI components based on the state
-    def updateUIState(this):
-        this.handView = HandView(this.snap.hand)
+    def updateUIState(this, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
 
-        if this.snap.state == 1:
+        this.handView = HandView(snap.hand)
+
+        if snap.state == 1:
             this.actionOptions = OptionList(["Pass", "Order", "Alone"])
             this.dataOptions = None
             this.options = [this.actionOptions]
             this.selectOption(0)
 
-        elif this.snap.state == 2:
+        elif snap.state == 2:
             this.actionOptions = OptionList(["Up", "Down"])
             this.dataOptions = None
             this.options = [this.handView, this.actionOptions]
             this.selectOption(1)
 
-        elif this.snap.state == 3:
+        elif snap.state == 3:
             this.actionOptions = OptionList(["Pass", "Make", "Alone"])
             this.dataOptions = OptionList(this.allowedSuits())
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
-        elif this.snap.state == 4:
+        elif snap.state == 4:
             this.actionOptions = OptionList(["Make", "Alone"])
             this.dataOptions = OptionList(this.allowedSuits())
             this.options = [this.dataOptions, this.actionOptions]
             this.selectOption(1)
 
-        elif this.snap.state == 5:
+        elif snap.state == 5:
             this.actionOptions = None
             this.dataOptions = None
             this.options = [this.handView]
             this.selectOption(0)
 
-        return this.snap
+        return snap
 
-    def paintMenu(this, x = 22):
-        if this.snap.active == this.snap.forPlayer:
+    def paintMenu(this, x = 22, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
+        if snap.active == snap.forPlayer:
             this.paintActiveMenu(x)
         else:
             this.paintIdleMenu(x)
 
-    def paintActiveMenu(this, x = 21):
-        this.boardscr.addstr(x + 0, 0, stateLabels[this.snap.state])
+    def paintActiveMenu(this, x = 21, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
+        this.boardscr.addstr(x + 0, 0, stateLabels[snap.state])
         x = x + 1
 
         if this.dataOptions != None:
@@ -313,17 +325,20 @@ class View:
         if this.actionOptions != None:
             x = this.actionOptions.paint(this.boardscr, x)
 
-        this.boardscr.addstr(x + 1, 0, "[p] Print this.snapshot")
+        this.boardscr.addstr(x + 1, 0, "[p] Print snapshot")
         this.boardscr.addstr(x + 2, 0, "[x] Exit")
 
     def paintIdleMenu(this, x = 21):
         this.boardscr.addstr(x + 0, 0, "[p] Print snapshot")
         this.boardscr.addstr(x + 1, 0, "[x] Exit")
 
-    def paintSnap(this):
+    def paintSnap(this, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
         this.infoScreen = True
         this.boardscr.clear()
-        string = str(this.snap)
+        string = str(snap)
         this.boardscr.addstr(string)
         this.boardscr.addstr(string.count('\n') + 1, 0, "Press any key to continue")
         this.boardscr.refresh()
@@ -334,35 +349,43 @@ class View:
             this.statscr.addstr(0, 0, string, curses.color_pair(1))
             this.statscr.refresh()
 
-    def paintTrickOver(this):
-        this.updateStatus(f"{this.snap.state} {this.snap.lastAction[this.snap.lastPlayer]}")
+    def paintTrickOver(this, snap = None):
+        if snap == None or len(this.snaps) < 2: return False
+        if snap == None: snap = this.snaps[-2]
 
-        if this.snap.state != 1: return False
-        if this.snap.lastAction[this.snap.lastPlayer] != "play": return False
+        this.updateStatus(f"{snap.state} {snap.lastAction[snap.lastPlayer]}")
+
+        if len(this.snaps) < 2: return False
+        if this.snaps[-2].state != 5: return False
+        if snap.state != 1: return False
+        
         this.infoScreen = True
 
         with this.paintLock:
             this.boardscr.clear()
-            if this.snap != None:
-                trick = this.snap.tricks[-2]
-                this.paintUpCard()
-                this.paintSouth()
-                this.paintWest()
-                this.paintNorth()
-                this.paintEast()
+            if snap != None:
+                trick = snap.tricks[-2]
+                this.paintUpCard(snap)
+                this.paintSouth(snap)
+                this.paintWest(snap)
+                this.paintNorth(snap)
+                this.paintEast(snap)
 
-                trick = this.snap.tricks[-1] if len(this.snap.tricks) > 0 else None
-                winner = this.snap.names[trick.winner()]
+                trick = snap.tricks[-1] if len(snap.tricks) > 0 else None
+                winner = snap.names[trick.winner()]
 
                 this.boardscr.addstr(24, 0, f"The winner of this trick is {winner}")
                 this.boardscr.addstr(25, 0, "Press any key to continue")
             this.boardscr.refresh()
         return True
 
-    def paintBoard(this):
+    def paintBoard(this, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
         with this.paintLock:
             this.boardscr.clear()
-            if this.snap != None:
+            if snap != None:
                 this.paintUpCard()
                 this.paintSouth()
                 this.paintWest()
@@ -374,44 +397,56 @@ class View:
                 this.paintScore()
             this.boardscr.refresh()
 
-    def paintUpCard(this):
-        if this.snap.upCard is not None:
-            paintCard(this.boardscr, 6, 10, this.snap.upCard)
+    def paintUpCard(this, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
+        if snap.upCard is not None:
+            paintCard(this.boardscr, 6, 10, snap.upCard)
         else:
             paintCard(this.boardscr, 6, 10, Card("X"))
         paintCard(this.boardscr, 6, 18, Card("  "))
 
-    def paintScore(this):
+    def paintScore(this, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
         x =  13
         y = 1
-        team = teamOf(this.snap.forPlayer)
+        team = teamOf(snap.forPlayer)
         other = otherTeam(team)
         this.boardscr.addstr(x+0, y, f"f:a", 1)
-        this.boardscr.addstr(x+1, y, f"{this.snap.score[team]}:{this.snap.score[other]}", 1)
+        this.boardscr.addstr(x+1, y, f"{snap.score[team]}:{snap.score[other]}", 1)
 
-    def paintTeam1(this):
+    def paintTeam1(this, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
         x = 12
         y = 21
 
-        for trick in this.snap.tricks:
-            if len(trick) < len(this.snap.order): break
+        for trick in snap.tricks:
+            if len(trick) < len(snap.order): break
             winner = trick.winner()
-            partner = (this.snap.forPlayer + 2) % 4
+            partner = (snap.forPlayer + 2) % 4
 
-            if winner == this.snap.forPlayer or winner == partner:
+            if winner == snap.forPlayer or winner == partner:
                 this.boardscr.addstr(x+0, y, f"*", 1)
                 x = x + 1
 
-    def paintTeam2(this):
+    def paintTeam2(this, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
         x = 7
         y = 35
 
-        for trick in this.snap.tricks:
-            if len(trick) < len(this.snap.order): break
+        for trick in snap.tricks:
+            if len(trick) < len(snap.order): break
             winner = trick.winner()
-            partner = (this.snap.forPlayer + 2) % 4
+            partner = (snap.forPlayer + 2) % 4
 
-            if winner != this.snap.forPlayer and winner != partner:
+            if winner != snap.forPlayer and winner != partner:
                 this.boardscr.addstr(x+0, y, f"*", 1)
                 x = x + 1
 
@@ -433,40 +468,49 @@ class View:
     # x : x offset
     # y : y offset
     # trick : current trick
-    def paintPlayer(this, chair, x, y):
+    def paintPlayer(this, chair, x, y, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
         # index = the index of the player in the snap.names array
         # the same that is used in: active, dealer, forPlayer, maker, and order[]
-        pIndex = (this.snap.forPlayer + chair) % 4
+        pIndex = (snap.forPlayer + chair) % 4
 
-        if (pIndex in this.snap.order) == False:
+        if (pIndex in snap.order) == False:
             paintBox(this.boardscr, x, y, "", curses.color_pair(4))
             this._paintPlayerName(pIndex, x, y, curses.color_pair(4))
-        elif pIndex == this.snap.active:
+        elif pIndex == snap.active:
             this._paintPlayer(pIndex, x, y, curses.color_pair(3))
             this._paintPlayerName(pIndex, x, y, curses.color_pair(3))
         else:
             this._paintPlayer(pIndex, x, y, curses.color_pair(1))
             this._paintPlayerName(pIndex, x, y, curses.color_pair(1))
 
-    def _paintPlayer(this, pIndex, x, y, color):
-        trick = this.snap.tricks[-1] if len(this.snap.tricks) > 0 else None
+    def _paintPlayer(this, pIndex, x, y, color, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
+        trick = snap.tricks[-1] if len(snap.tricks) > 0 else None
 
         if trick == None:
-            paintBox(this.boardscr, x, y, this.snap.lastAction[pIndex], color)
+            paintBox(this.boardscr, x, y, snap.lastAction[pIndex], color)
         else:
             card = trick.getCardByPlayer(pIndex)
             paintCard(this.boardscr, x, y, card, color)
 
-    def _paintPlayerName(this, pIndex, x, y, color):
+    def _paintPlayerName(this, pIndex, x, y, color, snap = None):
+        if snap == None and len(this.snaps) == 0: return
+        if snap == None: snap = this.snaps[-1]
+
         # Put name in parens if dealer, append trump to maker
-        name = this.snap.names[pIndex]
-        if this.snap.dealer == pIndex: name = f"({name})"
-        if this.snap.maker == pIndex: name = f"{name} {this.snap.trump}"
+        name = snap.names[pIndex]
+        if snap.dealer == pIndex: name = f"({name})"
+        if snap.maker == pIndex: name = f"{name} {snap.trump}"
         this.boardscr.addstr(x+5, y, f"{name}", color)
 
     def allowedSuits(this):
         suits = ["♠", "♣", "♥", "♦"]
-        suits.remove(this.snap.upCard.suit)
+        suits.remove(snap.upCard.suit)
         return suits
 
 def paintCard(screen, x, y, card, color = None):
@@ -507,5 +551,3 @@ def Main(stdscr):
 
 if __name__ == "__main__":
     curses.wrapper(Main)
-    # view = TestView()
-    # view.connect()
