@@ -39,8 +39,11 @@ class Game:
     def state0(this, player, action, data):
         this.allowedActions(action, "start")
         this.euchre.shuffleDeck()
-        this.euchre.dealCards()       
-        this.euchre.clearTricks() 
+        this.euchre.dealCards()               
+        this.enterState1()
+
+    def enterState1(this):
+        this.euchre.clearTricks()
         this.state = this.state1
 
     def state1(this, player, action, data):         
@@ -111,9 +114,8 @@ class Game:
             else:
                 this.euchre.nextHand()
                 this.euchre.shuffleDeck()
-                this.euchre.dealCards()
-                this.euchre.clearTricks()
-                this.state = this.state1
+                this.euchre.dealCards()                
+                this.enterState1()
 
     def allowedActions(this, action, *allowedActions):
         for allowed in allowedActions:
