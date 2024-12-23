@@ -66,8 +66,7 @@ class GameServer:
         elif parts[0] == "save":
             this.saveHistory()
         elif parts[0] == "load":
-            this.loadHistory()
-            await this.sendSnaps()
+            await this.loadHistory()
         elif parts[0] == "history":
             for entry in this.history:
                 print(entry)
@@ -139,7 +138,7 @@ class GameServer:
             print(ex)
 
 
-    def loadHistory(this):
+    async def loadHistory(this):
         print("--- Loading History -------------------")
         this.history = []
 
@@ -150,7 +149,21 @@ class GameServer:
                 parsed = line.split()
                 print(f"{line} -> {parsed}")
                 this.loadAction(parsed)
-        print("---------------------------------------")                
+        print("---------------------------------------")      
+
+        await this.sendSnaps()
+
+        while this.euchre.getCurrentPlayer().name != "Adam":
+            snap = Snapshot(this.game, this.euchre.getCurrentPlayer())
+            (action, data) = this.bot.decide(snap)
+            (action, data) = (action.lower(), data)
+
+            name = this.euchre.getCurrentPlayer().name
+            print(f"\b\b{name} : ('{action}', {data})")
+            print("> ", end="", flush=True)                             
+            this.game.input(this.euchre.getCurrentPlayer(), action, data)
+            this.history.append((name, action, data, this.game.hash))
+            await this.sendSnaps()          
 
     def loadAction(this, parsed):        
         action = parsed[0] if len(parsed) > 0 else ""
@@ -158,18 +171,12 @@ class GameServer:
         if action == "": return
 
         if action == "seed":
-            random.seed(int(data))
-            this.history.append((None, "seed", data, None))
+            this.initGame(seed = int(data))
         elif action == "start":
-            names = ["Adam", "T100", "Skynet", "Robocop"]
-            random.shuffle(names)
-            this.euchre = Euchre(names)  
-            this.game = Game(this.euchre)
-            this.game.input(None, "start", None)
-            this.history.append((None, "start", None, this.game.hash))  
+            pass
         else:
             this.game.input(this.euchre.getCurrentPlayer(), action, data)
-            this.history.append((this.euchre.getCurrentPlayer().name, action, data, this.game.hash))  
+            this.history.append((this.euchre.getCurrentPlayer().name, action, data, this.game.hash))   
 
 
     def saveHistory(this):
