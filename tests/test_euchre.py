@@ -1,6 +1,7 @@
 import unittest
 import pytest
-from euchre.Euchre import Euchre, EuchreException
+import numpy as np
+from euchre.Euchre import *
 
 @pytest.fixture
 def euchre():
@@ -11,230 +12,542 @@ def euchre():
 def test_initialization(euchre):
     assert len(euchre.players) == 4
     
-    assert euchre.order == [0, 1, 2, 3]
-    assert euchre.dealer == 3
-    assert euchre.currentPlayer == 0
-    
-    assert len(euchre.trick) is 0
-    assert euchre.upCard is None
-    assert euchre.downCard is None
-    assert euchre.trump is None
-    assert euchre.maker is None
+    # player order in new game is same as player names
+    assert euchre.current_player.name == "Player1"
+    assert euchre.first_player.name == "Player1"
 
-    assert euchre.players[0].cards == []
-    assert euchre.players[1].cards == []
-    assert euchre.players[2].cards == []
-    assert euchre.players[3].cards == []
-    assert euchre.players[0].played == []
-    assert euchre.players[1].played == []
-    assert euchre.players[2].played == []
-    assert euchre.players[3].played == []    
+    # no maker in new game
+    assert euchre.maker == None
 
-def test_next_hand_x1(euchre):
-    euchre.nextHand()
-    assert euchre.order == [1, 2, 3, 0]
-    assert euchre.dealer == 0
-    assert euchre.currentPlayer == 1
+    # the dealer is the last player in order
+    assert euchre.dealer.name == "Player4"
 
-def test_next_hand_x2(euchre):
-    euchre.nextHand()
-    euchre.nextHand()
+    # the score starts at 0
+    assert euchre.score[0] == 0
+    assert euchre.score[1] == 0
 
-    assert euchre.order == [2, 3, 0, 1]
-    assert euchre.dealer == 1
-    assert euchre.currentPlayer == 2
+def test_shuffle_deck(euchre):
+    original_deck = euchre.deck.copy()       
+    euchre.shuffle_deck()
+    shuffled_deck = euchre.deck.copy()       
 
-# rotates back to the first player
-def test_next_hand_x4(euchre):
-    euchre.nextHand()
-    euchre.nextHand()
-    euchre.nextHand()
-    euchre.nextHand()
+    # Assert the deck length remains the same
+    assert len(original_deck) == len(shuffled_deck), "Deck size changed after shuffle"
 
-    assert euchre.order == [0, 1, 2, 3]
-    assert euchre.dealer == 3
-    assert euchre.currentPlayer == 0    
+    # Assert the deck contains the same cards
+    assert set(original_deck) == set(shuffled_deck), "Deck contents changed after shuffle"
 
-# retrieve the player object for the first player
-# when first initialized the player order will the same as the names
-def test_get_current_player(euchre):
-    assert euchre.getCurrentPlayer().name == "Player1"
+    # Assert the deck order has changed (non-trivial shuffle)
+    assert original_deck != shuffled_deck, "Deck order did not change after shuffle"
 
-# retrieve the player object for the dealer
-# when first initialized the player order will the same as the names
-def test_get_dealer(euchre):
-    assert euchre.getDealer().name == "Player4"
 
-# if next player has not been called,
-# is at first player returns true
-def test_is_at_first_player(euchre):
-    assert euchre.isAtFirstPlayer() == True
-
-# activate dealer makes the current player the dealer
 def test_activate_dealer(euchre):
-    euchre.activateDealer()
-    assert euchre.getCurrentPlayer().name == "Player4"   
+    euchre.activate_dealer()
+    assert euchre.current_player == euchre.dealer
 
-# activate next player makes the current player the next in order
-def test_activate_next_player_x1(euchre):
-    euchre.activateNextPlayer()
-    assert euchre.getCurrentPlayer().name == "Player2" 
-
-# activate next player makes the current player the next in order
-def test_activate_next_player_x2(euchre):
-    euchre.activateNextPlayer()
-    euchre.activateNextPlayer()
-    assert euchre.getCurrentPlayer().name == "Player3" 
-
-# activate next player makes the current player the next in order
-# x4 cycles back to the first player
-def test_activate_next_player_x4(euchre):
-    euchre.activateNextPlayer()
-    euchre.activateNextPlayer()
-    euchre.activateNextPlayer()
-    euchre.activateNextPlayer()    
-    assert euchre.getCurrentPlayer().name == "Player1" 
-
-# activate first player makes the current player the first player
 def test_activate_first_player(euchre):
-    euchre.activateNextPlayer()
-    euchre.activateFirstPlayer()
-    assert euchre.getCurrentPlayer().name == "Player1"       
+    euchre.activate_dealer()
+    euchre.activate_first_player()
+    assert euchre.current_player.name == "Player1"
 
-# deal cards to each player and the upCard
-# the cards will be in a predictable order because they have not been shuffled
+def test_activate_next_player(euchre):
+    euchre.activate_next_player()
+    assert euchre.current_player.name == "Player2"
+
+# activate next player rotates to first player
+def test_activate_next_player_x4(euchre):
+    euchre.activate_next_player()
+    euchre.activate_next_player()
+    euchre.activate_next_player()
+    euchre.activate_next_player()
+    assert euchre.current_player.name == "Player1"
+
 def test_deal_cards(euchre):
-    euchre.dealCards()
+    euchre.deal_cards()
 
-    assert euchre.players[0].cards == ["9♠", "K♠", "J♣", "9♥", "K♥"]
-    assert euchre.players[1].cards == ["10♠", "A♠", "Q♣", "10♥", "A♥"]
-    assert euchre.players[2].cards == ["J♠", "9♣", "K♣", "J♥", "9♦"]
-    assert euchre.players[3].cards == ["Q♠", "10♣", "A♣", "Q♥", "10♦"]
-    assert euchre.players[0].played == []
-    assert euchre.players[1].played == []
-    assert euchre.players[2].played == []
-    assert euchre.players[3].played == []       
     assert euchre.upCard == "J♦"
-    assert euchre.trick == []
+    assert euchre.downCard == None
+    assert euchre.discard == None
 
-# playing a card removes it from player.cards and inserts it into player.played and euchre.trick
-def test_play_card_x1(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠");
-    euchre.playCard("9♠")
+    np.testing.assert_array_equal(
+        np.array(euchre.players[0].cards), 
+        np.array(["9♠", "K♠", "J♣", "9♥", "K♥"])
+    )
 
-    assert euchre.players[0].cards == ["K♠", "J♣", "9♥", "K♥"]
-    assert euchre.players[0].played == ["9♠"]
-    assert euchre.trick == ["9♠"]
+    np.testing.assert_array_equal(
+        np.array(euchre.players[1].cards), 
+        np.array(["10♠", "A♠", "Q♣", "10♥", "A♥"])
+    )
 
-def test_play_card_x2(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠");
-    euchre.playCard("9♠")
-    euchre.playCard("10♠")
+    np.testing.assert_array_equal(
+        np.array(euchre.players[2].cards), 
+        np.array(["J♠", "9♣", "K♣", "J♥", "9♦"])
+    )
 
-    assert euchre.players[0].cards == ["K♠", "J♣", "9♥", "K♥"]
-    assert euchre.players[0].played == ["9♠"]
-    assert euchre.players[1].cards == ["A♠", "Q♣", "10♥", "A♥"]
-    assert euchre.players[1].played == ["10♠"]    
-    assert euchre.trick == ["9♠", "10♠"]
+    np.testing.assert_array_equal(
+        np.array(euchre.players[3].cards), 
+        np.array(["Q♠", "10♣", "A♣", "Q♥", "10♦"])
+    )            
 
-# player must have the card to play the card
-def test_play_card_exception_1(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠");
+def test_turn_down_card(euchre):   
+    euchre.deal_cards()
+    euchre.turn_down_card()
 
-    with pytest.raises(EuchreException):        
-        euchre.playCard("10♠")
+    assert euchre.upCard == None
+    assert euchre.downCard == "J♦"
+    assert euchre.discard == None    
+
+def test_pick_up_card(euchre):   
+    euchre.deal_cards()
+    euchre.dealer_swap_card("10♣")
+
+    assert euchre.upCard == "J♦"
+    assert euchre.downCard == None
+    assert euchre.discard == "10♣"  
+    assert "J♦" in euchre.dealer.cards 
+    assert "10♣" not in euchre.dealer.cards
+    assert euchre.maker.name == "Player4" #dealer
+
+# can not turn down card after picking up
+def test_turn_down_card_exception(euchre):
+    euchre.deal_cards()
+    euchre.dealer_swap_card("10♣")
+
+    # ensure precondition
+    assert euchre.discard == "10♣"
+
+    with pytest.raises(EuchreException, match="Discard must be None to turn down."):
+        euchre.turn_down_card()
+
+# can not pick up card twice
+def test_pick_up_exception_0(euchre):
+    euchre.deal_cards()
+    euchre.dealer_swap_card("10♣")
+
+    # ensure precondition
+    assert euchre.discard == "10♣"
+
+    with pytest.raises(EuchreException, match="Discard must be None to swap."):
+        euchre.dealer_swap_card("Q♠")    
+
+# can not pick up card twice
+def test_pick_up_exception_1(euchre):
+    euchre.deal_cards()
+
+    with pytest.raises(EuchreException, match="Must swap card from hand: 10♠"):
+        euchre.dealer_swap_card("10♠")             
+ 
+
+# must make trump before adding trick
+def test_add_trick_exception_0(euchre):
+    euchre.deal_cards()    
+
+    with pytest.raises(EuchreException, match="Trump must be made before adding a trick."):
+        euchre.add_trick()
+
+def test_make_trump_up_card(euchre):
+    euchre.deal_cards()    
+
+    # precondition
+    assert euchre.upCard == "J♦"
+
+    euchre.make_trump()
+    assert euchre.trump == "♦"
+    assert euchre.maker.name == "Player1"
+
+def test_make_trump(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")
+    assert euchre.trump == "♠"
+    assert euchre.maker.name == "Player1"
+
+# trump can not match the down card
+def test_make_trump_exception_0(euchre):
+    euchre.deal_cards()    
+    euchre.turn_down_card()
+
+    # precondition
+    assert euchre.downCard == "J♦"
+
+    with pytest.raises(EuchreException, match="Trump can not match the down card."):
+        euchre.make_trump("♦") 
+
+# default trump can not be made if there is no upcard
+def test_make_trump_exception_1(euchre):
+    euchre.deal_cards()    
+    euchre.turn_down_card()
+
+    # precondition
+    assert euchre.upCard == None
+
+    with pytest.raises(EuchreException, match="Default trump requires an up card."):
+        euchre.make_trump() 
 
 
-# player must follow suit
-# player2 could follow suit but doesn't
-def test_follow_suit_1(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠");
-    euchre.playCard("9♠")
+# must make trump before adding trick
+def test_add_trick_exception_0(euchre):
+    euchre.deal_cards()    
 
-    with pytest.raises(EuchreException):        
-        euchre.playCard("Q♣")
+    with pytest.raises(EuchreException, match="Trump must be made before adding a trick."):
+        euchre.add_trick()        
+
+def test_add_trick(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")
+    euchre.add_trick()
+
+    assert len(euchre.tricks) == 1
+
+def test_add_second_trick(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")
+    euchre.add_trick()
+
+    with pytest.raises(EuchreException, match="Previous trick not complete."):
+        euchre.add_trick()
+
+def test_play_card_exception_0(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")
+    euchre.add_trick()
+
+    with pytest.raises(EuchreException, match="Card 'J♠' not in hand of 'Player1'."):
+        euchre.play_card("J♠")
     
-# player must follow suit
-# player1 leads left bower
-# player2 could follow suit but doesn't
-def test_follow_suit_2(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠")
-    euchre.playCard("J♣")
+def test_play_trick(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")
+    euchre.add_trick()
 
-    with pytest.raises(EuchreException):        
-        euchre.playCard("Q♣")    
+    euchre.play_card("9♠")
 
-# player1 goes alone
-# player3 is removed
+    assert "9♠" in euchre.tricks[-1]
+
+# play 4 cards
+def test_play_trick(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")
+    euchre.add_trick()
+
+    euchre.play_card("9♠")
+    euchre.play_card("10♠")
+    euchre.play_card("J♠")
+    euchre.play_card("Q♠")
+
+    assert len(euchre.tricks[-1]) == 4
+    assert euchre.is_trick_finished
+
+# must follow suit
+def test_play_card_exception_2(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠") 
+
+    euchre.add_trick()
+    euchre.play_card("9♠")
+
+    with pytest.raises(EuchreException, match="Card 'Q♣' must follow suit '♠'."):  
+        euchre.play_card("Q♣")
+
+# trick full can't play card
+def test_play_card_exception_1(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠") 
+
+    euchre.add_trick()
+    euchre.play_card("9♠")
+    euchre.play_card("10♠")
+    euchre.play_card("J♠")
+    euchre.play_card("Q♠")
+
+    with pytest.raises(EuchreException, match="Trick full, can't play card 'K♠'."):    
+        euchre.play_card("K♠")   
+
+# test the scoring of a trick by playing a hand
+def test_score_trick(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")    
+
+    euchre.add_trick()
+
+    euchre.play_card("9♠")  #P1
+    euchre.play_card("10♠") #P2
+    euchre.play_card("J♠")  #P3 W
+    euchre.play_card("Q♠")  #P4
+    euchre.score_trick()
+
+    assert euchre.current_player.name == "Player3"    
+    assert euchre.get_player(2).tricks == 1
+
+    euchre.add_trick()
+    euchre.play_card("9♣")  #P3
+    euchre.play_card("10♣") #P4
+    euchre.play_card("K♠")  #P1 W
+    euchre.play_card("Q♣")  #P2 
+    euchre.score_trick()
+
+    assert euchre.current_player.name == "Player1"    
+    assert euchre.get_player(0).tricks == 1
+
+    euchre.add_trick()
+    euchre.play_card("J♣") #P1 W
+    euchre.play_card("A♠") #P2
+    euchre.play_card("K♣") #P3
+    euchre.play_card("A♣") #P4 
+    euchre.score_trick()
+
+    assert euchre.current_player.name == "Player1"    
+    assert euchre.get_player(0).tricks == 2
+
+    euchre.add_trick()
+    euchre.play_card("9♥")  #P1
+    euchre.play_card("10♥") #P2
+    euchre.play_card("J♥")  #P3
+    euchre.play_card("Q♥")  #P4 W
+    euchre.score_trick() 
+
+    assert euchre.current_player.name == "Player4"    
+    assert euchre.get_player(3).tricks == 1
+
+    euchre.add_trick()
+    euchre.play_card("10♦") #P4 W
+    euchre.play_card("K♥")  #P1
+    euchre.play_card("A♥")  #P2
+    euchre.play_card("9♦")  #P3
+    euchre.score_trick()     
+
+    assert euchre.current_player.name == "Player4"    
+    assert euchre.get_player(3).tricks == 2    
+    assert len(euchre.tricks) == 5
+    assert euchre.is_trick_finished    
+
+def test_clear_tricks(euchre):
+    test_score_trick(euchre)
+    euchre.clear_tricks()
+    assert len(euchre.tricks) == 0
+
+# can't clear unfinished hand
+def test_clear_tricks_exception_0(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")    
+
+    euchre.add_trick()
+
+    euchre.play_card("9♠")  #P1
+    euchre.play_card("10♠") #P2
+    euchre.play_card("J♠")  #P3 W
+    euchre.play_card("Q♠")  #P4
+    euchre.score_trick()
+
+    with pytest.raises(EuchreException, match="Can not clear an unfinished hand."):    
+        euchre.clear_tricks()
+
+def test_go_alone_exception_0(euchre):
+    # Player1 goes alone
+    with pytest.raises(EuchreException, match="Trump must be made before going alone."): 
+        euchre.go_alone()    
+
 def test_go_alone(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠")
-    euchre.goAlone()
+    euchre.deal_cards()    
+    euchre.make_trump("♠")  
 
-    assert euchre.order == [0, 1, 3]
+    # Ensure the current player is Player1
+    assert euchre.current_player.name == "Player1"
 
-# trick is not finished if 4 cards have not been played
-def test_is_trick_finished_1(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠")
-    assert euchre.isTrickFinished() == False
+    # Player1 goes alone
+    euchre.go_alone()
 
-# trick is finished if 4 cards have been played
-def test_is_trick_finished_2(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠")
+    # Check that Player1 is marked as going alone
+    assert euchre.current_player.alone is True
 
-    euchre.playCard("J♣")
-    euchre.playCard("10♠")
-    euchre.playCard("J♠")
-    euchre.playCard("Q♠")
+    # Ensure Player1's partner (Player3) has been removed from the order
+    partners_index = euchre.players.index(euchre.current_player.partner)
+    assert partners_index not in euchre.order
 
-    assert euchre.isTrickFinished() == True    
+# must have 5 tricks played to advance
+def test_next_hand_exception_0(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")  
 
-# if a player has gone alone
-# trick is finished if 3 cards have been played
-def test_is_trick_finished_3(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠")
-    euchre.goAlone()
+    with pytest.raises(EuchreException, match="Hand not finished."): 
+        euchre.next_hand()    
 
-    euchre.playCard("J♣")
-    euchre.playCard("10♠")
-    euchre.playCard("Q♠")
+def test_next_hand(euchre):
+    test_score_trick(euchre)
+    euchre.next_hand()   
 
-    assert euchre.isTrickFinished() == True   
+    assert euchre.hands_played == 1 
+    assert euchre.first_player.name == "Player2"
+    assert euchre.dealer.name == "Player1"
+    assert euchre.order[0] == 1
+    assert euchre.order[1] == 2
+    assert euchre.order[2] == 3
+    assert euchre.order[3] == 0
 
-def test_dealer_swap_card(euchre):
-    euchre.dealCards()
-    euchre.dealerSwapCard("10♦")
-    assert euchre.getDealer().cards == ["Q♠", "10♣", "A♣", "Q♥", "J♦"]
-    assert euchre.downCard == "10♦"
+@pytest.mark.parametrize(
+    "score, expected",
+    [
+        # Game over first team has >= 10
+        ([11, 5], True),
+        ([10, 5], True),
 
-def test_can_not_advance_incomplete_trick(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠")
-    euchre.playCard("J♣")   
+        # Game over second team has >= 10
+        ([4, 12], True),
+        ([6, 10], True),
 
-    with pytest.raises(EuchreException):        
-        euchre.nextTrick()   
+        # Game not over neither team has >= 10
+        ([4, 0], False),
+        ([9, 9], False)
+    ]
+)
+def test_is_game_over(score, expected):
+    """
+    Test the score_hand function with various scenarios.
 
-def test_next_trick(euchre):
-    euchre.dealCards()
-    euchre.makeTrump("♠")
-    euchre.playCard("J♣")
-    euchre.playCard("10♠")
-    euchre.playCard("J♠")
-    euchre.playCard("Q♠")  
+    Args:
+        maker (int): Index of the maker.
+        tricks (List[int]): List of tricks won by each player.
+        isAlone (bool): Whether the maker's team went alone.
+        expected_score (int): Expected score based on the input.
+    """
+    assert is_game_over(score) == expected
 
-    euchre.nextTrick()       
+@pytest.mark.parametrize(
+    "maker, tricks, isAlone, expected_score",
+    [
+        # Maker team wins all 5 tricks, goes alone
+        (0, [5, 0, 0, 0], True, 4),
 
-    assert euchre.players[2].tricks == 1
-    assert euchre.order == [2, 3, 0, 1]
+        # Maker team wins all 5 tricks, does not go alone
+        (0, [3, 0, 2, 0], False, 2),
 
+        # Maker team wins 3 tricks
+        (0, [3, 0, 0, 2], False, 1),
 
+        # Maker team wins 4 tricks
+        (0, [4, 0, 0, 1], False, 1),
 
+        # Maker team loses, opponent team wins all tricks
+        (0, [0, 5, 0, 0], False, -2),
+
+        # Maker team loses, opponent team wins all tricks
+        (0, [0, 3, 0, 2], False, -2),        
+
+        # Maker team loses with mixed tricks
+        (0, [2, 1, 0, 2], False, -2),
+
+        # Maker at a different index, team wins 5 tricks alone
+        (2, [0, 0, 5, 0], True, 4),
+
+        # Maker at a different index, team wins 5 tricks not alone
+        (2, [2, 0, 3, 0], False, 2),
+
+        # Maker team wins exactly 3 tricks, does not go alone
+        (1, [1, 2, 1, 1], False, 1),
+
+        # Maker team loses with mixed tricks, maker at a different index
+        (1, [1, 0, 3, 1], False, -2),
+    ],
+)
+def test_score_hand(maker, tricks, isAlone, expected_score):
+    """
+    Test the score_hand function with various scenarios.
+
+    Args:
+        maker (int): Index of the maker.
+        tricks (List[int]): List of tricks won by each player.
+        isAlone (bool): Whether the maker's team went alone.
+        expected_score (int): Expected score based on the input.
+    """
+    assert score_hand(maker, tricks, isAlone) == expected_score
+
+# hand is not finished when less than 5 tricks have been added
+def test_is_hand_finished_false_0(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")    
+
+    euchre.add_trick()
+
+    euchre.play_card("9♠")  #P1
+    euchre.play_card("10♠") #P2
+    euchre.play_card("J♠")  #P3 W
+    euchre.play_card("Q♠")  #P4
+    euchre.score_trick()
+
+    assert euchre.current_player.name == "Player3"    
+    assert euchre.get_player(2).tricks == 1
+
+    euchre.add_trick()
+    euchre.play_card("9♣")  #P3
+    euchre.play_card("10♣") #P4
+    euchre.play_card("K♠")  #P1 W
+    euchre.play_card("Q♣")  #P2 
+    euchre.score_trick()
+
+    assert euchre.current_player.name == "Player1"    
+    assert euchre.get_player(0).tricks == 1
+
+    euchre.add_trick()
+    euchre.play_card("J♣") #P1 W
+    euchre.play_card("A♠") #P2
+    euchre.play_card("K♣") #P3
+    euchre.play_card("A♣") #P4 
+    euchre.score_trick()
+
+    assert euchre.is_hand_finished == False   
+
+# hand is not finished when last trick is not finished
+def test_is_hand_finished_false_1(euchre):
+    euchre.deal_cards()    
+    euchre.make_trump("♠")    
+
+    euchre.add_trick()
+
+    euchre.play_card("9♠")  #P1
+    euchre.play_card("10♠") #P2
+    euchre.play_card("J♠")  #P3 W
+    euchre.play_card("Q♠")  #P4
+    euchre.score_trick()
+
+    assert euchre.current_player.name == "Player3"    
+    assert euchre.get_player(2).tricks == 1
+
+    euchre.add_trick()
+    euchre.play_card("9♣")  #P3
+    euchre.play_card("10♣") #P4
+    euchre.play_card("K♠")  #P1 W
+    euchre.play_card("Q♣")  #P2 
+    euchre.score_trick()
+
+    assert euchre.current_player.name == "Player1"    
+    assert euchre.get_player(0).tricks == 1
+
+    euchre.add_trick()
+    euchre.play_card("J♣") #P1 W
+    euchre.play_card("A♠") #P2
+    euchre.play_card("K♣") #P3
+    euchre.play_card("A♣") #P4 
+    euchre.score_trick()
+
+    assert euchre.current_player.name == "Player1"    
+    assert euchre.get_player(0).tricks == 2
+
+    euchre.add_trick()
+    euchre.play_card("9♥")  #P1
+    euchre.play_card("10♥") #P2
+    euchre.play_card("J♥")  #P3
+    euchre.play_card("Q♥")  #P4 W
+    euchre.score_trick() 
+
+    assert euchre.current_player.name == "Player4"    
+    assert euchre.get_player(3).tricks == 1
+
+    euchre.add_trick()
+    euchre.play_card("10♦") #P4 W
+    euchre.play_card("K♥")  #P1
+    euchre.play_card("A♥")  #P2
+
+    assert euchre.is_hand_finished == False 
+
+def test_is_hand_finished_true(euchre):    
+    test_score_trick(euchre)
+    assert euchre.is_hand_finished == True 

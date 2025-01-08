@@ -1,246 +1,523 @@
-from euchre.Player import Player, PlayerList
-from euchre.Card import Card, Deck, Trick, Hand
-from euchre.delString import delString
-from euchre.rotate import rotate
+from euchre.Player import PlayerList, Player
+from euchre.Card import Card, Deck, Trick
+from euchre.rotate import rotateTo
 import euchre.bots.tools as tools
+from typing import List, Optional
+
+NUM_PLAYERS = 4
+NUM_CARDS_PER_PLAYER = 5
+NUM_TRICKS_PER_HAND = 5
+REQUIRED_TRICKS_TO_WIN = 3
 
 class EuchreException(Exception):
-    def __init__(this, msg):
+    """
+    Custom exception class for Euchre-specific errors.
+    """
+    def __init__(self, msg: str) -> None:
+        """
+        Initialize the EuchreException with an error message.
+
+        Args:
+            msg (str): The error message.
+        """
         super().__init__(msg)
 
 class Euchre:
-    def __init__(this, names):
-        this.players = PlayerList(names)
-        this.order = [0, 1, 2, 3]
-        this.currentPIndex = this.order[0]
-        this.dealer = this.order[3]
-        this.handCount = 0
-        this.trickCount = 0
+    """
+    The core class representing a single game of Euchre.
+    """
 
-        this.deck = Deck()
+    def __init__(self, names: List[str]) -> None:
+        """
+        Initialize a new Euchre game instance.
 
-        this.upCard = None
-        this.downCard = None
-        this.trump = None
-        this.maker = None 
-        this.score = [0, 0]   
-        this.clearTricks()
+        Args:
+            names (List[str]): A list of player names, in seating order.
+        """
+        self.players = PlayerList(names)
+        self.order: List[int] = [0, 1, 2, 3]
+        self.current_player_index = self.order[0]
+        self.dealer_index = self.order[3]
+        self.hand_count = 0
 
-    def hasTrick(this):
-        return len(this.tricks) > 0
+        self.deck = Deck()      
+        self.current_score: List[int] = [0, 0] 
+        self.__reset()
+        self.current_tricks: List[Trick] = []
 
-    def clearTricks(this):
-        this.tricks = []
+    def __reset(self) -> None:
+        """
+        Reset the state for a new hand (e.g., on dealing a new hand).
+        """
+        self.trickCount = 0
+        self.upCard: Optional[Card] = None
+        self.downCard: Optional[Card] = None
+        self.discard: Optional[Card] = None
+        self.current_trump: Optional[str] = None
+        self.last_maker: Optional[int] = None
 
-    def addTrick(this):
-        if this.trump is None: raise EuchreException(f"to add a trick, trump can not be None.  Must call #MakeTrump.")
-        this.tricks.append(Trick(this.trump))
-
-    # shuffle the deck, should be called after nextHand
-    def shuffleDeck(this):
-        this.deck = Deck().shuffle()
-
-    # advance to the next hand
-    # the order reset, the first player becomes the dealer
-    # the deck is collected (not shuffled)
-    # upCard, downCard, trump, maker, and trick are all cleared
-    def nextHand(this):
-        this.handCount = this.handCount + 1
-        this.order = []
-
-        for i in range(this.handCount, this.handCount + 4):
-            this.order.append(i % 4)
-
-        this.currentPIndex = this.order[0]
-        this.dealer = this.order[3]
-
-        this.deck = Deck()
-
-        this.trickCount = 0
-        this.upCard = None
-        this.downCard = None
-        this.trump = None
-        this.maker = None
-
-    # score the current hand
-    # if the score is >= 10 for either team return True
-    def scoreHand(this):
-        makerTeam = tools.teamOf(this.maker)
-        otherTeam = tools.otherTeam(makerTeam)
-        tricks = [0, 0]
+    @property 
+    def hands_played(self) -> int:
+        """
+        Get the number of hands that have been completed so far.
         
-        for trick in this.tricks:
-            team = trick.winner() % 2
-            tricks[team] = tricks[team] + 1
+        Returns:
+            int: The total number of hands completed in the game.
+        """
+        return self.hand_count
 
-        if tricks[makerTeam] == 5 and this.getMaker().alone:
-            this.score[makerTeam] += 4
-        elif tricks[makerTeam] == 5:
-            this.score[makerTeam] += 2
-        elif tricks[makerTeam] > 3:
-            this.score[makerTeam] += 1
-        else:
-            this.score[otherTeam] += 2
+    @property  
+    def trump(self) -> Optional[str]:
+        """
+        Get the suit that is trump for the current hand.
 
-    def isGameOver(this):
-        if this.score[0] >= 10 or this.score[1] >= 10:
-            return True
-        else:
-            return False
+        Returns:
+            Optional[str]: The trump suit as a string, or None if no trump is set yet.
+        """
+        return self.current_trump
 
-    # advance to the next player in the order
-    # circles back to first player
-    # returns the matching player object
-    def activateNextPlayer(this):        
-        currentOrderIndex = this.order.index(this.currentPIndex)
-        nextOrderIndex = (currentOrderIndex + 1) % len(this.order)
-        this.currentPIndex = this.order[nextOrderIndex]
-        return this.getCurrentPlayer()       
+    @property
+    def score(self) -> List[int]:
+        """
+        Retrieve the current score of the game.
 
-    # deprecated
-    # true if the current player is the first player
-    def isAtFirstPlayer(this):
-        return this.getCurrentPlayer() == this.getFirstPlayer()
+        Returns:
+            List[int]: A two-element list containing the score for each team.
+        """
+        return self.current_score.copy()
 
-    # retrieve the player object for the current player
-    def getCurrentPlayer(this):
-        return this.players[this.currentPIndex]
+    @property 
+    def has_trick(self) -> bool:
+        """
+        Check if at least one trick has been started.
 
-    def getMaker(this):
-        if this.maker == None: return None
-        return this.players[this.maker]
+        Returns:
+            bool: True if a trick is in progress or completed, False otherwise.
+        """
+        return len(self.current_tricks) > 0
 
-    # retrieve the player object for the first player
-    def getFirstPlayer(this):
-        index = this.order[0]
-        return this.players[index]
+    def clear_tricks(self) -> None:
+        """
+        Clear all tricks from the hand (only valid if the hand is finished).
+        
+        Raises:
+            EuchreException: If the hand is not finished.
+        """
+        if not self.is_hand_finished:
+            raise EuchreException("Can not clear an unfinished hand.")
+        self.current_tricks = []
 
-    # retrieve the player object for the dealer
-    def getDealer(this):
-        return this.players[this.dealer]      
+    def add_trick(self) -> None:
+        """
+        Start a new trick for the current hand.
+        
+        Raises:
+            EuchreException: If trump hasn't been declared, or if the previous trick is not finished.
+        """
+        if self.current_trump is None:
+            raise EuchreException("Trump must be made before adding a trick.")
+        if self.has_trick and not self.is_trick_finished:
+            raise EuchreException("Previous trick not complete.")
+        self.current_tricks.append(Trick(self.current_trump))
 
-    # make the dealer the current player
-    def activateDealer(this):
-        this.currentPIndex = this.dealer
 
-    # make the first player the current player
-    def activateFirstPlayer(this):
-        this.currentPIndex = this.order[0]             
+    @property
+    def tricks(self) -> List[Trick]:
+        """
+        Get a copy of the list of Tricks played in this hand so far.
 
-    # deal cards out to players and upCard
-    def dealCards(this):
-        for i in range(0, 5):
-            for player in this.players:
-                card = this.deck.pop(0)
+        Returns:
+            List[Trick]: A copy of the current hand's tricks.
+        """
+        return self.current_tricks.copy()
+
+    def shuffle_deck(self) -> None:
+        """
+        Shuffle the deck. Typically called after next_hand but before dealing.
+        """
+
+        # requires a new deck because cards are removed from the deck during dealing
+        self.deck = Deck().shuffle()
+
+    def next_hand(self) -> None:
+        """
+        Advance to the next hand if the current hand is finished.
+        
+        Raises:
+            EuchreException: If the current hand is not yet finished.
+        """
+        if not self.is_hand_finished:
+            raise EuchreException("Hand not finished.")
+
+        self.hand_count += 1
+        self.order = []
+
+        # the dealer is advanced by one
+        self.dealer_index = (self.dealer_index + 1) % NUM_PLAYERS
+
+        # current player is first after dealer
+        # can not use old current, as it is set by trick winner see #score_trick
+        self.current_player_index = (self.dealer_index + 1) % NUM_PLAYERS
+
+        # Recompute the order, where the previous dealer is now the f
+        for i in range(NUM_PLAYERS):
+            self.order.append((self.current_player_index + i) % NUM_PLAYERS)
+
+        self.__reset()
+
+    def activate_next_player(self) -> Player:
+        """
+        Advance to the next player in the order (circularly) and return that player.
+
+        Returns:
+            Player: The player who is now active.
+        """
+        currentOrderIndex = self.order.index(self.current_player_index)
+        nextOrderIndex = (currentOrderIndex + 1) % len(self.order)
+        self.current_player_index = self.order[nextOrderIndex]
+        return self.current_player 
+
+    @property
+    def current_player(self) -> Player:
+        """
+        Retrieve the currently active player.
+
+        Returns:
+            Player: The player object for the current player.
+        """
+        return self.players[self.current_player_index]
+
+    def get_player(self, index: int) -> Player:
+        """
+        Retrieve a player by playing order.
+
+        Args:
+            index (int): The index of the player in the list.
+
+        Returns:
+            Player: The player object at the given index.
+        """
+        return self.players[index]
+
+    @property
+    def maker(self) -> Optional[Player]:
+        """
+        Retrieve the player who declared the trump suit (the maker).
+        
+        Returns:
+            Optional[Player]: The player object representing the maker, or None if no trump suit is declared.
+        """
+        if self.last_maker is None:
+            return None
+        return self.players[self.last_maker]
+
+    @property
+    def first_player(self) -> Player:
+        """
+        Retrieve the player object for the first player (based on the current self.order).
+
+        Returns:
+            Player: The first player in the current order.
+        """
+        index = self.order[0]
+        return self.players[index]
+
+    @property
+    def dealer(self) -> Player:
+        """
+        Retrieve the current dealer.
+
+        Returns:
+            Player: The dealer player object.
+        """
+        return self.players[self.dealer_index]
+
+    def activate_dealer(self) -> None:
+        """
+        Make the dealer the current player.
+        """
+        self.current_player_index = self.dealer_index
+
+    def activate_first_player(self) -> None:
+        """
+        Make the first player from the order the current player.
+        """
+        self.current_player_index = self.order[0]         
+
+    def deal_cards(self) -> None:
+        """
+        Deal 5 cards to each player, then set the upCard from the top of the deck.
+        """
+        for _ in range(NUM_CARDS_PER_PLAYER):
+            for player in self.players:
+                card = self.deck.pop(0)
                 player.cards.append(card)
+        self.upCard = self.deck.pop(0)
 
-        this.upCard = this.deck.pop(0)
-
-    # removes the current player's partner from the order,
-    # sets the current player's 'alone' flag
-    def goAlone(this):
-        this.getCurrentPlayer().alone = True
-        i = this.players.index(this.getCurrentPlayer().partner)
-        this.order.remove(i)
-
-    # the current player declares trump (orders up or declares)
-    # if suit is omitted the upCard suit is used
-    def makeTrump(this, suit:str = None):
-        this.maker = this.currentPIndex
-        if suit != None: this.trump = suit     
-        else: this.trump = this.upCard.suit
-
-    # true if enough cards have been played to advance to the next trick
-    def isTrickFinished(this):        
-        return len(this.tricks[-1]) == len(this.order)
-
-    def __checkFollowSuit(this, player, card):
-        if tools.canPlay(this.trump, this.tricks[-1], player.cards, card) == False:
-            leadSuit = this.tricks[-1].getLeadSuit()
-            raise EuchreException(f"card '{card}' must follow suit '{leadSuit}'")
-
-    # the dealer removes card from their hand (it becomes downCard)
-    # the upCard is added to the dealers hand
-    def dealerSwapCard(this, card):
-        this.getDealer().cards.remove(card)
-        this.getDealer().cards.append(this.upCard)
-        this.downCard = card
-
-    # the current player plays the specified card
-    # it is removed from their hand and switched to played
-    # it is added to the trick
-    def playCard(this, card, next = True):
-        if this.trump is None: raise EuchreException(f"to play card, trump can not be None.  Must call #MakeTrump.")
-        if isinstance(card, str): card = Card(card)
-
-        player = this.getCurrentPlayer()
-
-        if card not in player.cards: raise EuchreException(f"card '{card}' not in hand of '{player.name}'")
-        this.__checkFollowSuit(player, card)
-
-        player.cards.remove(card)   
-        player.played.append(card)
+    def go_alone(self) -> None:
+        """
+        Indicate that the current player goes alone, removing their partner from the play order.
         
-        this.tricks[-1].append(this.currentPIndex, card)
+        Raises:
+            EuchreException: If trump is not set.
+        """
+        if self.current_trump is None:
+            raise EuchreException("Trump must be made before going alone.")
 
-        if next: this.activateNextPlayer()
+        # Mark the current player as going alone
+        self.current_player.alone = True
+        partner_index = self.players.index(self.current_player.partner)
+        self.order.remove(partner_index)
 
-    # determine the winner of the previous trick,
-    # that player becomes the first player in the play order
-    # increse the trick count of the trick winner
-    # if the trick is not finished, throw an exception
-    def nextTrick(this):
-        if this.isTrickFinished() == False:
+    def make_trump(self, suit: Optional[str] = None) -> None:
+        """
+        Declare the trump suit. If no suit is provided, the suit of the upCard is used.
+        
+        Args:
+            suit (Optional[str]): The desired trump suit.
+
+        Raises:
+            EuchreException: Various conditions (mismatched downCard, missing upCard, etc.).
+        """
+        # Disallow trump if it matches the downCard's suit
+        if self.downCard is not None and self.downCard.suit == suit:
+            raise EuchreException("Trump can not match the down card.")
+
+        if self.upCard is None and suit is None:
+            raise EuchreException("Default trump requires an up card.")
+
+        self.last_maker = self.current_player_index
+        self.current_trump = suit if suit is not None else self.upCard.suit
+
+    @property
+    def is_trick_finished(self) -> bool:
+        """
+        Determine if the current trick has been completed 
+        (i.e., each remaining player in order has played).
+        
+        Raises:
+            EuchreException: If there are no tricks yet.  Must call #add_trick
+        
+        Returns:
+            bool: True if the current trick is complete, False otherwise.
+        """
+        if len(self.current_tricks) == 0:
+            raise EuchreException("No tricks available.")
+        return len(self.current_tricks[-1]) == len(self.order)
+
+    def __check_follow_suit(self, player: Player, card: Card) -> None:
+        """
+        Verify that the card being played follows suit if the player can follow suit.
+
+        Args:
+            player (Player): The player who is playing the card.
+            card (Card): The card being played.
+
+        Raises:
+            EuchreException: If the card does not follow suit when required.
+        """
+        if not tools.canPlay(self.current_trump, self.current_tricks[-1], player.cards, card):
+            leadSuit = self.current_tricks[-1].getLeadSuit()
+            raise EuchreException(f"Card '{card}' must follow suit '{leadSuit}'.")
+
+    def dealer_swap_card(self, card: Card) -> None:
+        """
+        Allow the dealer to swap one card from their hand with the upCard.
+
+        Args:
+            card (Card): The card to discard from the dealer's hand.
+
+        Raises:
+            EuchreException: If a discard is already set, or the card is not in the dealer's hand.
+        """
+        if self.discard is not None:
+            raise EuchreException("Discard must be None to swap.")
+
+        if card not in self.dealer.cards:
+            raise EuchreException(f"Must swap card from hand: {card}")
+
+        # Remove the given card, add the upCard to dealer's hand
+        self.dealer.cards.remove(card)
+        self.dealer.cards.append(self.upCard)
+        self.discard = card
+        self.last_maker = self.dealer_index
+
+    def turn_down_card(self) -> None:
+        """
+        Turn down the up card (pass on making trump if upCard is not desired).
+        
+        Raises:
+            EuchreException: If a discard is already set.
+        """
+        if self.discard is not None:
+            raise EuchreException("Discard must be None to turn down.")
+
+        self.downCard = self.upCard
+        self.upCard = None
+
+    def play_card(self, card: Card) -> None:
+        """
+        Play a card from the current player's hand into the current trick.
+
+        Args:
+            card (Card): The card object or string representation of the card to be played.
+
+        Raises:
+            EuchreException: If trump isn't set, if the trick is finished, if the card isn't in the player's hand,
+                             or if the suit cannot be followed.
+        """
+        if self.current_trump is None:
+            raise EuchreException("Trump must be made before playing a card.")
+        if self.is_trick_finished:
+            raise EuchreException(f"Trick full, can't play card '{card}'.")
+
+        # Convert string to Card if needed
+        if isinstance(card, str):
+            card = Card(card)
+
+        player = self.current_player
+
+        if card not in player.cards:
+            raise EuchreException(f"Card '{card}' not in hand of '{player.name}'.")
+        self.__check_follow_suit(player, card)
+
+        # Remove card from player's hand and move to played
+        player.cards.remove(card)
+        player.played.append(card)
+
+        # Add to the current trick
+        self.current_tricks[-1].append(self.current_player_index, card)
+
+        # Advance to the next player
+        self.activate_next_player()
+
+    def score_trick(self) -> None:
+        """
+        Score the current (just-finished) trick:
+          - Identify the winning card and its player.
+          - Rotate self.order so the winner is first.
+          - Increase the winner's trick count.
+        
+        Raises:
+            EuchreException: If the trick is not yet finished.
+        """
+        if not self.is_trick_finished:
+            raise EuchreException("Cannot score an unfinished trick.")
+
+        # Determine the trick winner, update order
+        player = self.__trick_winner()
+        player.tricks += 1
+
+        # Move the winner to the front of the order
+        winner_index = self.players.index(player)
+        rotateTo(self.order, winner_index)
+        self.current_player_index = winner_index
+
+    @property
+    def is_hand_finished(self) -> bool:
+        """
+        Check if the current hand is finished (i.e., 5 tricks played).
+
+        Returns:
+            bool: True if the hand is complete, False otherwise.
+        """
+        if len(self.current_tricks) < NUM_TRICKS_PER_HAND:
             return False
-
-        player = this.__trickWinner()
-        player.tricks = player.tricks + 1
-        i = this.players.index(player)
-
-        while this.order[0] != i:
-            rotate(this.order)
-
-        this.currentPIndex = i
-        if len(this.tricks) < 5: this.addTrick()
-
+        if len(self.current_tricks[-1]) != len(self.order):
+            return False
         return True
 
-    def isHandFinished(this):
-        if len(this.tricks) < 5: return False
-        if len(this.tricks[-1]) != len(this.order): return False
-        return True
+    def __trick_winner(self) -> Player:
+        """
+        Determine the winner of the current (last) trick by comparing played cards.
 
-    def __trickWinner(this):
-        bestPlayer = this.getFirstPlayer()
+        Returns:
+            Player: The player who won the last trick.
+        """
+        bestPlayer = self.first_player
         bestCard = bestPlayer.played[-1]
 
-        for i in this.order:
-            player = this.players[i]       
+        for i in self.order:
+            player = self.players[i]
             card = player.played[-1]
-            compare = bestCard.compare(card, this.trump)
+            compare = bestCard.compare(card, self.current_trump)
 
-            if (compare < 0):
-                 bestPlayer = player
-                 bestCard = card
+            if compare < 0:
+                bestPlayer = player
+                bestCard = card
 
-        return bestPlayer 
+        return bestPlayer
 
-    def __str__(this):
+    def __str__(self) -> str:  # pragma: no cover
+        """
+        String representation of the Euchre object, containing debug info.
+        """
         sb = ""
 
-        for attr in dir(this):
-            if attr.startswith("__"): continue
-            attrValue = getattr(this, attr)
+        # Include results from any get*() methods and non-callable public attributes
+        for attr in dir(self):
+            if attr.startswith("__"):
+                continue
+            attrValue = getattr(self, attr)
             if callable(attrValue) and attr.startswith("get"):
-                sb = sb + f"{attr}() : {str(attrValue())}\n"
-            elif callable(attrValue) == False:
-                sb = sb + f".{attr} : {str(attrValue)}\n"
+                sb += f"{attr}() : {str(attrValue())}\n"
+            elif not callable(attrValue):
+                sb += f".{attr} : {str(attrValue)}\n"
 
-        sb = sb + "players:[\n"
-        for player in this.players:
-            sb = sb + f"\t{str(player)}\n"
-        sb = sb + "]\n"
+        # Print the players as well
+        sb += "players:[\n"
+        for player in self.players:
+            sb += f"\t{str(player)}\n"
+        sb += "]\n"
 
         return sb
-        
-__all__ = ["Euchre", "EuchreException"]
+
+
+def is_game_over(score: List[int]) -> bool:
+    """
+    Determine if the game is over based on the current score.
+
+    Args:
+        score (List[int]): A two-element list representing the team scores.
+
+    Returns:
+        bool: True if either team has reached or exceeded 10 points, otherwise False.
+    """
+    return score[0] >= 10 or score[1] >= 10
+
+
+def score_hand(maker: int, tricks: List[int], isAlone: bool) -> int:
+    """
+    Score a completed Euchre hand based on the tricks won by each side.
+
+    Args:
+        maker (int): Index of the player who made trump.
+        tricks (List[int]): Number of tricks won, indexed by each of the four players.
+        isAlone (bool): True if the maker's team played alone, otherwise False.
+
+    Returns:
+        int: 
+            4 if the maker's team took all 5 tricks alone,
+            2 if the maker's team took all 5 tricks (not alone),
+            1 if the maker's team took 3 or 4 tricks,
+            -2 if the opposing team took 3 or more tricks.
+    
+    Raises:
+        EuchreException: If the total number of tricks does not sum to 5.
+    """
+    if sum(tricks) != NUM_TRICKS_PER_HAND:
+        raise EuchreException(f"Tricks must sum to 5, found: {sum(tricks)}.")
+
+    # Calculate the total tricks won by the maker's team
+    maker_tricks = tricks[maker] + tricks[(maker + 2) % NUM_PLAYERS]
+
+    if maker_tricks == NUM_TRICKS_PER_HAND and isAlone:
+        return 4
+    if maker_tricks == NUM_TRICKS_PER_HAND:
+        return 2
+    if maker_tricks >= REQUIRED_TRICKS_TO_WIN:
+        return 1
+    return -2
+
+
+__all__ = ["Euchre", "EuchreException", "score_hand", "is_game_over"]
