@@ -36,7 +36,7 @@ class Game:
         self.lastPlayer = self.euchre.current_player_index
         self.state(player, action, data)
 
-    def state0(self, player, action, data):
+    def state0(self, action, data):
         self.allowedActions(action, "start")         
         self.enterState1()
 
@@ -46,7 +46,7 @@ class Game:
         self.euchre.clear_tricks()
         self.state = self.state1
 
-    def state1(self, player, action, data):         
+    def state1(self, action, data):         
         self.allowedActions(action, "pass", "order", "alone")
 
         if action == "pass":
@@ -54,29 +54,27 @@ class Game:
                 self.state = self.state3
         elif action == "order":
             self.euchre.make_trump()
-            self.euchre.add_trick()
             self.euchre.activate_dealer()
             self.state = self.state2
         elif action == "alone":      
             self.euchre.make_trump()      
-            self.euchre.add_trick()
             self.euchre.go_alone()
             if self.euchre.getCurrentPlayer().partner != self.euchre.dealer:
                 self.euchre.activate_dealer()
                 self.state = self.state2
             else:
-                self.state = self.state5
+                self.enterState5()
 
-    def state2(self, player, action, card):
+    def state2(self, action, card):
         self.allowedActions(action, "down", "up")
 
         if action == "up": self.euchre.dealer_swap_card(card)
         else: self.euchre.turn_down_card()
 
         self.euchre.activate_first_player()
-        self.state = self.state5
+        self.enterState5()
 
-    def state3(self, player, action, suit):
+    def state3(self, action, suit):
         self.allowedActions(action, "pass", "make", "alone")
 
         if action == "pass":            
@@ -84,26 +82,27 @@ class Game:
                 self.state = self.state4
         elif action == "make":
             self.euchre.make_trump(suit)
-            self.euchre.add_trick()
-            self.state = self.state5
             self.euchre.activate_first_player()
+            self.enterState5()            
         elif action == "alone":
             self.euchre.make_trump(suit)
-            self.euchre.add_trick()
             self.euchre.go_alone()
             self.euchre.activate_first_player()
-            self.state = self.state5
+            self.enterState5()
 
-    def state4(self, player, action, suit):
+    def state4(self, action, suit):
         self.allowedActions(action, "make", "alone")
 
         self.euchre.make_trump(suit)
-        self.euchre.add_trick()
         if action == "alone": self.euchre.go_alone()
         self.euchre.activate_first_player()
+        self.enterState5()
+
+    def enterState5(self):
+        self.euchre.add_trick()
         self.state = self.state5
 
-    def state5(self, player, action, card):
+    def state5(self, action, card):
         self.allowedActions(action, "play")
         self.euchre.play_card(card)
         if not self.euchre.isTrickFinished(): return
