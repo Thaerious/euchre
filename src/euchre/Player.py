@@ -36,7 +36,7 @@ class PlayerList(list):
         this[2].partner = this[0]
         this[3].partner = this[1]
 
-    def getPlayer(this, name):
+    def get_player(this, name):
         for player in this:
             if player.name == name: return player
 
@@ -61,7 +61,7 @@ class PlayerList(list):
 
     # Return the next next player in this list
     # If there is no next player, returns None
-    def activateNextPlayer(this, afterThis):
+    def activate_next_player(this, afterThis):
         returnNext = False
 
         for player in this:

@@ -120,7 +120,7 @@ class GameServer:
         this.hndPacket(packet)
 
     async def sendSnaps(this):
-        snap = Snapshot(this.game, this.euchre.players.getPlayer("Adam"))
+        snap = Snapshot(this.game, this.euchre.players.get_player("Adam"))
         serialized = pickle.dumps(snap)
         len_b = struct.pack("!I", len(serialized))
 
@@ -132,7 +132,7 @@ class GameServer:
         (action, data) = (packet[0].lower(), packet[1])
 
         try:
-            this.game.input(this.euchre.players.getPlayer("Adam"), action, data)
+            this.game.input(this.euchre.players.get_player("Adam"), action, data)
             this.history.append(("Adam", action, data, this.game.hash))
         except EuchreException as ex:
             print(ex)

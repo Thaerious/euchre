@@ -11,7 +11,7 @@ game = Game(euchre)
 euchre.shuffle()
 euchre.players.rotate()
 euchre.copyPlayersToPlaying()
-euchre.dealCards()
+euchre.deal_cards()
 
 norm = Normalized(euchre, euchre.players[0])
 

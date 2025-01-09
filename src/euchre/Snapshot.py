@@ -14,7 +14,7 @@ class Snapshot:
         this.names = [player.name for player in euchre.players]
         this.tricks = [player.tricks for player in euchre.players]
         this.forPlayer = euchre.players.index(forPlayer)
-        this.active = euchre.currentPIndex
+        this.active = euchre.current_player_index
         this.state = int(game.state.__name__[5:])
         this.upCard = euchre.upCard
         this.trump = euchre.trump
@@ -23,7 +23,7 @@ class Snapshot:
         this.dealer = euchre.dealer
         this.hand = forPlayer.cards
         this.order = euchre.order   
-        this.handCount =  euchre.handCount
+        this.hands_played =  euchre.hands_played
         this.score = euchre.score
         this.lastAction = game.lastAction
         this.lastPlayer = game.lastPlayer

@@ -2,174 +2,176 @@ import random
 from euchre.delString import delString
 
 class CardList(list):
-    def __init__(this, stringList = []):
+    def __init__(self, stringList = []):
         for string in stringList:
-            this.append(Card(string))
+            self.append(Card(string))
 
-    def randomItem(this):
-        if len(this) == 0: return None
-        index = random.randint(0, len(this)) - 1
-        return this[index]     
+    def randomItem(self):
+        if len(self) == 0: return None
+        index = random.randint(0, len(self)) - 1
+        return self[index]     
 
-    def __str__(this):
-        return delString(this)
+    def __str__(self):
+        return delString(self)
 
 class Hand(CardList):
-    # Given 'trick' and 'trump' return the cards in 'this' that can be played.
-    def playableCards(this, trick, trump):
+    # Given 'trick' and 'trump' return the cards in 'self' that can be played.
+    def playableCards(self, trick, trump):
         cards = CardList()
-        for card in this:
-            if trick.canPlay(card, this, trump):
+        for card in self:
+            if trick.canPlay(card, self, trump):
                 cards.append(card)
                 
         return cards   
 
 # A list of cards starting with the lead player
 class Trick(list):
-    def __init__(this, trump):
-        list.__init__(this)
-        this.trump = trump
+    def __init__(self, trump):
+        list.__init__(self)
+        self.who_played = {}
+        self.trump = trump
 
     # retrieve the pIndex of the lead player
-    def getLead(this):
-        return this[0][0]
+    def getLead(self):
+        return self[0][0]
 
-    def getLeadSuit(this):
-        return this.getCard(0).getSuit(this.trump)
+    def getLeadSuit(self):
+        return self[0].getSuit(self.trump)
 
     # retrieve a card by index
-    def getCard(this, index):
-        return this[index][1]
+    def getCard(self, index):
+        return self[index][1]
 
     # retrieve a card based on the player index that played it
-    def getCardByPlayer(this, pIndex):
-        for (p, card) in this:  
-            if p == pIndex: return card
-
+    def getCardByPlayer(self, pIndex):
+        if pIndex in self.who_played.keys():
+            return self.who_played[pIndex]
         return None
 
-    def append(this, pIndex, card):
-        list.append(this, (pIndex,card))
+    def append(self, pIndex, card):
+        list.append(self, card)
+        self.who_played[pIndex] = card
 
     # return the winning card
-    def bestCard(this):
-        if len(this) < 1: return None
-        bestCard = this.getCard(0)
+    def bestCard(self):
+        if len(self) < 1: return None
+        bestCard = self.getCard(0)
         
-        for (pIndex, card) in this:               
-            if (bestCard.compare(card, this.trump) < 0):
+        for card in self:               
+            if (bestCard.compare(card, self.trump) < 0):
                  bestCard = card
 
         return bestCard 
                   
     # return the player index of the winning player
-    def winner(this):
-        if len(this) < 1: return None
-        bestCard = this.bestCard()        
+    def winner(self):
+        best = self.bestCard()
+        for pIndex, card in self.who_played:
+            if card == best: return pIndex
 
-        for (pIndex, card) in this:  
-            if card == bestCard: return pIndex
-        
-
-    # Can 'card' be played if 'this' is the current trick.
-    def canPlay(this, card, hand):
+    # Can 'card' be played if 'self' is the current trick.
+    def canPlay(self, card, hand):
         if not isinstance(card, Card): raise TypeError(f"expected Card, found {type(card)}")
         if not isinstance(hand, CardList): raise TypeError(f"expected CardList, found {type(hand)}")
-        if not isinstance(this.trump, str): raise TypeError(f"expected str, found {type(this.trump)}")
+        if not isinstance(self.trump, str): raise TypeError(f"expected str, found {type(self.trump)}")
 
         # empty trick
-        if len(this) == 0: return True
+        if len(self) == 0: return True
 
         # subject card suit matches leading card suit
-        leadSuit = this[0].suit
-        if card.getSuit(this.trump) == leadSuit: return True
+        leadSuit = self[0].suit
+        if card.getSuit(self.trump) == leadSuit: return True
 
         # if any other card in the hand matches suit
-        for (pIndex, cardInHand) in this:
+        for cardInHand in self:
             if cardInHand == card: continue
-            if cardInHand.getSuit(this.trump) == leadSuit: return False
+            if cardInHand.getSuit(self.trump) == leadSuit: return False
 
         return True  
 
-    def __str__(this):
-        return f"([{delString(this)}] : ({this.bestCard()}, {this.trump}, {this.winner()}) )"
+    def __str__(self):
+        return f"[{delString(self)}]"
 
-    def __repr__(this):
-        return str(this)
+    def __repr__(self):
+        return str(self)
 
 
 class Deck(CardList):
-    def __init__(this):
+    def __init__(self):
         for suit in Card.suits:
             for value in Card.values:
-                this.append(Card(suit, value))
+                self.append(Card(suit, value))
 
-    def shuffle(this):
-        random.shuffle(this)
-        return this
+    def shuffle(self):
+        random.shuffle(self)
+        return self
 
 class Card:
     suits = ["♠", "♣", "♥", "♦"]
     values = ["9", "10", "J", "Q", "K", "A"]
 
-    def __init__(this, suit, value = None):
+    def __init__(self, suit, value = None):
         if value == None:
             # initialize from card string ie "10♥"
-            this.suit = suit[-1]
-            this.value = suit[:-1]
+            self.suit = suit[-1]
+            self.value = suit[:-1]
         else:
-            this.suit = suit
-            this.value = value
+            self.suit = suit
+            self.value = value
 
-    def __str__(this):
-        return this.value + this.suit
+    def __str__(self):
+        return self.value + self.suit
 
-    def __repr__(this):
-        return this.value + this.suit        
+    def __repr__(self):
+        return self.value + self.suit        
 
-    def __eq__(this, that):        
+    def __eq__(self, that):        
         if that == None: return False
         if isinstance(that, str): that = Card(that)
-        if this.suit != that.suit: return False
-        return this.value == that.value
+        if not isinstance(that, Card): return False
+        if self.suit != that.suit: return False
+        return self.value == that.value
 
-    def getSuit(this, trump):
-        if this.isLeftBower(trump): return trump
-        return this.suit
+    def __hash__(self):
+        return hash((self.suit, self.value))
 
-    # compare two cards this and that
-    # assume this card is played first
-    # return 1 if this beats that, otherwise return -1
-    def compare(this, that, trump):        
-        if (this.isRightBower(trump)):
+    def getSuit(self, trump):
+        if self.isLeftBower(trump): return trump
+        return self.suit
+
+    # compare two cards self and that
+    # assume self card is played first
+    # return 1 if self beats that, otherwise return -1
+    def compare(self, that, trump):        
+        if (self.isRightBower(trump)):
             return 1
         if (that.isRightBower(trump)):
             return -1
-        if (this.isLeftBower(trump)):
+        if (self.isLeftBower(trump)):
             return 1
         if (that.isLeftBower(trump)):
             return -1
         
-        if (this.suit == trump and that.suit != trump) :
+        if (self.suit == trump and that.suit != trump) :
             return 1
-        if (this.suit != trump and that.suit == trump):
+        if (self.suit != trump and that.suit == trump):
             return -1
-        if (this.suit != that.suit):
+        if (self.suit != that.suit):
             return 1
 
-        thisIndex = Card.values.index(this.value)
+        selfIndex = Card.values.index(self.value)
         thatIndex = Card.values.index(that.value)
         
-        if (thisIndex > thatIndex): return 1
-        if (thisIndex < thatIndex): return -1
+        if (selfIndex > thatIndex): return 1
+        if (selfIndex < thatIndex): return -1
 
         return 0
 
-    def isRightBower(this, trump):
-        return this.value == "J" and this.suit == trump
+    def isRightBower(self, trump):
+        return self.value == "J" and self.suit == trump
 
-    def isLeftBower(this, trump):                
-        return this.value == "J" and this.suit == leftBowerSuit(trump)
+    def isLeftBower(self, trump):                
+        return self.value == "J" and self.suit == leftBowerSuit(trump)
 
     
 def leftBowerSuit(suit):

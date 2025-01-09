@@ -4,152 +4,156 @@ from euchre.Euchre import EuchreException
 import random
 
 class ActionException(EuchreException):
-    def __init__(this, msg):
+    def __init__(self, msg):
         super().__init__(msg)
 
 class Game:
-    def __init__(this, euchre):
-        this.euchre = euchre
-        this.state = this.state0
-        this.activePlayer = None
-        this.updateHash()
-        this.lastAction = [None, None, None, None]
-        this.lastPlayer = None
+    def __init__(self, euchre):
+        self.euchre = euchre
+        self.state = self.state0
+        self.activePlayer = None
+        self.updateHash()
+        self.lastAction = [None, None, None, None]
+        self.lastPlayer = None
 
-    def updateHash(this):
-        this.hash = ''.join(random.choices('0123456789abcdef', k=8))
+    def updateHash(self):
+        self.hash = ''.join(random.choices('0123456789abcdef', k=8))
 
-    def getState(this):
-        return int(this.state.__name__[5:])
+    def getState(self):
+        return int(self.state.__name__[5:])
 
-    def input(this, player, action, data = None):        
-        if this.state != this.state0 and player != this.euchre.getCurrentPlayer(): 
-            raise ActionException(f"Incorrect Player: expected {this.euchre.getCurrentPlayer().name} found {player.name}")
+    def input(self, player, action, data = None):        
+        if self.state != self.state0 and player != self.euchre.getCurrentPlayer(): 
+            raise ActionException(f"Incorrect Player: expected {self.euchre.getCurrentPlayer().name} found {player.name}")
         
         # if data is a string, convert it to a card
         if isinstance(data, str): 
             data = Card(data[-1], data[:-1]) 
 
         # activate the current state
-        this.updateHash()
-        this.lastAction[this.euchre.currentPIndex] = action
-        this.lastPlayer = this.euchre.currentPIndex
-        this.state(player, action, data)
+        self.updateHash()
+        self.lastAction[self.euchre.current_player_index] = action
+        self.lastPlayer = self.euchre.current_player_index
+        self.state(player, action, data)
 
-    def state0(this, player, action, data):
-        this.allowedActions(action, "start")
-        this.euchre.shuffleDeck()
-        this.euchre.dealCards()               
-        this.enterState1()
+    def state0(self, player, action, data):
+        self.allowedActions(action, "start")         
+        self.enterState1()
 
-    def enterState1(this):
-        this.euchre.clearTricks()
-        this.state = this.state1
+    def enterState1(self):
+        self.euchre.shuffle_deck()
+        self.euchre.deal_cards()          
+        self.euchre.clear_tricks()
+        self.state = self.state1
 
-    def state1(this, player, action, data):         
-        this.allowedActions(action, "pass", "order", "alone")
+    def state1(self, player, action, data):         
+        self.allowedActions(action, "pass", "order", "alone")
 
         if action == "pass":
-            if this.euchre.activateNextPlayer() == this.euchre.getFirstPlayer():
-                this.state = this.state3
+            if self.euchre.activate_next_player() == self.euchre.getFirstPlayer():
+                self.state = self.state3
         elif action == "order":
-            this.euchre.makeTrump()
-            this.euchre.addTrick()
-            this.euchre.activateDealer()
-            this.state = this.state2
+            self.euchre.make_trump()
+            self.euchre.add_trick()
+            self.euchre.activate_dealer()
+            self.state = self.state2
         elif action == "alone":      
-            this.euchre.makeTrump()      
-            this.euchre.addTrick()
-            this.euchre.goAlone()
-            if this.euchre.getCurrentPlayer().partner != this.euchre.dealer:
-                this.euchre.activateDealer()
-                this.state = this.state2
+            self.euchre.make_trump()      
+            self.euchre.add_trick()
+            self.euchre.go_alone()
+            if self.euchre.getCurrentPlayer().partner != self.euchre.dealer:
+                self.euchre.activate_dealer()
+                self.state = self.state2
             else:
-                this.state = this.state5
+                self.state = self.state5
 
-    def state2(this, player, action, card):
-        this.allowedActions(action, "down", "up")
+    def state2(self, player, action, card):
+        self.allowedActions(action, "down", "up")
 
-        if action == "up": this.euchre.dealerSwapCard(card)
-        this.euchre.activateFirstPlayer()
-        this.state = this.state5
+        if action == "up": self.euchre.dealer_swap_card(card)
+        else: self.euchre.turn_down_card()
 
-    def state3(this, player, action, suit):
-        this.allowedActions(action, "pass", "make", "alone")
+        self.euchre.activate_first_player()
+        self.state = self.state5
+
+    def state3(self, player, action, suit):
+        self.allowedActions(action, "pass", "make", "alone")
 
         if action == "pass":            
-            if this.euchre.activateNextPlayer() == this.euchre.getDealer():     
-                this.state = this.state4
+            if self.euchre.activate_next_player() == self.euchre.getDealer():     
+                self.state = self.state4
         elif action == "make":
-            this.euchre.makeTrump(suit)
-            this.euchre.addTrick()
-            this.state = this.state5
-            this.euchre.activateFirstPlayer()
+            self.euchre.make_trump(suit)
+            self.euchre.add_trick()
+            self.state = self.state5
+            self.euchre.activate_first_player()
         elif action == "alone":
-            this.euchre.makeTrump(suit)
-            this.euchre.addTrick()
-            this.euchre.goAlone()
-            this.euchre.activateFirstPlayer()
-            this.state = this.state5
+            self.euchre.make_trump(suit)
+            self.euchre.add_trick()
+            self.euchre.go_alone()
+            self.euchre.activate_first_player()
+            self.state = self.state5
 
-    def state4(this, player, action, suit):
-        this.allowedActions(action, "make", "alone")
+    def state4(self, player, action, suit):
+        self.allowedActions(action, "make", "alone")
 
-        this.euchre.makeTrump(suit)
-        this.euchre.addTrick()
-        if action == "alone": this.euchre.goAlone()
-        this.euchre.activateFirstPlayer()
-        this.state = this.state5
+        self.euchre.make_trump(suit)
+        self.euchre.add_trick()
+        if action == "alone": self.euchre.go_alone()
+        self.euchre.activate_first_player()
+        self.state = self.state5
 
-    def state5(this, player, action, card):
-        this.allowedActions(action, "play")
-        this.euchre.playCard(card)
-        if this.euchre.nextTrick() == False: return
+    def state5(self, player, action, card):
+        self.allowedActions(action, "play")
+        self.euchre.play_card(card)
+        if not self.euchre.isTrickFinished(): return
+        
+        self.euchre.score_trick()
 
-        if this.euchre.isHandFinished():
-            this.euchre.scoreHand()
+        if self.euchre.isHandFinished():
+            self.euchre.score_hand()
 
-            if this.euchre.isGameOver():
-                this.state = this.state0
+            if self.euchre.is_game_over():
+                self.state = self.state0
             else:
-                this.euchre.nextHand()
-                this.euchre.shuffleDeck()
-                this.euchre.dealCards()                
-                this.enterState1()
+                self.euchre.next_hand() # todo test? doc?
+                self.enterState1()
+        else:
+            self.euchre.add_trick()
 
-    def allowedActions(this, action, *allowedActions):
+    def allowedActions(self, action, *allowedActions):
         for allowed in allowedActions:
             if action.lower() == allowed.lower(): return
 
         raise ActionException("Unhandled Action " + (str)(action))
 
-    def print(this):        
-        for player in this.euchre.players:
+    def print(self):        
+        for player in self.euchre.players:
             prefix = ""
 
-            if this.euchre.getMaker() == player: prefix = prefix + "M"
-            if this.euchre.getDealer() == player: prefix = prefix + "D"
+            if self.euchre.getMaker() == player: prefix = prefix + "M"
+            if self.euchre.getDealer() == player: prefix = prefix + "D"
             if player.partner.alone == True: prefix = prefix + "X"
             if player.alone == True: prefix = prefix + "A"
 
             prefix = prefix.rjust(3, " ")
 
-            if this.euchre.getCurrentPlayer() == player: prefix = prefix + ">"  
+            if self.euchre.getCurrentPlayer() == player: prefix = prefix + ">"  
             else: prefix = prefix + " "  
 
             print(f"{prefix} {str(player)}")
 
 
-        t1Score = this.euchre.players[0].team.score
-        t2Score = this.euchre.players[2].team.score
+        t1Score = self.euchre.players[0].team.score
+        t2Score = self.euchre.players[2].team.score
 
-        t1Text = f"Team1 [{this.euchre.players[0].name} {this.euchre.players[2].name}] {t1Score}"
-        t2Text = f"Team2 [{this.euchre.players[1].name} {this.euchre.players[3].name}] {t2Score}" 
+        t1Text = f"Team1 [{self.euchre.players[0].name} {self.euchre.players[2].name}] {t1Score}"
+        t2Text = f"Team2 [{self.euchre.players[1].name} {self.euchre.players[3].name}] {t2Score}" 
 
         print(t1Text)
         print(t2Text)
 
-        print(this.state.__name__)    
-        print("upCard: " + (str)(this.euchre.upCard))
-        print(f"[{delString(this.euchre.trick)}] : ", end="")
-        print(this.euchre.trump if this.euchre.trump is not None else "_")        
+        print(self.state.__name__)    
+        print("upCard: " + (str)(self.euchre.upCard))
+        print(f"[{delString(self.euchre.trick)}] : ", end="")
+        print(self.euchre.trump if self.euchre.trump is not None else "_")        
