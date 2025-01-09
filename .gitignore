@@ -1,4 +1,8 @@
 __pycache__/
 venv/
+htmlcov/
+metrics/
+lib/
 history.txt
 commit_message.txt
+.coverage
