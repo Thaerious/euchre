@@ -2,9 +2,10 @@ from euchre.delString import delString
 from euchre.Card import Card, CardList, Hand    
 
 class Player:
-    def __init__(this, name):
+    def __init__(this, name, index):
         this.name = name        
         this.partner = None
+        this.index = index
         this.clear()             
 
     def clear(this):
@@ -21,15 +22,15 @@ class Player:
         return newPlayer
 
     def __str__(this):     
-        sb = f"{this.name}[{delString(this.cards)}][{delString(this.played)}] {this.tricks}"
+        sb = f"{this.name}@{this.index}[{delString(this.cards)}][{delString(this.played)}] {this.tricks}"
         return sb
 
 class PlayerList(list):
     def __init__(this, names = []):
         if (len(names) != 4): return
 
-        for name in names:
-            this.append(Player(name))
+        for i, name in enumerate(names):
+            this.append(Player(name, i))
 
         this[0].partner = this[2]
         this[1].partner = this[3]

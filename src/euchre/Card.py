@@ -38,24 +38,14 @@ class Trick(list):
     def getLeadSuit(self):
         return self[0].getSuit(self.trump)
 
-    # retrieve a card by index
-    def getCard(self, index):
-        return self[index][1]
-
-    # retrieve a card based on the player index that played it
-    def getCardByPlayer(self, pIndex):
-        if pIndex in self.who_played.keys():
-            return self.who_played[pIndex]
-        return None
-
     def append(self, pIndex, card):
         list.append(self, card)
-        self.who_played[pIndex] = card
+        self.who_played[card] = pIndex
 
     # return the winning card
     def bestCard(self):
         if len(self) < 1: return None
-        bestCard = self.getCard(0)
+        bestCard = self[0]
         
         for card in self:               
             if (bestCard.compare(card, self.trump) < 0):
@@ -66,7 +56,7 @@ class Trick(list):
     # return the player index of the winning player
     def winner(self):
         best = self.bestCard()
-        for pIndex, card in self.who_played:
+        for card, pIndex in self.who_played:
             if card == best: return pIndex
 
     # Can 'card' be played if 'self' is the current trick.
@@ -87,10 +77,17 @@ class Trick(list):
             if cardInHand == card: continue
             if cardInHand.getSuit(self.trump) == leadSuit: return False
 
-        return True  
+        return True
 
     def __str__(self):
-        return f"[{delString(self)}]"
+        sb = ""
+        for card in self:
+            if card == self.bestCard():
+                sb = sb + f"[{self.who_played[card]}, {card}*]"
+            else:
+                sb = sb + f"[{self.who_played[card]}, {card}]"
+
+        return sb
 
     def __repr__(self):
         return str(self)

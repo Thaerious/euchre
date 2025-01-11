@@ -1,4 +1,3 @@
-import unittest
 import pytest
 import numpy as np
 from euchre.Euchre import *
@@ -65,8 +64,8 @@ def test_activate_next_player_x4(euchre):
 def test_deal_cards(euchre):
     euchre.deal_cards()
 
-    assert euchre.upCard == "J♦"
-    assert euchre.downCard == None
+    assert euchre.up_card == "J♦"
+    assert euchre.down_card == None
     assert euchre.discard == None
 
     np.testing.assert_array_equal(
@@ -93,16 +92,16 @@ def test_turn_down_card(euchre):
     euchre.deal_cards()
     euchre.turn_down_card()
 
-    assert euchre.upCard == None
-    assert euchre.downCard == "J♦"
+    assert euchre.up_card == None
+    assert euchre.down_card == "J♦"
     assert euchre.discard == None    
 
 def test_pick_up_card(euchre):   
     euchre.deal_cards()
     euchre.dealer_swap_card("10♣")
 
-    assert euchre.upCard == "J♦"
-    assert euchre.downCard == None
+    assert euchre.up_card == "J♦"
+    assert euchre.down_card == None
     assert euchre.discard == "10♣"  
     assert "J♦" in euchre.dealer.cards 
     assert "10♣" not in euchre.dealer.cards
@@ -149,7 +148,7 @@ def test_make_trump_up_card(euchre):
     euchre.deal_cards()    
 
     # precondition
-    assert euchre.upCard == "J♦"
+    assert euchre.up_card == "J♦"
 
     euchre.make_trump()
     assert euchre.trump == "♦"
@@ -167,18 +166,18 @@ def test_make_trump_exception_0(euchre):
     euchre.turn_down_card()
 
     # precondition
-    assert euchre.downCard == "J♦"
+    assert euchre.down_card == "J♦"
 
     with pytest.raises(EuchreException, match="Trump can not match the down card."):
         euchre.make_trump("♦") 
 
-# default trump can not be made if there is no upcard
+# default trump can not be made if there is no up_card
 def test_make_trump_exception_1(euchre):
     euchre.deal_cards()    
     euchre.turn_down_card()
 
     # precondition
-    assert euchre.upCard == None
+    assert euchre.up_card == None
 
     with pytest.raises(EuchreException, match="Default trump requires an up card."):
         euchre.make_trump() 
@@ -415,37 +414,37 @@ def test_is_game_over(score, expected):
     "maker, tricks, isAlone, expected_score",
     [
         # Maker team wins all 5 tricks, goes alone
-        (0, [5, 0, 0, 0], True, 4),
+        (0, [5, 0, 0, 0], True, [4, 0]),
 
         # Maker team wins all 5 tricks, does not go alone
-        (0, [3, 0, 2, 0], False, 2),
+        (0, [3, 0, 2, 0], False, [2, 0]),
 
         # Maker team wins 3 tricks
-        (0, [3, 0, 0, 2], False, 1),
+        (0, [3, 0, 0, 2], False, [1, 0]),
 
         # Maker team wins 4 tricks
-        (0, [4, 0, 0, 1], False, 1),
+        (0, [4, 0, 0, 1], False, [1, 0]),
 
         # Maker team loses, opponent team wins all tricks
-        (0, [0, 5, 0, 0], False, -2),
+        (0, [0, 5, 0, 0], False, [0, 2]),
 
         # Maker team loses, opponent team wins all tricks
-        (0, [0, 3, 0, 2], False, -2),        
+        (0, [0, 3, 0, 2], False, [0, 2]),        
 
         # Maker team loses with mixed tricks
-        (0, [2, 1, 0, 2], False, -2),
+        (0, [2, 1, 0, 2], False, [0, 2]),
 
         # Maker at a different index, team wins 5 tricks alone
-        (2, [0, 0, 5, 0], True, 4),
+        (2, [0, 0, 5, 0], True, [4, 0]),
 
         # Maker at a different index, team wins 5 tricks not alone
-        (2, [2, 0, 3, 0], False, 2),
+        (2, [2, 0, 3, 0], False, [2, 0]),
 
         # Maker team wins exactly 3 tricks, does not go alone
-        (1, [1, 2, 1, 1], False, 1),
+        (1, [1, 2, 1, 1], False, [0, 1]),
 
         # Maker team loses with mixed tricks, maker at a different index
-        (1, [1, 0, 3, 1], False, -2),
+        (1, [1, 0, 3, 1], False, [2, 0]),
     ],
 )
 def test_score_hand(maker, tricks, isAlone, expected_score):

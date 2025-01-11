@@ -41,20 +41,31 @@ class Euchre:
         self.hand_count = 0
 
         self.deck = Deck()      
-        self.current_score: List[int] = [0, 0] 
+        self._score: List[int] = [0, 0] 
         self.__reset()
-        self.current_tricks: List[Trick] = []
+        self._tricks: List[Trick] = []
 
     def __reset(self) -> None:
         """
         Reset the state for a new hand (e.g., on dealing a new hand).
         """
-        self.trickCount = 0
-        self.upCard: Optional[Card] = None
-        self.downCard: Optional[Card] = None
+        self._up_card: Optional[Card] = None
+        self._down_card: Optional[Card] = None
         self.discard: Optional[Card] = None
         self.current_trump: Optional[str] = None
-        self.last_maker: Optional[int] = None
+        self.maker_index: Optional[int] = None
+
+    @property
+    def score(self) -> List[int]:
+        return self._score.copy()
+
+    @property
+    def up_card(self) -> str:
+        return self._up_card
+
+    @property
+    def down_card(self) -> str:
+        return self._down_card
 
     @property 
     def hands_played(self) -> int:
@@ -84,7 +95,7 @@ class Euchre:
         Returns:
             List[int]: A two-element list containing the score for each team.
         """
-        return self.current_score.copy()
+        return self._score.copy()
 
     @property 
     def has_trick(self) -> bool:
@@ -94,7 +105,7 @@ class Euchre:
         Returns:
             bool: True if a trick is in progress or completed, False otherwise.
         """
-        return len(self.current_tricks) > 0
+        return len(self._tricks) > 0
 
     def clear_tricks(self) -> None:
         """
@@ -105,7 +116,7 @@ class Euchre:
         """
         if not self.is_hand_finished:
             raise EuchreException("Can not clear an unfinished hand.")
-        self.current_tricks = []
+        self._tricks = []
 
     def add_trick(self) -> None:
         """
@@ -118,8 +129,7 @@ class Euchre:
             raise EuchreException("Trump must be made before adding a trick.")
         if self.has_trick and not self.is_trick_finished:
             raise EuchreException("Previous trick not complete.")
-        self.current_tricks.append(Trick(self.current_trump))
-
+        self._tricks.append(Trick(self.current_trump))
 
     @property
     def tricks(self) -> List[Trick]:
@@ -129,12 +139,29 @@ class Euchre:
         Returns:
             List[Trick]: A copy of the current hand's tricks.
         """
-        return self.current_tricks.copy()
+        return self._tricks.copy()
+
+    @property
+    def current_trick(self) -> List[Trick]:
+        """
+        Get the current (latest) trick.
+
+        Returns:
+            List[Trick]: A copy of the current hand's tricks.
+        """
+        return self._tricks[-1]
 
     def shuffle_deck(self) -> None:
         """
         Shuffle the deck. Typically called after next_hand but before dealing.
         """
+
+        self._down_card = None
+        self._discard = None
+        self._up_card = None
+
+        for player in self.players:
+            player.clear()
 
         # requires a new deck because cards are removed from the deck during dealing
         self.deck = Deck().shuffle()
@@ -207,9 +234,9 @@ class Euchre:
         Returns:
             Optional[Player]: The player object representing the maker, or None if no trump suit is declared.
         """
-        if self.last_maker is None:
+        if self.maker_index is None:
             return None
-        return self.players[self.last_maker]
+        return self.players[self.maker_index]
 
     @property
     def first_player(self) -> Player:
@@ -252,7 +279,7 @@ class Euchre:
             for player in self.players:
                 card = self.deck.pop(0)
                 player.cards.append(card)
-        self.upCard = self.deck.pop(0)
+        self._up_card = self.deck.pop(0)
 
     def go_alone(self) -> None:
         """
@@ -280,14 +307,14 @@ class Euchre:
             EuchreException: Various conditions (mismatched downCard, missing upCard, etc.).
         """
         # Disallow trump if it matches the downCard's suit
-        if self.downCard is not None and self.downCard.suit == suit:
+        if self._down_card is not None and self._down_card.suit == suit:
             raise EuchreException("Trump can not match the down card.")
 
-        if self.upCard is None and suit is None:
+        if self._up_card is None and suit is None:
             raise EuchreException("Default trump requires an up card.")
 
-        self.last_maker = self.current_player_index
-        self.current_trump = suit if suit is not None else self.upCard.suit
+        self.maker_index = self.current_player_index
+        self.current_trump = suit if suit is not None else self._up_card.suit
 
     @property
     def is_trick_finished(self) -> bool:
@@ -301,9 +328,9 @@ class Euchre:
         Returns:
             bool: True if the current trick is complete, False otherwise.
         """
-        if len(self.current_tricks) == 0:
+        if len(self._tricks) == 0:
             raise EuchreException("No tricks available.")
-        return len(self.current_tricks[-1]) == len(self.order)
+        return len(self._tricks[-1]) == len(self.order)
 
     def __check_follow_suit(self, player: Player, card: Card) -> None:
         """
@@ -316,8 +343,8 @@ class Euchre:
         Raises:
             EuchreException: If the card does not follow suit when required.
         """
-        if not tools.canPlay(self.current_trump, self.current_tricks[-1], player.cards, card):
-            leadSuit = self.current_tricks[-1].getLeadSuit()
+        if not tools.canPlay(self.current_trump, self._tricks[-1], player.cards, card):
+            leadSuit = self._tricks[-1].getLeadSuit()
             raise EuchreException(f"Card '{card}' must follow suit '{leadSuit}'.")
 
     def dealer_swap_card(self, card: Card) -> None:
@@ -338,9 +365,9 @@ class Euchre:
 
         # Remove the given card, add the upCard to dealer's hand
         self.dealer.cards.remove(card)
-        self.dealer.cards.append(self.upCard)
+        self.dealer.cards.append(self._up_card)
         self.discard = card
-        self.last_maker = self.dealer_index
+        self.maker_index = self.dealer_index
 
     def turn_down_card(self) -> None:
         """
@@ -352,8 +379,8 @@ class Euchre:
         if self.discard is not None:
             raise EuchreException("Discard must be None to turn down.")
 
-        self.downCard = self.upCard
-        self.upCard = None
+        self._down_card = self._up_card
+        self._up_card = None
 
     def play_card(self, card: Card) -> None:
         """
@@ -386,7 +413,7 @@ class Euchre:
         player.played.append(card)
 
         # Add to the current trick
-        self.current_tricks[-1].append(self.current_player_index, card)
+        self._tricks[-1].append(self.current_player_index, card)
 
         # Advance to the next player
         self.activate_next_player()
@@ -421,9 +448,9 @@ class Euchre:
         Returns:
             bool: True if the hand is complete, False otherwise.
         """
-        if len(self.current_tricks) < NUM_TRICKS_PER_HAND:
+        if len(self._tricks) < NUM_TRICKS_PER_HAND:
             return False
-        if len(self.current_tricks[-1]) != len(self.order):
+        if len(self._tricks[-1]) != len(self.order):
             return False
         return True
 
@@ -448,27 +475,34 @@ class Euchre:
 
         return bestPlayer
 
+    def adjust_score(self, hand_score):
+        self._score[0] = self._score[0] + hand_score[0]
+        self._score[1] = self._score[1] + hand_score[1]
+
     def __str__(self) -> str:  # pragma: no cover
         """
         String representation of the Euchre object, containing debug info.
         """
         sb = ""
 
-        # Include results from any get*() methods and non-callable public attributes
-        for attr in dir(self):
-            if attr.startswith("__"):
-                continue
-            attrValue = getattr(self, attr)
-            if callable(attrValue) and attr.startswith("get"):
-                sb += f"{attr}() : {str(attrValue())}\n"
-            elif not callable(attrValue):
-                sb += f".{attr} : {str(attrValue)}\n"
-
-        # Print the players as well
-        sb += "players:[\n"
+        sb = sb + f"players:\n"
         for player in self.players:
-            sb += f"\t{str(player)}\n"
-        sb += "]\n"
+            sb = sb + "  " + str(player) + "\n"
+
+        sb = sb + f"order: {self.order}" + "\n"
+        sb = sb + f"current: {self.current_player}" + "\n"
+        sb = sb + f"dealer: {self.dealer}" + "\n"
+        sb = sb + f"hand count: {self.hand_count}" + "\n"
+        sb = sb + f"up card: {self.up_card}" + "\n"
+        sb = sb + f"down card: {self._down_card}" + "\n"
+        sb = sb + f"discard: {self.discard}" + "\n"
+        sb = sb + f"trump: {self.trump}" + "\n"
+        sb = sb + f"maker: {self.maker}" + "\n"
+        sb = sb + f"score: {self._score}" + "\n"
+
+        sb = sb + f"tricks:\n"
+        for trick in self.tricks:
+            sb = sb + "  " + str(trick) + "\n"
 
         return sb
 
@@ -508,16 +542,21 @@ def score_hand(maker: int, tricks: List[int], isAlone: bool) -> int:
     if sum(tricks) != NUM_TRICKS_PER_HAND:
         raise EuchreException(f"Tricks must sum to 5, found: {sum(tricks)}.")
 
+    result = [0, 0]
+
     # Calculate the total tricks won by the maker's team
     maker_tricks = tricks[maker] + tricks[(maker + 2) % NUM_PLAYERS]
 
     if maker_tricks == NUM_TRICKS_PER_HAND and isAlone:
-        return 4
-    if maker_tricks == NUM_TRICKS_PER_HAND:
-        return 2
-    if maker_tricks >= REQUIRED_TRICKS_TO_WIN:
-        return 1
-    return -2
+        result[maker % 2] = 4
+    elif maker_tricks == NUM_TRICKS_PER_HAND:
+        result[maker % 2] = 2
+    elif maker_tricks >= REQUIRED_TRICKS_TO_WIN:
+        result[maker % 2] = 1
+    else:
+        result[(maker + 1) % 2] = 2
+
+    return result
 
 
 __all__ = ["Euchre", "EuchreException", "score_hand", "is_game_over"]
