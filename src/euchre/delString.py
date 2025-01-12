@@ -1,5 +1,4 @@
-# create a delmited string out of a list
-
+# create a delimited string out of a list
 
 def delString(aList, delimiter = ", "):
     sb = ""
