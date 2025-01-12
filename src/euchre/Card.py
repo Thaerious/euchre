@@ -1,6 +1,20 @@
 import random
 from euchre.delString import delString
 
+def compare_card_by_suit(card1, card2):
+    if isinstance(card1, str): card1 = Card(card1)
+    if isinstance(card2, str): card2 = Card(card2)
+
+    suit_index1 = Card.suits.index(card1.suit)
+    suit_index2 = Card.suits.index(card2.suit)
+    value_index1 = Card.values.index(card1.value)
+    value_index2 = Card.values.index(card2.value)
+
+    if suit_index1 != suit_index2:
+        return suit_index2 - suit_index1
+    else:
+        return value_index2 - value_index1    
+
 class CardList(list):
     def __init__(self, stringList = []):
         for string in stringList:
@@ -104,7 +118,7 @@ class Deck(CardList):
         return self
 
 class Card:
-    suits = ["♠", "♣", "♥", "♦"]
+    suits = ["♥", "♠", "♣", "♦"]
     values = ["9", "10", "J", "Q", "K", "A"]
 
     def __init__(self, suit, value = None):

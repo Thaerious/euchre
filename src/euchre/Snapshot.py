@@ -2,48 +2,48 @@ from euchre.Normalized import Normalized
 import copy
 
 class Snapshot:
-    def __init__(this, game, player):
+    def __init__(self, game, player):
         if game is None: raise ValueError("Game can not be none.")
         if player is None: raise ValueError("Player can not be none.")
 
-        this.build(game, player)
+        self.build(game, player)
 
-    def build(this, game, forPlayer):
+    def build(self, game, for_player):
         euchre = game.euchre
 
-        this.names = [player.name for player in euchre.players]
-        this.tricks = [player.tricks for player in euchre.players]
-        this.forPlayer = euchre.players.index(forPlayer)
-        this.active = euchre.current_player_index
-        this.state = int(game.state.__name__[5:])
-        this.upCard = euchre.upCard
-        this.trump = euchre.trump
-        this.tricks = euchre.tricks
-        this.maker = euchre.maker
-        this.dealer = euchre.dealer
-        this.hand = forPlayer.cards
-        this.order = euchre.order   
-        this.hands_played =  euchre.hands_played
-        this.score = euchre.score
-        this.lastAction = game.lastAction
-        this.lastPlayer = game.lastPlayer
+        self.names = [player.name for player in euchre.players]
+        self.tricks = [player.tricks for player in euchre.players]
+        self.for_player = euchre.players.index(for_player)
+        self.active = euchre.current_player_index
+        self.state = game.current_state
+        self.up_card = euchre.up_card
+        self.trump = euchre.trump
+        self.tricks = euchre.tricks
+        self.maker = euchre.maker
+        self.dealer = euchre.dealer
+        self.hand = for_player.cards
+        self.order = euchre.order   
+        self.hands_played = euchre.hands_played
+        self.score = euchre.score
+        self.last_action = game.last_action
+        self.last_player = game.last_player
 
-        this.normalized = Normalized(euchre, forPlayer)
+        self.normalized = Normalized(euchre, for_player)
 
-        if euchre.getDealer() == forPlayer:
-            this.downCard = euchre.downCard
+        if euchre.dealer == for_player:
+            self.down_card = euchre.down_card
         else:
-            this.downCard = None
+            self.down_card = None
 
-        this.hash = game.hash
+        self.hash = game.hash
     
-    def __str__(this):
+    def __str__(self):
         sb = ""
 
-        for attr in dir(this):
+        for attr in dir(self):
             if attr.startswith("_"): continue
-            attrValue = getattr(this, attr)
-            if callable(attrValue) == True: continue
-            sb = sb + f"{attr} : {str(attrValue)}\n"
+            attr_value = getattr(self, attr)
+            if callable(attr_value): continue
+            sb = sb + f"{attr} : {str(attr_value)}\n"
 
         return sb
