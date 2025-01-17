@@ -1,7 +1,7 @@
 # euchre/__init__.py
 
 # Import classes and functions to expose them at the package level
-from .Card import Card
+from .card.Card import Card
 from .Player import Player
 from .Game import Game
 from .Snapshot import Snapshot

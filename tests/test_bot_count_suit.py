@@ -2,7 +2,7 @@ import unittest
 from types import SimpleNamespace
 from euchre.bots.evals.CountSuitInHand import CountSuitInHand
 from euchre.bots.evals.CountTrumpInHand import CountTrumpInHand
-from euchre.Card import Hand
+from euchre.card.Card import Hand
 
 class TestCountSuitInHand(unittest.TestCase):
     def test_count_suits_false(this):

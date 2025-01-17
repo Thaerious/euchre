@@ -1,4 +1,4 @@
-from euchre.Card import Card
+from euchre.card.Card import Card
 from .tools import *
 import random
 

@@ -6,14 +6,14 @@ import random
 
 @pytest.fixture
 def game():
-    random.seed(1000)
     names = ["Player1", "Player2", "Player3", "Player4"]
     game = Game(names)
+    game.debug_mode = True
     return game
 
-def test_print(game):
-    game.input(None, "start")  
-    print(game)   
+# def test_print(game):
+#     game.input(None, "start")  
+#     print(game)   
 
 def test_state_0(game):
     assert game.current_state == 0    
@@ -34,6 +34,7 @@ def test_state_1_order(game):
 
     suit = game.euchre.up_card.suit
     game.input("Player1", "order")
+
     assert game.current_state == 2
     assert game.euchre.current_player.name == game.euchre.dealer.name
     assert game.euchre.trump == suit
@@ -69,23 +70,25 @@ def test_state_2_up(game):
     test_state_1_order(game)    
 
     assert game.euchre.current_player == game.euchre.dealer
+    up_card_before = game.euchre.up_card
 
-    game.input("Player4", "up", "9♦")
+    game.input("Player4", "up", "10♠")
 
-    assert game.euchre.discard == "9♦"
+    assert game.euchre.discard == "10♠"
     assert game.euchre.down_card == None
-    assert game.euchre.up_card == "J♥"
+    assert game.euchre.up_card == up_card_before
     assert game.current_state == 5
 
 def test_state_2_down(game):
     test_state_1_order(game)    
 
     assert game.euchre.current_player == game.euchre.dealer
+    up_card_before = game.euchre.up_card
 
     game.input("Player4", "down")
     
     assert game.euchre.discard == None
-    assert game.euchre.down_card == "J♥"
+    assert game.euchre.down_card == up_card_before
     assert game.euchre.up_card == None
     assert game.current_state == 5    
 
@@ -115,6 +118,7 @@ def test_state_3_make(game):
     test_state_1_pass_x4(game)
 
     assert game.euchre.current_player == game.euchre.first_player
+    up_card_before = game.euchre.up_card
 
     game.input("Player1", "make", "♠")
        
@@ -123,12 +127,13 @@ def test_state_3_make(game):
     assert game.euchre.maker.name == "Player1"
     assert game.euchre.discard == None
     assert game.euchre.down_card == None
-    assert game.euchre.up_card == "J♥"    
+    assert game.euchre.up_card == up_card_before    
 
 def test_state_3_make(game):
     test_state_1_pass_x4(game)
 
     assert game.euchre.current_player == game.euchre.first_player
+    up_card_before = game.euchre.up_card
 
     game.input("Player1", "make", "♠")
        
@@ -137,12 +142,13 @@ def test_state_3_make(game):
     assert game.euchre.maker.name == "Player1"
     assert game.euchre.discard == None
     assert game.euchre.down_card == None
-    assert game.euchre.up_card == "J♥"      
+    assert game.euchre.up_card == up_card_before    
 
 def test_state_3_alone(game):
     test_state_1_pass_x4(game)
 
     assert game.euchre.current_player == game.euchre.first_player
+    up_card_before = game.euchre.up_card
 
     game.input("Player1", "alone", "♠")
        
@@ -151,28 +157,36 @@ def test_state_3_alone(game):
     assert game.euchre.maker.name == "Player1"
     assert game.euchre.discard == None
     assert game.euchre.down_card == None
-    assert game.euchre.up_card == "J♥" 
+    assert game.euchre.up_card == up_card_before
     assert game.euchre.get_player(0).alone      
 
 def test_state_4_make(game):
     test_state_3_pass_to_dealer(game)
+
+    up_card_before = game.euchre.up_card
+
     game.input("Player4", "make", "♠")
+
     assert game.current_state == 5
     assert game.euchre.trump == "♠"
     assert game.euchre.maker.name == "Player4"
     assert game.euchre.discard == None
     assert game.euchre.down_card == None
-    assert game.euchre.up_card == "J♥" 
+    assert game.euchre.up_card == up_card_before
 
 def test_state_4_alone(game):
     test_state_3_pass_to_dealer(game)
+
+    up_card_before = game.euchre.up_card
+
     game.input("Player4", "alone", "♠")
+
     assert game.current_state == 5
     assert game.euchre.trump == "♠"
     assert game.euchre.maker.name == "Player4"
     assert game.euchre.discard == None
     assert game.euchre.down_card == None
-    assert game.euchre.up_card == "J♥"   
+    assert game.euchre.up_card == up_card_before   
     assert game.euchre.get_player(3).alone      
     assert game.euchre.current_player.name == "Player1"
 
@@ -190,25 +204,25 @@ def test_state_5_play_hand(game):
     test_state_4_make(game)       
 
     assert len(game.euchre.tricks) == 1
-    game.input("Player1", "play", "Q♠")
+    game.input("Player1", "play", "9♥")
     
     assert game.current_state == 5
     assert game.euchre.current_player.name == "Player2"
     assert len(game.euchre.current_trick) == 1
 
-    game.input("Player2", "play", "9♠")
+    game.input("Player2", "play", "10♥")
     
     assert game.current_state == 5
     assert game.euchre.current_player.name == "Player3"
     assert len(game.euchre.current_trick) == 2
 
-    game.input("Player3", "play", "10♠")
+    game.input("Player3", "play", "J♥")
     
     assert game.current_state == 5
     assert game.euchre.current_player.name == "Player4"
     assert len(game.euchre.current_trick) == 3    
 
-    game.input("Player4", "play", "A♠")
+    game.input("Player4", "play", "Q♥")
     
     assert game.current_state == 5
     assert game.euchre.current_player.name == "Player4"
@@ -216,13 +230,16 @@ def test_state_5_play_hand(game):
     assert len(game.euchre.current_trick) == 0  # new trick
 
     assert len(game.euchre.tricks) == 2 
-    game.input("Player4", "play", "Q♣")
-    game.input("Player1", "play", "A♣")
-    game.input("Player2", "play", "K♣")
-    with pytest.raises(EuchreException, match="Card 'A♥' must follow suit '♣'."):
-        game.input("Player3", "play", "A♥")
+    game.input("Player4", "play", "10♠")
+    game.input("Player1", "play", "J♠")
+    game.input("Player2", "play", "Q♠")
+    
+    with pytest.raises(EuchreException, match="Card 'J♣' must follow suit '♠'."):
+        game.input("Player3", "play", "J♣")
 
-    game.input("Player3", "play", "9♣")
+    game.input("Player3", "play", "K♠")
+
+    print(game)
 
     assert len(game.euchre.tricks) == 3     
     game.input("Player1", "play", "J♦")
@@ -269,7 +286,4 @@ def test_state_6_continue(game):
     assert game.euchre.current_player.name == "Player2"
     assert game.euchre.dealer.name == "Player1"
     assert game.euchre.hand_count == 1
-    assert game.current_state == 1
-
-    print(game)
-    
+    assert game.current_state == 1   

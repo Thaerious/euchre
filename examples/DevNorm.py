@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 from euchre import *
-from euchre.Card import Deck, Trick
+from euchre.card.Card import Deck, Trick
 from euchre.Normalized import Normalized
 import random
 

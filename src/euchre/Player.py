@@ -1,5 +1,5 @@
 from euchre.delString import delString
-from euchre.Card import Card, CardList, Hand    
+from euchre.card.Card import Card, CardList, Hand    
 
 class Player:
     def __init__(this, name, index):

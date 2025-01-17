@@ -1,7 +1,6 @@
 from euchre.Player import PlayerList, Player
-from euchre.Card import Card, Deck, Trick
+from euchre.card.Card import Card, Deck, Trick
 from euchre.rotate import rotateTo
-import euchre.bots.tools as tools
 from typing import List, Optional
 
 NUM_PLAYERS = 4
@@ -332,21 +331,6 @@ class Euchre:
             raise EuchreException("No tricks available.")
         return len(self._tricks[-1]) == len(self.order)
 
-    def __check_follow_suit(self, player: Player, card: Card) -> None:
-        """
-        Verify that the card being played follows suit if the player can follow suit.
-
-        Args:
-            player (Player): The player who is playing the card.
-            card (Card): The card being played.
-
-        Raises:
-            EuchreException: If the card does not follow suit when required.
-        """
-        if not tools.canPlay(self.current_trump, self._tricks[-1], player.cards, card):
-            leadSuit = self._tricks[-1].getLeadSuit()
-            raise EuchreException(f"Card '{card}' must follow suit '{leadSuit}'.")
-
     def dealer_swap_card(self, card: Card) -> None:
         """
         Allow the dealer to swap one card from their hand with the upCard.
@@ -399,14 +383,16 @@ class Euchre:
             raise EuchreException(f"Trick full, can't play card '{card}'.")
 
         # Convert string to Card if needed
-        if isinstance(card, str):
-            card = Card(card)
+        if isinstance(card, str): card = Card(card)
 
         player = self.current_player
 
         if card not in player.cards:
             raise EuchreException(f"Card '{card}' not in hand of '{player.name}'.")
-        self.__check_follow_suit(player, card)
+        
+        if not card in player.cards.playable_cards(self.current_trick):
+            leadSuit = self._tricks[-1].getLeadSuit()
+            raise EuchreException(f"Card '{card}' must follow suit '{leadSuit}'.")
 
         # Remove card from player's hand and move to played
         player.cards.remove(card)

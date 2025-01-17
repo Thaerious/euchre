@@ -1,4 +1,4 @@
-from euchre.Card import Card
+from euchre.card.Card import Card
 
 # 0: Unknown
 # 1: Player's card

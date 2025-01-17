@@ -1,4 +1,4 @@
-from euchre.Card import Card, Deck, Trick
+from euchre.card.Card import Card, Deck, Trick
 from euchre.delString import delString
 from euchre.Euchre import *
 from euchre.Player import Player
@@ -40,6 +40,7 @@ class Game:
         self.update_hash()
         self.last_action: Optional[str] = None
         self.last_player: Optional[Player] = None
+        self.debug_mode = False # set to true to prevent shuffling
 
     @typechecked
     def update_hash(self) -> None:
@@ -78,9 +79,10 @@ class Game:
         elif player != self.euchre.current_player.name:
             raise ActionException(f"Incorrect Player: expected '{self.euchre.current_player.name}' found '{player}'.")
 
-        # Convert string data to a Card object if applicable
-        if isinstance(data, str):
-            data = Card(data[-1], data[:-1])
+        # States 2 & 5 expect a card object
+        if self.current_state == 2 or self.current_state == 5:
+            if isinstance(data, str):
+                data = Card(data[-1], data[:-1])
 
         # Activate the current state
         self.update_hash()
@@ -105,7 +107,7 @@ class Game:
         """
         Transition to state 1: Shuffle and deal cards.
         """
-        self.euchre.shuffle_deck()
+        if not self.debug_mode: self.euchre.shuffle_deck()
         self.euchre.deal_cards()
         self.state = self.state_1
 

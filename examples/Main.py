@@ -124,7 +124,7 @@ class GameLoop:
     def printPlayable(this):
         i = 0
         for card in this.euchre.getCurrentPlayer().cards:
-            if this.game.euchre.trick.canPlay(card, this.euchre.getCurrentPlayer().cards, this.game.euchre.trump):
+            if this.game.euchre.trick.can_play(card, this.euchre.getCurrentPlayer().cards, this.game.euchre.trump):
                 print(f"{i}[{card}]", end=" ")
             i = i + 1
 

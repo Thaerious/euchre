@@ -6,7 +6,7 @@ import struct
 import time
 from datetime import datetime
 from euchre import *
-from euchre.Card import Hand
+from euchre.card.Card import Hand
 from euchre.Snapshot import Snapshot
 from euchre.bots.tools import *
 

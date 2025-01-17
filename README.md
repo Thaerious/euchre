@@ -1,6 +1,6 @@
-Use "source ./venv/bin/activate" on new terminals.
-
-Don't forget to install the local module with 'pip install -e .'
+## Start Here
+* Use "source ./venv/bin/activate" on new terminals.
+* On fresh repos, don't forget to install the local module with 'pip install -e .'
 
 ## Running tests
 ### Run all tests

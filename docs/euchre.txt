@@ -37,7 +37,7 @@ make_trump(suit=None):
 isTrickFinished(): 
     Determines if the current trick has been completed based on the number of cards played.
 
-canPlay(player, card): 
+can_play(player, card): 
     Checks if a player can legally play a specified card, enforcing the rule of following suit.
 
 dealer_swap_card(card): 
