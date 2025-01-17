@@ -1,15 +1,25 @@
 from euchre.delString import delString
 import Card
+from typing import List
 
 class CardList(list):
-    def __init__(self, stringList = []):
-        for string in stringList:
-            self.append(Card(string))
+    """
+    A list-like class that holds multiple `Card` objects and provides helper methods for working with them.
+    """
 
-    def randomItem(self):
-        if len(self) == 0: return None
-        index = random.randint(0, len(self)) - 1
-        return self[index]     
+    def __init__(self, stringList: List[str] = []):
+        """
+        Initialize a CardList from a list of card strings.
 
-    def __str__(self):
+        Args:
+            stringList (List[str]): A list of card representations as strings (e.g., ["10♥", "J♠"]).
+        """
+        super().__init__(Card(string) for string in stringList)  # Ensures only `Card` objects are added
+
+    def __str__(self) -> str:
+        """
+        Return a formatted string representation of the CardList.
+
+        Uses `delString()` to create a clean, formatted output.
+        """
         return delString(self)
