@@ -18,7 +18,7 @@ class Trick(list):
         return self[0][0]
 
     def getLeadSuit(self):
-        return self[0].get_suit(self.trump)
+        return self[0].suit_effective(self.trump)
 
     def append(self, pIndex, card):
         if isinstance(card, str): card = Card(card)
@@ -29,10 +29,12 @@ class Trick(list):
     # return the winning card
     def bestCard(self):
         if len(self) < 1: return None
+        if len(self) == 1: return self[0]
+        
         bestCard = self[0]
         
-        for card in self:               
-            if (bestCard.compare(card, self.trump) < 0):
+        for card in self:
+            if (bestCard.compare(card, self.getLeadSuit(), self.trump) < 0):
                  bestCard = card
 
         return bestCard 
@@ -54,12 +56,12 @@ class Trick(list):
 
         # subject card suit matches leading card suit
         leadSuit = self[0].suit
-        if card.get_suit(self.trump) == leadSuit: return True
+        if card.suit_effective(self.trump) == leadSuit: return True
 
         # if any other card in the hand matches suit
         for cardInHand in self:
             if cardInHand == card: continue
-            if cardInHand.get_suit(self.trump) == leadSuit: return False
+            if cardInHand.suit_effective(self.trump) == leadSuit: return False
 
         return True
 
