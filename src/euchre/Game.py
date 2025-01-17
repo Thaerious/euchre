@@ -159,7 +159,7 @@ class Game:
         self.enter_state_5()
 
     @typechecked
-    def state_3(self, action: str, suit: str) -> None:
+    def state_3(self, action: str, suit: Optional[str]) -> None:
         """
         State 3: Players decide to pass, make, or go alone for trump.
 
@@ -180,7 +180,7 @@ class Game:
             self.enter_state_5()
 
     @typechecked
-    def state_4(self, action: str, suit: str) -> None:
+    def state_4(self, action: str, suit: Optional[str]) -> None:
         """
         State 4: Dealer decides to make trump or go alone.
 
