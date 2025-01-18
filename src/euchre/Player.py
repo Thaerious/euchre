@@ -1,5 +1,5 @@
 from euchre.delString import delString
-from euchre.card.Card import Card, CardList, Hand    
+from euchre.card import *
 
 class Player:
     def __init__(this, name, index):
@@ -10,7 +10,7 @@ class Player:
 
     def clear(this):
         this.cards = Hand()
-        this.played = CardList() # cards this player has played in the current trick
+        this.played = [] # cards this player has played in the current trick
         this.tricks = 0
         this.alone = False   
 

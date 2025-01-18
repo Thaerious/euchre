@@ -1,5 +1,5 @@
 from euchre.Player import PlayerList, Player
-from euchre.card.Card import Card, Deck, Trick
+from euchre.card import *
 from euchre.rotate import rotateTo
 from typing import List, Optional
 

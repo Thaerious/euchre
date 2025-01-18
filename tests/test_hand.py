@@ -2,6 +2,10 @@ import pytest
 from euchre.card.Hand import Hand
 from euchre.card.Card import Card
 
+def test_hand_empty_constructor():
+    hand = Hand()
+    assert len(hand) == 0
+
 def test_hand_has_suit_present():
     """Test has_suit() returns True when the suit is in hand, considering trump."""
     hand = Hand(["10♠", "J♦", "A♣"])

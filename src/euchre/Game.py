@@ -1,4 +1,4 @@
-from euchre.card.Card import Card, Deck, Trick
+from euchre.card import *
 from euchre.delString import delString
 from euchre.Euchre import *
 from euchre.Player import Player

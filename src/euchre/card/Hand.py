@@ -6,7 +6,7 @@ class Hand(list):
     Represents a player's hand in Euchre, extending `CardList`.
     """
 
-    def __init__(self, cards: List[Union[Card, str]]):
+    def __init__(self, cards: List[Union[Card, str]] = []):
         """
         Initializes a Hand with a given list of Card objects.
 
