@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+setup.py
+euchre_project.egg-info/PKG-INFO
+euchre_project.egg-info/SOURCES.txt
+euchre_project.egg-info/dependency_links.txt
+euchre_project.egg-info/top_level.txt
+tests/test_card.py
+tests/test_deck.py
+tests/test_del_string.py
+tests/test_euchre.py
+tests/test_game.py
+tests/test_hand.py
+tests/test_trick.py
