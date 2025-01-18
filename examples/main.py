@@ -6,3 +6,5 @@ print(game)
 
 snap = Snapshot(game, "Player1")
 print(snap)
+
+print(snap.to_json())
