@@ -108,34 +108,7 @@ class Trick(List[Card]):
         if best is None:
             return None
 
-        return self.who_played.get(best, None)
-
-    def can_play(self, card: Union[Card, str]) -> bool:
-        """
-        Determines if a given card can be legally played in this trick.
-
-        Args:
-            card (Union[Card, str]): The card being checked.
-
-        Returns:
-            bool: True if the card is playable, False otherwise.
-        """
-        if isinstance(card, str):
-            card = Card(card)  # Convert string to Card
-
-        if not self:
-            return True  # First card of the trick can always be played
-
-        lead_suit = self.lead_suit
-        if card.suit_effective(self._trump) == lead_suit:
-            return True  # Following suit is always legal
-
-        # Check if player has any other cards matching the lead suit
-        for card_in_hand in self:
-            if card_in_hand.suit_effective(self._trump) == lead_suit:
-                return False  # If another card follows suit, this one must follow suit too
-
-        return True  # No lead suit cards in hand, so playing off-suit is legal
+        return self.who_played.get(best, None)   
 
     def __str__(self) -> str:
         """

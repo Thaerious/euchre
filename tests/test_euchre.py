@@ -62,7 +62,6 @@ def test_activate_next_player_x4(euchre):
 
 def test_deal_cards(euchre):
     euchre.deal_cards()
-    print(euchre)
 
     assert euchre.up_card == "J♦"
     assert euchre.down_card == None
@@ -117,8 +116,6 @@ def test_pick_up_exception_0(euchre):
 # can not pick up card twice
 def test_pick_up_exception_1(euchre):
     euchre.deal_cards()
-
-    print(euchre.dealer)
 
     with pytest.raises(EuchreException, match="Must swap card from hand: 9♠"):
         euchre.dealer_swap_card("9♠")             
@@ -214,8 +211,6 @@ def test_play_trick_x4(euchre):
     euchre.deal_cards()    
     euchre.make_trump("♠")
     euchre.add_trick()
-
-    print(euchre)
 
     euchre.play_card("9♥")
     euchre.play_card("10♥")

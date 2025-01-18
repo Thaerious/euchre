@@ -21,3 +21,9 @@ coverage report
 
 ### View an HTML report
 coverage html
+
+### Handy test flags
+-x exit on fail
+-k run test names
+-v verbose
+-s print stdout

@@ -150,7 +150,7 @@ class Euchre:
         """
         return self._tricks[-1]
 
-    def shuffle_deck(self) -> None:
+    def shuffle_deck(self, debug_mode = False) -> None:
         """
         Shuffle the deck. Typically called after next_hand but before dealing.
         """
@@ -163,7 +163,8 @@ class Euchre:
             player.clear()
 
         # requires a new deck because cards are removed from the deck during dealing
-        self.deck = Deck().shuffle()
+        self.deck = Deck()
+        if not debug_mode: self.deck.shuffle()
 
     def next_hand(self) -> None:
         """
@@ -418,7 +419,8 @@ class Euchre:
             raise EuchreException("Cannot score an unfinished trick.")
 
         # Determine the trick winner, update order
-        player = self.__trick_winner
+        pindex = self.current_trick.winner
+        player = self.players[pindex]
         player.tricks += 1
 
         # Move the winner to the front of the order
@@ -439,27 +441,6 @@ class Euchre:
         if len(self._tricks[-1]) != len(self.order):
             return False
         return True
-
-    def __trick_winner(self) -> Player:
-        """
-        Determine the winner of the current (last) trick by comparing played cards.
-
-        Returns:
-            Player: The player who won the last trick.
-        """
-        bestPlayer = self.first_player
-        best_card = bestPlayer.played[-1]
-
-        for i in self.order:
-            player = self.players[i]
-            card = player.played[-1]
-            compare = best_card.compare(card, self.current_trump)
-
-            if compare < 0:
-                bestPlayer = player
-                best_card = card
-
-        return bestPlayer
 
     def adjust_score(self, hand_score):
         self._score[0] = self._score[0] + hand_score[0]

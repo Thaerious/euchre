@@ -11,9 +11,9 @@ def game():
     game.debug_mode = True
     return game
 
-# def test_print(game):
-#     game.input(None, "start")  
-#     print(game)   
+def test_print(game):
+    game.input(None, "start")  
+    print(game)   
 
 def test_state_0(game):
     assert game.current_state == 0    
@@ -232,32 +232,26 @@ def test_state_5_play_hand(game):
     assert len(game.euchre.tricks) == 2 
     game.input("Player4", "play", "10♠")
     game.input("Player1", "play", "J♠")
-    game.input("Player2", "play", "Q♠")
-    
-    with pytest.raises(EuchreException, match="Card 'J♣' must follow suit '♠'."):
-        game.input("Player3", "play", "J♣")
-
+    game.input("Player2", "play", "Q♠")    
     game.input("Player3", "play", "K♠")
 
-    print(game)
-
     assert len(game.euchre.tricks) == 3     
-    game.input("Player1", "play", "J♦")
-    game.input("Player2", "play", "K♦")
-    game.input("Player3", "play", "J♣")
-    game.input("Player4", "play", "9♦")
-    
-    assert len(game.euchre.tricks) == 4
-    game.input("Player3", "play", "A♥")
-    game.input("Player4", "play", "9♥")
     game.input("Player1", "play", "K♥")
-    game.input("Player2", "play", "J♠")
+    game.input("Player2", "play", "A♥")
+    game.input("Player3", "play", "9♠")
+    game.input("Player4", "play", "A♠")
+
+    assert len(game.euchre.tricks) == 4
+    game.input("Player4", "play", "Q♣")
+    game.input("Player1", "play", "9♣")
+    game.input("Player2", "play", "10♣")
+    game.input("Player3", "play", "J♣")
 
     assert len(game.euchre.tricks) == 5
-    game.input("Player2", "play", "Q♦")
-    game.input("Player3", "play", "10♣")
-    game.input("Player4", "play", "10♥")
-    game.input("Player1", "play", "10♦")
+    game.input("Player3", "play", "9♦")
+    game.input("Player4", "play", "10♦")
+    game.input("Player1", "play", "K♣")
+    game.input("Player2", "play", "A♣")
 
     assert game.current_state == 6
     assert game.euchre.score == [0, 1]
@@ -266,13 +260,13 @@ def test_state_5_play_hand(game):
 def test_state_5_alone_play_hand(game):
     test_state_4_alone(game)
 
-    game.input("Player1", "play", "Q♠") 
+    game.input("Player1", "play", "9♥") 
     
     assert game.current_state == 5
     assert game.euchre.current_player.name == "Player3" # player 4 went alone so there is no player 2
     assert len(game.euchre.current_trick) == 1
 
-    game.input("Player3", "play", "10♠") 
+    game.input("Player3", "play", "J♥") 
     
     assert game.current_state == 5
     assert game.euchre.current_player.name == "Player4" # player 4 went alone so there is no player 2

@@ -107,7 +107,7 @@ class Game:
         """
         Transition to state 1: Shuffle and deal cards.
         """
-        if not self.debug_mode: self.euchre.shuffle_deck()
+        self.euchre.shuffle_deck(self.debug_mode)
         self.euchre.deal_cards()
         self.state = self.state_1
 
