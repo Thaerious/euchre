@@ -391,7 +391,7 @@ class Euchre:
             raise EuchreException(f"Card '{card}' not in hand of '{player.name}'.")
         
         if not card in player.cards.playable_cards(self.current_trick):
-            leadSuit = self._tricks[-1].getLeadSuit()
+            leadSuit = self._tricks[-1].lead_suit
             raise EuchreException(f"Card '{card}' must follow suit '{leadSuit}'.")
 
         # Remove card from player's hand and move to played
@@ -418,7 +418,7 @@ class Euchre:
             raise EuchreException("Cannot score an unfinished trick.")
 
         # Determine the trick winner, update order
-        player = self.__trick_winner()
+        player = self.__trick_winner
         player.tricks += 1
 
         # Move the winner to the front of the order
@@ -448,16 +448,16 @@ class Euchre:
             Player: The player who won the last trick.
         """
         bestPlayer = self.first_player
-        bestCard = bestPlayer.played[-1]
+        best_card = bestPlayer.played[-1]
 
         for i in self.order:
             player = self.players[i]
             card = player.played[-1]
-            compare = bestCard.compare(card, self.current_trump)
+            compare = best_card.compare(card, self.current_trump)
 
             if compare < 0:
                 bestPlayer = player
-                bestCard = card
+                best_card = card
 
         return bestPlayer
 

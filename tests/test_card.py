@@ -10,6 +10,22 @@ def test_equality_card_object_false():
     card1 = Card("♠", "9")
     assert card0 != card1
 
+def test_equality_with_None():
+    card0 = Card("♠", "10")
+    assert card0 != None
+
+def test_equality_with_string_true():
+    card0 = Card("♠", "10")
+    assert card0 == "10♠"
+
+def test_equality_with_string_false():
+    card0 = Card("♠", "10")
+    assert card0 != "10♦"
+
+def test_equality_with_not_card():
+    card0 = Card("♠", "10")
+    assert card0 != []
+
 def test_suit_effective_eq():
     trump = '♦'
     card = Card('A♦')
@@ -25,9 +41,14 @@ def test_suit_effective_rb():
     card = Card('J♠')
     assert card.suit_effective(trump) == trump
 
-def test_suit_effective_lb():
+def test_suit_effective_lb_1():
     trump = '♠'
     card = Card('J♣')
+    assert card.suit_effective(trump) == trump
+
+def test_suit_effective_lb_2():
+    trump = '♣'
+    card = Card('J♠')
     assert card.suit_effective(trump) == trump
 
 def test_to_str():
@@ -48,8 +69,10 @@ def test_hash_not_equal():
     card2 = Card('J♠')
     assert card1.__hash__() != card2.__hash__()    
 
-import pytest
-from euchre.card.Card import Card
+# Same card returns 1
+def test_compare_same_card():
+    card1 = Card('J♠')  # Right Bower (Trump Jack)
+    assert card1.compare(card1, lead='♠', trump='♠') == 1  # Right Bower wins
 
 # ✅ Right Bower (J of Trump) always wins
 def test_compare_right_bower_vs_non_trump():

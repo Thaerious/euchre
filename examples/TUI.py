@@ -372,7 +372,7 @@ class View:
                 this.paintEast(snap)
 
                 trick = snap.tricks[-1] if len(snap.tricks) > 0 else None
-                winner = snap.names[trick.winner()]
+                winner = snap.names[trick.winner]
 
                 this.boardscr.addstr(24, 0, f"The winner of this trick is {winner}")
                 this.boardscr.addstr(25, 0, "Press any key to continue")
@@ -427,7 +427,7 @@ class View:
 
         for trick in snap.tricks:
             if len(trick) < len(snap.order): break
-            winner = trick.winner()
+            winner = trick.winner
             partner = (snap.forPlayer + 2) % 4
 
             if winner == snap.forPlayer or winner == partner:
@@ -443,7 +443,7 @@ class View:
 
         for trick in snap.tricks:
             if len(trick) < len(snap.order): break
-            winner = trick.winner()
+            winner = trick.winner
             partner = (snap.forPlayer + 2) % 4
 
             if winner != snap.forPlayer and winner != partner:
