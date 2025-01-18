@@ -59,7 +59,7 @@ class Card:
 
     def __hash__(self) -> int:
         """Return a hash value for the card (useful for sets and dictionaries)."""
-        return hash((self.suit, self.value))
+        return hash(str(self))
 
     def suit_effective(self, trump: str) -> str:
         """
