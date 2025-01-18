@@ -1,7 +1,7 @@
 from euchre.Player import PlayerList, Player
 from euchre.card import *
 from euchre.rotate import rotateTo
-from typing import List, Optional
+from typing import List, Optional, Union
 
 NUM_PLAYERS = 4
 NUM_CARDS_PER_PLAYER = 5
@@ -214,7 +214,7 @@ class Euchre:
         """
         return self.players[self.current_player_index]
 
-    def get_player(self, index: int) -> Player:
+    def get_player(self, index: Union[int, str]) -> Player:
         """
         Retrieve a player by playing order.
 
@@ -224,7 +224,13 @@ class Euchre:
         Returns:
             Player: The player object at the given index.
         """
-        return self.players[index]
+
+        if isinstance(index, str):
+            for player in self.players:
+                if player.name == index:
+                    return player
+        else:
+            return self.players[index]
 
     @property
     def maker(self) -> Optional[Player]:

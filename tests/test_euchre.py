@@ -7,6 +7,18 @@ def euchre():
     euchre = Euchre(names)
     return euchre
 
+def test_get_player_int(euchre):
+    assert euchre.get_player(0).name == "Player1"
+    assert euchre.get_player(1).name == "Player2"
+    assert euchre.get_player(2).name == "Player3"
+    assert euchre.get_player(3).name == "Player4"
+
+def test_get_player_str(euchre):
+    assert euchre.get_player("Player1").name == "Player1"
+    assert euchre.get_player("Player2").name == "Player2"
+    assert euchre.get_player("Player3").name == "Player3"
+    assert euchre.get_player("Player4").name == "Player4"            
+
 def test_initialization(euchre):
     assert len(euchre.players) == 4
     
