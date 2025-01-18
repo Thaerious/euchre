@@ -10,6 +10,14 @@ def test_deck_initialization():
     expected_cards = {Card(suit, value) for suit in Card.suits for value in Card.values}
     assert set(deck) == expected_cards, "Deck should contain all Euchre cards"
 
+def test_deck_order():
+    """Other tests require the deck to be in a predicatable order."""
+    deck = Deck()
+    assert deck == ["9♥", "10♥", "J♥", "Q♥", "K♥", "A♥",
+                    "9♠", "10♠", "J♠", "Q♠", "K♠", "A♠",
+                    "9♣", "10♣", "J♣", "Q♣", "K♣", "A♣",
+                    "9♦", "10♦", "J♦", "Q♦", "K♦", "A♦"]
+
 def test_deck_shuffling():
     """Test that shuffling the deck changes the order but keeps the same cards."""
     deck = Deck()

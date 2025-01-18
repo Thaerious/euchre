@@ -12,9 +12,9 @@ def playable(trick: Trick, hand: Hand):
             playable_cards.append(card)
             continue
 
-        if not hand.has_suit(trick.lead_suit):
+        if not hand.has_suit(trick.lead_suit, trick.trump):
             playable_cards.append(card)
             continue
 
-        return True  
+    return playable_cards
     

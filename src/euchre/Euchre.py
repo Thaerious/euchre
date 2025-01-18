@@ -390,7 +390,7 @@ class Euchre:
         if card not in player.cards:
             raise EuchreException(f"Card '{card}' not in hand of '{player.name}'.")
         
-        if not card in player.cards.playable_cards(self.current_trick):
+        if not card in playable(self.current_trick, player.cards):
             leadSuit = self._tricks[-1].lead_suit
             raise EuchreException(f"Card '{card}' must follow suit '{leadSuit}'.")
 
