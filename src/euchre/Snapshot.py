@@ -6,8 +6,14 @@ class Snapshot:
     def __init__(self, game, player_name):
         for_player = game.euchre.get_player(player_name)
 
-        self.names = [player.name for player in game.euchre.players]
-        self.tricks = [player.tricks for player in game.euchre.players]
+        self.players = []
+        for player in game.euchre.players:
+            self.players.append({
+                "name": player.name,
+                "cards": len(player.cards),
+                "tricks": player.tricks
+            })
+
         self.for_player = for_player.index
         self.active = game.euchre.current_player_index
         self.state = game.current_state
@@ -22,7 +28,9 @@ class Snapshot:
         self.hands_played = game.euchre.hands_played
         self.score = game.euchre.score
         self.last_action = game.last_action
-        self.last_player = game.last_player
+
+        self.last_player = game.last_player.index if game.last_player is not None else None
+        
         self.hash = game.hash
         # self.normalized = Normalized(game.euchre, for_player)
         self.state = game.current_state
@@ -37,7 +45,7 @@ class Snapshot:
         Converts the Snapshot object to a dictionary suitable for JSON serialization.
         """
         return {
-            "players": self.names,
+            "players": self.players,
             "tricks": self.tricks,
             "for_player": self.for_player,
             "active_player": self.active,
@@ -69,10 +77,10 @@ class Snapshot:
         Returns a human-readable string representation of the Snapshot object.
         """
         return (
-            f"  Players: {', '.join(self.names)}\n"
+            f"  Players: {self.players}\n"
             f"  Tricks: {self.tricks}\n"
-            f"  For Player: {self.for_player} ({self.names[self.for_player]})\n"
-            f"  Active Player: {self.active} ({self.names[self.active]})\n"
+            f"  For Player: {self.for_player}\n"
+            f"  Active Player: {self.active}\n"
             f"  Game State: {self.state}\n"
             f"  Up Card: {self.up_card}\n"
             f"  Down Card: {self.down_card if self.down_card else 'None'}\n"            
