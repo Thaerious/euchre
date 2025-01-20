@@ -2,9 +2,11 @@ from euchre.card import *
 from euchre.delString import delString
 from euchre.Euchre import *
 from euchre.Player import Player
+from euchre.bots import Bot
 import random
 from typing import *
 from typeguard import typechecked
+from .Snapshot import Snapshot
 
 class ActionException(EuchreException):
     """
@@ -41,6 +43,21 @@ class Game:
         self.last_action: Optional[str] = None
         self.last_player: Optional[Player] = None
         self.debug_mode = False # set to true to prevent shuffling
+        self.bots = {}
+
+    @typechecked
+    def is_bot(self) -> bool:
+        return self.euchre.current_player in self.bots
+
+    @typechecked
+    def set_bot(self, index: int, bot: Bot) -> None:
+        self.bots[index] = bot
+
+    @typechecked
+    def do_bot(self) -> None:
+        if self.euchre.current_player in self.bots:
+            bot = self.bots[self.euchre.current_player]
+            action, data = bot.decide(Snapshot(self))
 
     @typechecked
     def update_hash(self) -> None:

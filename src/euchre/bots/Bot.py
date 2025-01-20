@@ -2,21 +2,25 @@ from euchre.card.Card import Card
 import random
 
 class Bot:
-    def decide(this, snap):
+    def decide(self, snap):
+        method_name = f"state_{snap.state}"
+        method = getattr(self, method_name)
+        method(snap)
+
+    def state_1(self, snap):
+        options = ["pass", "order", "alone"]
+        random_item = random.choice(options)
+        return random_item, None
+
+    def state_2(self, snap):
         pass
 
-    def state1(this):
+    def state_3(self, snap):
         pass
 
-    def state2(this):
+    def state_4(self, snap):
         pass
 
-    def state3(this):
-        pass
-
-    def state4(this):
-        pass
-
-    def state5(this):
+    def state_5(self, snap):
         pass
 
