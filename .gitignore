@@ -6,3 +6,16 @@ lib/
 history.txt
 commit_message.txt
 .coverage
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+**/*.egg-info/
+*.egg
+dist/
+build/
+*.wheel

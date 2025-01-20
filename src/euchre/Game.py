@@ -73,10 +73,10 @@ class Game:
         Raises:
             ActionException: If the action or player is invalid.
         """
-        if self.current_state == 0 or self.current_state == 6:
+        if self.current_state == 6:
             if player is not None:
                 raise ActionException(f"Incorrect Player: expected 'None' found '{player}'.")
-        elif player != self.euchre.current_player.name:
+        elif self.current_state != 0 and player != self.euchre.current_player.name:
             raise ActionException(f"Incorrect Player: expected '{self.euchre.current_player.name}' found '{player}'.")
 
         # States 2 & 5 expect a card object
