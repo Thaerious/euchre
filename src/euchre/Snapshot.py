@@ -15,13 +15,13 @@ class Snapshot:
             })
 
         self.for_player = for_player.index
-        self.active = game.euchre.current_player_index
+        self.active = game.euchre.current_player.index
         self.state = game.current_state
         self.up_card = game.euchre.up_card
         self.down_card = game.euchre.down_card        
         self.trump = game.euchre.trump
         self.tricks = game.euchre.tricks
-        self.maker = game.euchre.maker
+        self.maker = game.euchre.maker.index if game.euchre.maker != None else None
         self.dealer = game.euchre.dealer.index
         self.hand = for_player.cards
         self.order = game.euchre.order   
