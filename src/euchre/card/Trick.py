@@ -1,11 +1,13 @@
 from typing import Dict, List, Optional, Union
 from euchre.card.Card import Card
+from typeguard import typechecked
 
 class Trick(List[Card]):
     """
     Represents a trick in Euchre, storing cards played in order and tracking the winner.
     """
 
+    @typechecked
     def __init__(self, trump: str):
         """
         Initializes an empty trick.
@@ -16,27 +18,6 @@ class Trick(List[Card]):
         super().__init__()
         self.who_played: Dict[Card, int] = {}  # Maps cards to player indices
         self._trump: str = trump  # The trump suit for this trick
-
-    @staticmethod
-    def build(trump: str, cards: List[tuple[int, Union[Card, str]]], order = [0, 1, 2, 3]) -> "Trick":
-        """
-        Creates a Trick instance with given cards and their player indices.
-
-        Args:
-            trump (str): The trump suit.
-            cards (List[tuple[int, Union[Card, str]]]): A list of (player_index, card) pairs.
-
-        Returns:
-            Trick: A Trick instance populated with the given cards.
-        """
-
-        if len(cards) != len(order):
-            raise Exception("Cards and order lists sizes must match.")
-
-        trick = Trick(trump)
-        for i, card in enumerate(cards):
-            trick.append(order[i], card)
-        return trick
 
     @property
     def trump(self) -> str:
@@ -61,8 +42,9 @@ class Trick(List[Card]):
         Returns:
             str: The suit of the first played card, adjusted for Left Bower.
         """
-        return self[0].suit_effective(self._trump)
+        return self[0].suit_effective()
 
+    @typechecked
     def append(self, pIndex: int, card: Union[Card, str]) -> None:
         """
         Adds a card to the trick, associating it with a player.
@@ -71,9 +53,6 @@ class Trick(List[Card]):
             pIndex (int): The player index who played this card.
             card (Union[Card, str]): The card being played (as a Card object or string).
         """
-        if isinstance(card, str):
-            card = Card(card)  # Convert string representation to Card
-
         super().append(card)
         self.who_played[card] = pIndex
 
@@ -91,7 +70,7 @@ class Trick(List[Card]):
         best_card = self[0]
 
         for card in self[1:]:  # Start checking from the second card
-            if best_card.compare(card, self.lead_suit, self._trump) < 0:
+            if best_card.compare(card, self.lead_suit) < 0:
                 best_card = card
 
         return best_card
@@ -110,6 +89,7 @@ class Trick(List[Card]):
 
         return self.who_played.get(best, None)   
 
+    @typechecked
     def __str__(self) -> str:
         """
         Returns a formatted string representation of the trick.
@@ -122,6 +102,7 @@ class Trick(List[Card]):
             for card in self
         )
 
+    @typechecked
     def __repr__(self) -> str:
         """
         Returns a string representation of the trick (same as __str__).

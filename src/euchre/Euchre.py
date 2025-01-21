@@ -321,6 +321,7 @@ class Euchre:
 
         self.maker_index = self.current_player_index
         self.current_trump = suit if suit is not None else self._up_card.suit
+        self.deck.trump = self.current_trump
 
     @property
     def is_trick_finished(self) -> bool:
@@ -390,7 +391,7 @@ class Euchre:
             raise EuchreException(f"Trick full, can't play card '{card}'.")
 
         # Convert string to Card if needed
-        if isinstance(card, str): card = Card(card)
+        if isinstance(card, str): card = self.deck.get_card(card)
 
         player = self.current_player
 

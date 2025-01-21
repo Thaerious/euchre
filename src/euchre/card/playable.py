@@ -8,11 +8,11 @@ def playable(trick: Trick, hand: Hand):
     if len(trick) == 0: return hand.copy()
 
     for card in hand:
-        if card.suit_effective(trick.trump) == trick.lead_suit:
+        if card.suit_effective() == trick.lead_suit:
             playable_cards.append(card)
             continue
 
-        if not hand.has_suit(trick.lead_suit, trick.trump):
+        if not hand.has_suit(trick.lead_suit):
             playable_cards.append(card)
             continue
 
