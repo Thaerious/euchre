@@ -46,18 +46,25 @@ class Game:
         self.bots = {}
 
     @typechecked
-    def is_bot(self) -> bool:
-        return self.euchre.current_player in self.bots
+    def is_bot(self, index = -1) -> bool:
+        if index == -1: index = self.euchre.current_player.index
+        return index in self.bots
 
     @typechecked
     def set_bot(self, index: int, bot: Bot) -> None:
         self.bots[index] = bot
 
     @typechecked
-    def do_bot(self) -> None:
-        if self.euchre.current_player in self.bots:
-            bot = self.bots[self.euchre.current_player]
-            action, data = bot.decide(Snapshot(self))
+    def bot_action(self) -> Optional[None]:
+        pidx = self.euchre.current_player.index
+        pname = self.euchre.current_player.name
+
+        if pidx in self.bots:
+            bot = self.bots[pidx]
+            (action, data) = bot.decide(Snapshot(self, pname))  
+            self.input(pname, action, data)
+        else:     
+            raise ActionException("Current player is not a bot.")
 
     @typechecked
     def update_hash(self) -> None:
@@ -298,4 +305,6 @@ class Game:
         sb += f"last action: {self.last_action}\n"
         sb += f"last player: {self.last_player}\n"
         sb += f"state: {self.current_state}\n"
+        sb += f"bots: {[self.is_bot(i) for i in range(4)]}\n"
+
         return sb
