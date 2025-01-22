@@ -2,6 +2,7 @@ from euchre.Player import PlayerList, Player
 from euchre.card import *
 from euchre.rotate import rotateTo
 from typing import List, Optional, Union
+import random
 
 NUM_PLAYERS = 4
 NUM_CARDS_PER_PLAYER = 5
@@ -150,7 +151,7 @@ class Euchre:
         """
         return self._tricks[-1]
 
-    def shuffle_deck(self, debug_mode = False) -> None:
+    def shuffle_deck(self, seed = None) -> None:
         """
         Shuffle the deck. Typically called after next_hand but before dealing.
         """
@@ -164,7 +165,7 @@ class Euchre:
 
         # requires a new deck because cards are removed from the deck during dealing
         self.deck = Deck()
-        if not debug_mode: self.deck.shuffle()
+        self.deck.shuffle(seed)
 
     def next_hand(self) -> None:
         """

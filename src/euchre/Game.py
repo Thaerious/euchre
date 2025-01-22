@@ -42,7 +42,7 @@ class Game:
         self.update_hash()
         self.last_action: Optional[str] = None
         self.last_player: Optional[Player] = None
-        self.debug_mode = False # set to true to prevent shuffling
+        self.debug_seed = -1 # set to -1 to prevent shuffling
         self.bots = {}
 
     @typechecked
@@ -131,7 +131,7 @@ class Game:
         """
         Transition to state 1: Shuffle and deal cards.
         """
-        self.euchre.shuffle_deck(self.debug_mode)
+        self.euchre.shuffle_deck(self.debug_seed)
         self.euchre.deal_cards()
         self.state = self.state_1
 

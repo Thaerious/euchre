@@ -71,7 +71,7 @@ class Card:
         """Return a hash value for the card (useful for sets and dictionaries)."""
         return hash(str(self))
     
-    def suit_effective(self) -> str:
+    def suit_effective(self, trump = None) -> str:
         """
         Determine the effective suit of the card.
 
@@ -81,7 +81,7 @@ class Card:
         Returns:
             str: The effective suit (adjusts for Left Bower being counted as trump).
         """
-        if self.is_left_bower():
+        if self.is_left_bower(trump):
             return self._deck.trump  # Left Bower is considered part of the trump suit
         return self.suit
 
@@ -138,7 +138,7 @@ class Card:
         # If neither follows lead or is trump, it's a tie
         return 0
 
-    def is_right_bower(self) -> bool:
+    def is_right_bower(self, trump = None) -> bool:
         """
         Determine if the card is the Right Bower (Jack of trump suit).
 
@@ -148,9 +148,10 @@ class Card:
         Returns:
             bool: True if this card is the Right Bower, False otherwise.
         """
-        return self.value == "J" and self.suit == self._deck.trump
+        if trump is None: trump = self.deck.trump
+        return self.value == "J" and self.suit == trump
 
-    def is_left_bower(self) -> bool:
+    def is_left_bower(self, trump = None) -> bool:
         """
         Determine if the card is the Left Bower (Jack of the same-color suit as trump).
 
@@ -160,4 +161,5 @@ class Card:
         Returns:
             bool: True if this card is the Left Bower, False otherwise.
         """
-        return self.value == "J" and self.suit == Card.left_bower_suit[self._deck.trump]
+        if trump is None: trump = self.deck.trump
+        return self.value == "J" and self.suit == Card.left_bower_suit[trump]

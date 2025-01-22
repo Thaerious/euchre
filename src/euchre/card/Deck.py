@@ -29,12 +29,13 @@ class Deck(list):
     def get_card(self, suit, value: str | None = None):
         return Card(self, suit, value)
 
-    def shuffle(self) -> "Deck":
+    def shuffle(self, seed = None) -> "Deck":
         """
         Shuffle the deck in place.
 
         Returns:
             Deck: The shuffled deck (self).
         """
-        random.shuffle(self)
-        return self  # Allows method chaining (e.g., deck.shuffle().deal())
+        if seed is not None: random.seed(seed)
+        if seed is not -1: random.shuffle(self)
+        return self
