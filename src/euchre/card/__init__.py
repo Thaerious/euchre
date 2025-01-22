@@ -6,6 +6,7 @@ from .Deck import Deck
 from .Hand import Hand
 from .playable import playable
 from .Trick import Trick
+from .Query import Query
 
 # Define __all__ to specify what is exported when using 'from euchre.Card import *'
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     'Deck',
     'Hand',
     'playable',
-    'Trick'
+    'Trick',
+    'Query'
 ]

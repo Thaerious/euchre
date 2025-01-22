@@ -1,6 +1,8 @@
-from euchre.card.Card import Card
+from euchre.card import *
 from euchre import Snapshot
 import random
+
+# ["♠", "♥", "♣", "♦"]
 
 class Bot:
     def decide(self, snap: Snapshot):
@@ -11,11 +13,17 @@ class Bot:
 
     def state_1(self, snap):
         # pass / order / alone
-        if snap.hand.count(suits = snap.up_card.suit, trump = snap.up_card.suit) < 2:
-            return ("pass", None)
 
-        if snap.hand.count(values = ["A", "J", "Q", "K"], suits = snap.up_card.suit, trump = snap.up_card.suit) >= 1:
-            return ("order", None)
+        q = Query(
+            trump = snap.up_card.suit, 
+            hand = snap.hand
+        )
+
+        # order when >= 2 face trump
+        if q.phrase("A J Q K ♠ J♣").count >= 2: return ("order", None)
+
+        # order when >= 3 trump (one has to be face)
+        if q.phrase("♠").count >= 2: return ("order", None)
 
         return ("pass", None)
 
@@ -24,8 +32,7 @@ class Bot:
             if suit is not snap.trump:
                 cards = snap.hand.select(suit = suit, trump = snap.trump)
                 if (len(cards) == 1): return("up", cards[0])
-
-        
+       
 
     def state_3(self, snap):
         pass

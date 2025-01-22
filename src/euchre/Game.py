@@ -1,5 +1,5 @@
 from euchre.card import *
-from euchre.delString import delString
+from euchre.del_string import del_string
 from euchre.Euchre import *
 from euchre.Player import Player
 from euchre.bots import Bot

@@ -1,4 +1,4 @@
-from euchre.delString import delString
+from euchre.del_string import del_string
 from euchre.card import *
 
 class Player:
@@ -22,7 +22,7 @@ class Player:
         return newPlayer
 
     def __str__(this):     
-        sb = f"{this.name}@{this.index}[{delString(this.cards)}][{delString(this.played)}] {this.tricks}"
+        sb = f"{this.name}@{this.index}[{del_string(this.cards)}][{del_string(this.played)}] {this.tricks}"
         return sb
 
 class PlayerList(list):
@@ -74,4 +74,4 @@ class PlayerList(list):
     def __str__(this):     
         names = []
         for player in this: names.append(player.name)
-        return f"[{delString(names)}]"
+        return f"[{del_string(names)}]"

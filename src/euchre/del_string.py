@@ -1,6 +1,6 @@
 # create a delimited string out of a list
 
-def delString(aList, delimiter = ", "):
+def del_string(aList, delimiter = ", ", wrap = ''):
     sb = ""
 
     length = len(aList) - 1
@@ -8,9 +8,9 @@ def delString(aList, delimiter = ", "):
 
     for i in range(length):
         item = aList[i]
-        sb = sb + str(item) + delimiter
+        sb = sb + wrap + str(item) + wrap + delimiter
 
     item = aList[-1]
-    sb = sb + str(item)
+    sb = sb + wrap + str(item) + wrap
         
     return sb

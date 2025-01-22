@@ -2,6 +2,7 @@ class Card:
     """Represents a single card in Euchre, with suit and value."""
 
     # Suits available in Euchre
+    
     suits: list[str] = ["♥", "♠", "♣", "♦"]
 
     # Possible values of a card in Euchre (9 through Ace)
@@ -69,7 +70,7 @@ class Card:
     def __hash__(self) -> int:
         """Return a hash value for the card (useful for sets and dictionaries)."""
         return hash(str(self))
-
+    
     def suit_effective(self) -> str:
         """
         Determine the effective suit of the card.
