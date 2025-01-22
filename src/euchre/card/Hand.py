@@ -1,5 +1,6 @@
 from typing import List, Union
 from euchre.card.Card import Card
+from euchre.del_string import del_string
 
 class Hand(list):
     """
@@ -92,3 +93,29 @@ class Hand(list):
     
     def count_trump(self, values: List[int] = Card.values, suits: List[str] = Card.suits) -> int:
         return len(self.select_trump(values, suits))    
+    
+    def query(self, phrase):
+        if len(self) == 0: return []
+
+        result = []
+        split = phrase.split(" ")
+
+        split = [s.replace("T", self[0].deck.trump) for s in split]
+        split = [s.replace("RB", f"J{self[0].deck.trump}") for s in split]
+
+        has_suits = any(item in Card.suits for item in split)
+        has_values = any(item in Card.values for item in split)
+        
+        if has_suits and not has_values:
+            split.extend(Card.values)
+
+        if has_values and not has_suits:
+            split.extend(Card.suits)
+
+        print("[" + del_string(split, ",", '"') + "]")
+
+        for card in self:
+            if card.suit_effective() in split and card.value in split: result.append(card)
+            elif str(card) in split: result.append(card)
+
+        return result
