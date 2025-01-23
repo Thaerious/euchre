@@ -1,5 +1,6 @@
 import re
 from euchre.del_string import del_string
+from euchre.card.Trick import Trick
 
 class Query(list):
     suits: list[str] = ["♠", "♥", "♣", "♦"] # order matters
@@ -8,6 +9,19 @@ class Query(list):
     def __init__(self, trump, source):
         self.extend(source)
         self.trump = trump
+
+    def copy(self):
+        return Query(self.trump, self)
+
+    # return all cards that could win the current trick
+    def beats(self, trick):
+        result = []
+
+        for card in self:
+            if trick.compare_card(card) > 0:
+                result.append(card)
+
+        return Query(self.trump, result)
 
     def len(self, phrase = "9TJQKA♠♥♣♦"):
          return len(self.select(phrase))
@@ -28,12 +42,14 @@ class Query(list):
 
         return Query(self.trump, result)
 
-    def by_rank(self):
-        list = sorted(self, key = lambda card: Query.ranks.index(card.rank))        
+    def by_rank(self, phrase = "9TJQKA♠♥♣♦"):
+        q = self.select(phrase)
+        list = sorted(q, key = lambda card: Query.ranks.index(card.rank))        
         return Query(self.trump, list)
 
-    def by_suit(self):
-        list = sorted(self, key = lambda card: Query.suits.index(card.suit))        
+    def by_suit(self, phrase = "9TJQKA♠♥♣♦"):
+        q = self.select(phrase)
+        list = sorted(q, key = lambda card: Query.suits.index(card.suit))        
         return Query(self.trump, list)
     
     def __str__(self):

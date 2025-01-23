@@ -139,6 +139,7 @@ class Euchre:
         Returns:
             List[Trick]: A copy of the current hand's tricks.
         """
+
         return self._tricks.copy()
 
     @property

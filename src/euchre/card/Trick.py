@@ -19,6 +19,18 @@ class Trick(List[Card]):
         self.who_played: Dict[Card, int] = {}  # Maps cards to player indices
         self._trump: str = trump  # The trump suit for this trick
 
+    def copy(self) -> "Trick":
+        """
+        Creates shallow copy of the trick, including the base list and all fields.
+
+        Returns:
+            Trick: A new instance of Trick with the same data.
+        """
+        new_trick = Trick(self._trump)  # Create a new Trick with the same trump suit
+        new_trick.extend(self)
+        new_trick.who_played = self.who_played
+        return new_trick
+
     @property
     def trump(self) -> str:
         """
@@ -41,11 +53,11 @@ class Trick(List[Card]):
 
         Returns:
             str: The suit of the first played card, adjusted for Left Bower.
-        """
+        """        
         return self[0].suit_effective()
 
     @typechecked
-    def append(self, pIndex: int, card: Union[Card, str]) -> None:
+    def append(self, pIndex: int, card: Card) -> None:
         """
         Adds a card to the trick, associating it with a player.
 
@@ -74,6 +86,12 @@ class Trick(List[Card]):
                 best_card = card
 
         return best_card
+
+    # true if card would be the winner of this trick
+    # todo test
+    def compare_card(self, card):
+        best_card = self.best_card
+        return best_card.compare(card, self.lead_suit) < 0
 
     @property
     def winner(self) -> Optional[int]:

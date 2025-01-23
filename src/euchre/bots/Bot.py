@@ -24,12 +24,20 @@ class Bot:
         return ("pass", None)
 
     def state_2(self, snap):
-        q = Query(trump = snap.trump, hand = snap.hand)
-        
-        print(snap.hand)
-        print(q.select("910JQKA♣♥♦").select)
+        q = Query(trump = snap.trump, source = snap.hand)
 
-        if q.select("910JQKA♣♥♦").count > 0: return ("up", q.select[0])
+        if q.len("910JQKA♣") == 1: 
+            return ("up", q.select("910JQKA♣")[0])
+        
+        if q.len("910JQKA♥") == 1: 
+            return ("up", q.select("910JQKA♥")[0])
+        
+        if q.len("910JQKA♦") == 1: 
+            return ("up", q.select("910JQKA♦")[0])
+
+        if q.by_rank("910JQK♣♥♦").len() > 0: 
+            return ("up", q.by_rank("910JQK♣♥♦")[0])
+        
         return("down", None)
 
     def state_3(self, snap):
@@ -38,5 +46,30 @@ class Bot:
     def state_4(self, snap):
         pass
 
-    def state_5(self, snap):
-        pass
+    def state_5(self, snap):   
+        trick = snap.tricks[-1]
+
+        p = playable(snap.tricks[-1], snap.hand)
+        print(f"can play {p}")
+        q = Query(trump = snap.trump, source = p)
+
+        if len(trick) == 0:
+            if q.len("LJA♠") >= 2: 
+                return ("play", q.by_rank("LJA♠")[0])
+            
+            if q.len("♦") == 1:
+                return ("play", q.select("♦")[0])
+
+            if q.len("♥") == 1:
+                return ("play", q.select("♥")[0])
+            
+            if q.len("♣") == 1:
+                return ("play", q.select("♣")[0])                
+
+        if trick.winner % 2 != snap.for_player % 2:
+            if q.select("♠").len() > 0:
+                return ("play", q.select("♠")[0])
+
+        print(snap.tricks[-1])
+        print(snap.tricks[-1].winner %2)
+        print(snap.for_player % 2)

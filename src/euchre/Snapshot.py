@@ -20,7 +20,7 @@ class Snapshot:
         self.up_card = game.euchre.up_card
         self.down_card = game.euchre.down_card        
         self.trump = game.euchre.trump
-        self.tricks = game.euchre.tricks
+        self.tricks = game.euchre.tricks 
         self.maker = game.euchre.maker.index if game.euchre.maker != None else None
         self.dealer = game.euchre.dealer.index
         self.hand = for_player.cards
