@@ -55,9 +55,16 @@ def test_by_suit_then_rank():
     q = Query(trump = "♠", source = hand).select("♣♦♥").by_suit().by_rank()
     assert ["9♥","10♣","A♥","A♦"] == q    
 
-def test_by_suit_then_rank():
+def test_beats():
     (deck, hand) = build_hand(["9♠", "K♣", "A♥", "9♥", "10♣"], "♠")
     trick = Trick(deck.trump)
     trick.append(0, deck.get_card("Q♣"))
     q = Query(trump = "♠", source = hand).beats(trick)
     assert ["9♠", "K♣"] == q          
+
+def test_loses():
+    (deck, hand) = build_hand(["9♠", "K♣", "A♥", "9♥", "10♣"], "♠")
+    trick = Trick(deck.trump)
+    trick.append(0, deck.get_card("Q♣"))
+    q = Query(trump = "♠", source = hand).loses(trick)
+    assert ["A♥", "9♥", "10♣"] == q          

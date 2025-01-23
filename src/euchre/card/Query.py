@@ -23,6 +23,15 @@ class Query(list):
 
         return Query(self.trump, result)
 
+    def loses(self, trick):
+        result = []
+
+        for card in self:
+            if trick.compare_card(card) <= 0:
+                result.append(card)
+
+        return Query(self.trump, result)
+
     def len(self, phrase = "9TJQKA♠♥♣♦"):
          return len(self.select(phrase))
 
