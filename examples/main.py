@@ -1,26 +1,27 @@
 from euchre import Game, Snapshot
 from euchre.bots import Bot
+from euchre.card import *
 import random
+
+def decide(game):
+    print("-----------------------------------------")
+    print(f"{game.euchre.current_player}")
+    snap = Snapshot(game, game.euchre.current_player.name)
+    decision = bot.decide(snap)
+    print(decision)
+    game.input(game.euchre.current_player.name, decision[0], decision[1])
+    
 
 names = ["Player1", "Player2", "Player3", "Player4"]
 game = Game(names)
 
 game.debug_seed = 1000
-
-game.set_bot(1, Bot())
-game.set_bot(2, Bot())
-game.set_bot(3, Bot())
+bot = Bot()
 
 game.input(None, "start")
+print(game)
 
-snap = Snapshot(game, game.euchre.current_player.name)
-print(f"{snap.trump} {snap.up_card}")
+decide(game)
+decide(game)
 
-game.input("Player1", "pass")
-print(f"{game.last_player} {game.last_action}")
-game.bot_action()
-print(f"{game.last_player} {game.last_action}")
-game.bot_action()
-print(f"{game.last_player} {game.last_action}")
-game.bot_action()
-print(f"{game.last_player} {game.last_action}")
+

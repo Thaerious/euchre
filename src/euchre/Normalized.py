@@ -13,7 +13,7 @@ class Normalized:
 
         # all cards default to 0
         for suit in Card.suits:
-            for value in Card.values:
+            for value in Card.ranks:
                 card = Card(suit, value)
                 self.deck[str(card)] = 0
 
@@ -50,7 +50,7 @@ class Normalized:
 
         sb = sb + "\n"
 
-        for value in Card.values:
+        for value in Card.ranks:
             sb = sb + value
             for suit in Card.suits:
                 key = f"{value}{suit}"

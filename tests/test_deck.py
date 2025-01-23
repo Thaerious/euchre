@@ -7,7 +7,7 @@ def test_deck_initialization():
     assert len(deck) == 24, "Deck should have 24 cards"
 
     # Check that all expected cards are present
-    expected_cards = {deck.get_card(suit, value) for suit in Card.suits for value in Card.values}
+    expected_cards = {deck.get_card(suit, value) for suit in Card.suits for value in Card.ranks}
     assert set(deck) == expected_cards, "Deck should contain all Euchre cards"
 
 # def test_deck_order():

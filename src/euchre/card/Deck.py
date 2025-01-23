@@ -14,7 +14,7 @@ class Deck(list):
         self._trump = None
 
         for suit in Card.suits:
-            for value in Card.values:
+            for value in Card.ranks:
                 deck.append(Card(self, suit, value))
         super().__init__(deck)  # Pass the full list to the parent class
 

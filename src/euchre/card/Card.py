@@ -6,7 +6,7 @@ class Card:
     suits: list[str] = ["♥", "♠", "♣", "♦"]
 
     # Possible values of a card in Euchre (9 through Ace)
-    values: list[str] = ["9", "10", "J", "Q", "K", "A"]
+    ranks: list[str] = ["9", "10", "J", "Q", "K", "A"]
 
     # Dictionary to determine the left bower suit (Jack of the same color as trump)
     left_bower_suit: dict[str, str] = {
@@ -31,11 +31,19 @@ class Card:
 
         if value is None:
             # If value is not provided, assume `suit` is a full card string (e.g., "10♥")
-            self.suit: str = suit[-1]  # Extract suit from last character
-            self.value: str = suit[:-1]  # Extract value from all preceding characters
+            self._suit: str = suit[-1]  # Extract suit from last character
+            self._value: str = suit[:-1]  # Extract value from all preceding characters
         else:
-            self.suit = suit
-            self.value = value
+            self._suit = suit
+            self._value = value
+
+    @property
+    def suit(self):
+        return self._suit
+    
+    @property
+    def rank(self):
+        return self._value    
 
     @property
     def deck(self):
@@ -43,11 +51,11 @@ class Card:
 
     def __str__(self) -> str:
         """Return a string representation of the card."""
-        return self.value + self.suit
+        return self._value + self._suit
 
     def __repr__(self) -> str:
         """Return a formal representation of the card (same as __str__)."""
-        return self.value + self.suit
+        return self._value + self._suit
 
     def __eq__(self, that: object) -> bool:
         """
@@ -65,7 +73,7 @@ class Card:
             that = self.deck.get_card(that)
         if not isinstance(that, Card):
             return False
-        return self.suit == that.suit and self.value == that.value
+        return self._suit == that._suit and self._value == that._value
 
     def __hash__(self) -> int:
         """Return a hash value for the card (useful for sets and dictionaries)."""
@@ -83,7 +91,7 @@ class Card:
         """
         if self.is_left_bower(trump):
             return self._deck.trump  # Left Bower is considered part of the trump suit
-        return self.suit
+        return self._suit
 
     def compare(self, that: "Card", lead: str) -> int:
         """
@@ -118,21 +126,21 @@ class Card:
             return -1
 
         # Trump suit always wins over non-trump
-        if self.suit == self._deck.trump and that.suit != self._deck.trump:
+        if self._suit == self._deck.trump and that._suit != self._deck.trump:
             return 1
-        if self.suit != self._deck.trump and that.suit == self._deck.trump:
+        if self._suit != self._deck.trump and that._suit == self._deck.trump:
             return -1
 
         # If both are the same suit (trump or lead), compare by value
-        if self.suit == that.suit:
-            selfIndex = Card.values.index(self.value)
-            thatIndex = Card.values.index(that.value)
+        if self._suit == that._suit:
+            selfIndex = Card.ranks.index(self._value)
+            thatIndex = Card.ranks.index(that._value)
             return 1 if selfIndex > thatIndex else -1
 
         # If one follows lead and the other does not, lead suit wins
-        if self.suit == lead and that.suit != lead:
+        if self._suit == lead and that._suit != lead:
             return 1
-        if that.suit == lead and self.suit != lead:
+        if that._suit == lead and self._suit != lead:
             return -1
 
         # If neither follows lead or is trump, it's a tie
@@ -149,7 +157,7 @@ class Card:
             bool: True if this card is the Right Bower, False otherwise.
         """
         if trump is None: trump = self.deck.trump
-        return self.value == "J" and self.suit == trump
+        return self._value == "J" and self._suit == trump
 
     def is_left_bower(self, trump = None) -> bool:
         """
@@ -162,4 +170,4 @@ class Card:
             bool: True if this card is the Left Bower, False otherwise.
         """
         if trump is None: trump = self.deck.trump
-        return self.value == "J" and self.suit == Card.left_bower_suit[trump]
+        return self._value == "J" and self._suit == Card.left_bower_suit[trump]

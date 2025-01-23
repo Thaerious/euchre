@@ -50,9 +50,9 @@ class Hand(list):
             hand.has_suit("♠", "♠")  # Returns 2
             hand.has_suit("♦", "♣")  # Returns 0
         """
-        return len(self.select(Card.values, [suit]))
+        return len(self.select(Card.ranks, [suit]))
     
-    def select(self, values: List[int] = Card.values, suits: List[str] = Card.suits) -> list[Card]:
+    def select(self, values: List[int] = Card.ranks, suits: List[str] = Card.suits) -> list[Card]:
         """
         Selects and returns a list of cards from the hand that match the given values and suits,
         considering effective suits.
@@ -67,12 +67,12 @@ class Hand(list):
         selected = []
         for card in self:
             if card.suit_effective() not in suits: continue
-            if card.value not in values: continue
+            if card.ranknot in values: continue
             selected.append(card)
 
         return selected
     
-    def count(self, values: List[int] = Card.values, suits: List[str] = Card.suits) -> int:
+    def count(self, values: List[int] = Card.ranks, suits: List[str] = Card.suits) -> int:
         return len(self.select(values, suits))
 
     def select_trump(self, trump: str) -> int:
@@ -91,6 +91,6 @@ class Hand(list):
                 selected.append(card)
         return selected
     
-    def count_trump(self, values: List[int] = Card.values, suits: List[str] = Card.suits) -> int:
+    def count_trump(self, values: List[int] = Card.ranks, suits: List[str] = Card.suits) -> int:
         return len(self.select_trump(values, suits))   
         

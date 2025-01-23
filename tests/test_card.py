@@ -8,7 +8,7 @@ def deck():
 def test_string_builder(deck):
     card = deck.get_card("10♠")
     assert card.suit == "♠"
-    assert card.value == "10"
+    assert card.rank== "10"
     
 def test_equality_with_string(deck):
     card = deck.get_card("J♦")

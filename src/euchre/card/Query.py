@@ -1,58 +1,91 @@
+import re
+from euchre.del_string import del_string
 
-class Query:
+class Query(list):
     suits: list[str] = ["♠", "♥", "♣", "♦"] # order matters
-    values: list[str] = ["9", "10", "J", "Q", "K", "A"]
+    ranks: list[str] = ["9", "10", "J", "Q", "K", "A"]
 
-    def __init__(self, trump, hand, phrase = ""):
+    def __init__(self, trump, source):
+        self.extend(source)
         self.trump = trump
-        self.hand = hand
-        self._src_phrase = phrase
 
-    def phrase(self, phrase):
-        self._src_phrase = phrase
-        return self
+    def len(self, phrase = "9TJQKA♠♥♣♦"):
+         return len(self.select(phrase))
 
-    def _denormalize_phrase(self, trump):
-        self.denorm_phrase = []
-        split = self._src_phrase.split(" ")
+    def select(self, phrase = "9TJQKA♠♥♣♦"):
+        result = []           
+        if len(self) == 0: return []
 
-        iTrump = Query.suits.index(trump)
-        opposite = Query.suits[(iTrump + 2) % 4]
-        off1 = Query.suits[(iTrump + 1) % 4]
-        off2 = Query.suits[(iTrump + 3) % 4]
+        if self.trump is None: raise Exception("Can not query before trump is set")
 
-        for part in split:
-            if   "♠" in part: self.denorm_phrase.append(part.replace("♠", trump))
-            elif "♣" in part: self.denorm_phrase.append(part.replace("♣", opposite))
-            elif "♥" in part: self.denorm_phrase.append(part.replace("♥", off1))
-            elif "♦" in part: self.denorm_phrase.append(part.replace("♦", off2))
-            else:             self.denorm_phrase.append(part)
+        part1 = expand_cards(phrase)
+        part2 = denormalize_phrase(part1, self.trump)
 
-    @property
-    def count(self):
-         return len(self.select)
+        for card in self:
+            if not card in part2: continue
+            if card in result: continue
+            result.append(card)
 
-    @property
-    def select(self):
-            result = []           
-            if len(self.hand) == 0: return []
+        return Query(self.trump, result)
 
-            if self.trump is None: raise Exception("Can not query before trump is set")
-            self._denormalize_phrase(self.trump)
+    def by_rank(self):
+        list = sorted(self, key = lambda card: Query.ranks.index(card.rank))        
+        return Query(self.trump, list)
 
-            has_suits = any(item in Query.suits for item in self.denorm_phrase)
-            has_values = any(item in Query.values for item in self.denorm_phrase)
-            
-            if has_suits and not has_values:
-                self.denorm_phrase.extend(Query.values)
+    def by_suit(self):
+        list = sorted(self, key = lambda card: Query.suits.index(card.suit))        
+        return Query(self.trump, list)
+    
+    def __str__(self):
+        return f"[{del_string(self, ",", '"')}]"
+    
+    def __repr__(self):
+        return f"[{del_string(self, ",", '"')}]"   
 
-            if has_values and not has_suits:
-                self.denorm_phrase.extend(Query.suits)   
+def expand_cards(input_str):
+    result = []
+    input_str = input_str.replace("T", "10")
+    suit_opposites = {"♠": "♣", "♣": "♠", "♦": "♥", "♥": "♦"}
 
-            for card in self.hand:
-                if card.suit_effective(self.trump) in self.denorm_phrase and card.value in self.denorm_phrase: result.append(card)
-                elif str(card) in self.denorm_phrase: result.append(card)
+    for part in input_str.split(" "):    
+        match = re.match(r'([109JQKAL]*)([♠♣♦♥]*)', part)
+        if not match: raise Exception("Invalid input")
+        
+        ranks, suits = match.groups()
+        if len(suits) == 0: suits = "♠♣♦♥"
 
-            return result        
+        ranks = re.findall(r'10|[9JQKAL]', ranks)
+        part_result = []
 
+        for suit in suits:
+            for rank in _fix_ranks(suit, ranks):
+                if rank == "L":
+                    part_result.append(f"J{suit_opposites[suit]}")
+                else:
+                    part_result.append(f"{rank}{suit}")
+                    
+        result.extend(part_result)
 
+    return result
+
+def _fix_ranks(suit, ranks):
+    if len(ranks) > 0: return ranks
+    if suit == "♠": return ["9", "10", "Q", "K", "A", "L", "J"]
+    return ["9", "10", "J", "Q", "K", "A"]
+
+def denormalize_phrase(source, trump):
+    result = []
+
+    iTrump = Query.suits.index(trump)
+    opposite = Query.suits[(iTrump + 2) % 4]
+    off1 = Query.suits[(iTrump + 1) % 4]
+    off2 = Query.suits[(iTrump + 3) % 4]
+
+    for part in source:
+        if   "♠" in part: result.append(part.replace("♠", trump))
+        elif "♣" in part: result.append(part.replace("♣", opposite))
+        elif "♥" in part: result.append(part.replace("♥", off1))
+        elif "♦" in part: result.append(part.replace("♦", off2))
+        else:             result.append(part)
+
+    return result

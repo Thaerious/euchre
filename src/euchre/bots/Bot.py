@@ -13,25 +13,23 @@ class Bot:
     def state_1(self, snap):
         # pass / order / alone
 
-        q = Query(trump = snap.up_card.suit, hand = snap.hand)
+        q = Query(trump = snap.up_card.suit, source = snap.hand)
 
         # order when >= 2 face trump
-        if q.phrase("A J Q K ♠ J♣").count >= 2: return ("order", None)
+        if q.select("LJAQK♠").len() >= 2: return ("order", None)
 
         # order when >= 3 trump (one has to be face)
-        if q.phrase("♠").count >= 2: return ("order", None)
+        if q.select("♠").len() >= 2: return ("order", None)
 
         return ("pass", None)
 
     def state_2(self, snap):
         q = Query(trump = snap.trump, hand = snap.hand)
-        if q.phrase("9 ♥ ♣ ♦").count == 1: return ("up", q.select[0])
-        if q.phrase("10 ♥ ♣ ♦").count == 1: return ("up", q.select[0])
-        if q.phrase("J ♥ ♣ ♦").count == 1: return ("up", q.select[0])
-        if q.phrase("Q ♥ ♣ ♦").count == 1: return ("up", q.select[0])
-        if q.phrase("K ♥ ♣ ♦").count == 1: return ("up", q.select[0])
-        if q.phrase("A ♥ ♣ ♦").count == 1: return ("up", q.select[0])
+        
+        print(snap.hand)
+        print(q.select("910JQKA♣♥♦").select)
 
+        if q.select("910JQKA♣♥♦").count > 0: return ("up", q.select[0])
         return("down", None)
 
     def state_3(self, snap):

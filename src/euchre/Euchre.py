@@ -314,14 +314,14 @@ class Euchre:
             EuchreException: Various conditions (mismatched downCard, missing upCard, etc.).
         """
         # Disallow trump if it matches the downCard's suit
-        if self._down_card is not None and self._down_card.suit == suit:
+        if self._down_card is not None and self._down_card._suit == suit:
             raise EuchreException("Trump can not match the down card.")
 
         if self._up_card is None and suit is None:
             raise EuchreException("Default trump requires an up card.")
 
         self.maker_index = self.current_player_index
-        self.current_trump = suit if suit is not None else self._up_card.suit
+        self.current_trump = suit if suit is not None else self._up_card._suit
         self.deck.trump = self.current_trump
 
     @property
