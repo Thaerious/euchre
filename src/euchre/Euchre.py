@@ -107,17 +107,6 @@ class Euchre:
         """
         return len(self._tricks) > 0
 
-    def clear_tricks(self) -> None:
-        """
-        Clear all tricks from the hand (only valid if the hand is finished).
-        
-        Raises:
-            EuchreException: If the hand is not finished.
-        """
-        if not self.is_hand_finished:
-            raise EuchreException("Can not clear an unfinished hand.")
-        self._tricks = []
-
     def add_trick(self) -> None:
         """
         Start a new trick for the current hand.
@@ -178,6 +167,7 @@ class Euchre:
         if not self.is_hand_finished:
             raise EuchreException("Hand not finished.")
 
+        self._tricks = []
         self.hand_count += 1
         self.order = []
 
@@ -339,6 +329,7 @@ class Euchre:
         """
         if len(self._tricks) == 0:
             raise EuchreException("No tricks available.")
+        
         return len(self._tricks[-1]) == len(self.order)
 
     def dealer_swap_card(self, card: Card) -> None:
@@ -447,9 +438,7 @@ class Euchre:
         """
         if len(self._tricks) < NUM_TRICKS_PER_HAND:
             return False
-        if len(self._tricks[-1]) != len(self.order):
-            return False
-        return True
+        return self.is_trick_finished
 
     def adjust_score(self, hand_score):
         self._score[0] = self._score[0] + hand_score[0]

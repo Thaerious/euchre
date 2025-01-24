@@ -269,9 +269,8 @@ class Game:
             action (str): Expected action "continue".
             __: Unused parameter.
         """
-        self.allowed_actions(action, "continue")
+        self.allowed_actions(action, "continue")        
         self.euchre.next_hand()
-        self.euchre.clear_tricks()
         self.enter_state_1()
 
     @typechecked
