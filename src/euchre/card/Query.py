@@ -37,7 +37,7 @@ class Query(list):
 
     def select(self, phrase = "9TJQKA♠♥♣♦"):
         result = []           
-        if len(self) == 0: return []
+        if len(self) == 0: return Query(self.trump, result)
 
         if self.trump is None: raise Exception("Can not query before trump is set")
 
