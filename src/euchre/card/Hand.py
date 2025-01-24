@@ -67,7 +67,7 @@ class Hand(list):
         selected = []
         for card in self:
             if card.suit_effective() not in suits: continue
-            if card.ranknot in values: continue
+            if card.rank not in values: continue
             selected.append(card)
 
         return selected

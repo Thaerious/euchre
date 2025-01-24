@@ -15,61 +15,87 @@ class Bot:
 
         q = Query(trump = snap.up_card.suit, source = snap.hand)
 
-        # order when >= 2 face trump
-        if q.select("LJAQK♠").len() >= 2: return ("order", None)
-
-        # order when >= 3 trump (one has to be face)
-        if q.select("♠").len() >= 2: return ("order", None)
+        # order when face trump >= 2
+        if q.count("LJAQK♠") >= 2: return ("order", None)
 
         return ("pass", None)
 
     def state_2(self, snap):
         q = Query(trump = snap.trump, source = snap.hand)
 
-        if q.len("910JQKA♣") == 1: 
+        if q.count("910JQKA♣") == 1: 
             return ("up", q.select("910JQKA♣")[0])
         
-        if q.len("910JQKA♥") == 1: 
+        if q.count("910JQKA♥") == 1: 
             return ("up", q.select("910JQKA♥")[0])
         
-        if q.len("910JQKA♦") == 1: 
+        if q.count("910JQKA♦") == 1: 
             return ("up", q.select("910JQKA♦")[0])
 
-        if q.by_rank("910JQK♣♥♦").len() > 0: 
+        if q.by_rank("910JQK♣♥♦").count() > 0: 
             return ("up", q.by_rank("910JQK♣♥♦")[0])
         
         return("down", None)
 
     def state_3(self, snap):
-        pass
+        q = Query(trump = None, source = snap.hand)
+
+        suits = Card.suits
+        suits.remove(snap.up_card.suit)
+
+        for suit in suits:
+            if q.trump(suit).count(suit) >= 4: return ("alone", suit)
+            if q.trump(suit).count(suit) >= 3: return ("make", suit)
+        return ("pass", None)
 
     def state_4(self, snap):
-        pass
+        q = Query(trump = None, source = snap.hand)
+
+        suits = Card.suits
+        suits.remove(snap.up_card.suit)
+
+        for suit in suits:
+            if q.count(suit) >= 4: return ("alone", suit)
+            if q.count(suit) >= 3: return ("make", suit)
+
+        for suit in suits:
+            if q.count(suit) >= 2: return ("make", suit)           
+
+        cards = q.select("".join(suits)).by_rank()
+        return ("make", cards[0].suit)
+        
 
     def state_5(self, snap):   
         trick = snap.tricks[-1]
 
         p = playable(snap.tricks[-1], snap.hand)
-        print(f"can play {p}")
         q = Query(trump = snap.trump, source = p)
 
         if len(trick) == 0:
-            if q.len("LJA♠") >= 2: 
+            if q.count("LJA♠") >= 2: 
                 return ("play", q.by_rank("LJA♠")[0])
             
-            if q.len("♦") == 1:
+            if q.count("♦") == 1:
                 return ("play", q.select("♦")[0])
 
-            if q.len("♥") == 1:
+            if q.count("♥") == 1:
                 return ("play", q.select("♥")[0])
             
-            if q.len("♣") == 1:
+            if q.count("♣") == 1:
                 return ("play", q.select("♣")[0])                
+            
+            off_suit_by_rank = q.select("♦♥♣").by_rank()
+            if off_suit_by_rank: return ("play", off_suit_by_rank[0])
 
-        if trick.winner % 2 != snap.for_player % 2:
-            if q.select("♠").len() > 0:
-                return ("play", q.select("♠")[0])
+            trump_by_rank = q.select("♠").by_rank()
+            if trump_by_rank: return ("play", trump_by_rank[0])
+        else:
+            # if winning team is not my team
+            if trick.winner % 2 != snap.for_player % 2:            
+                q1 = q.beats(trick).select("♣♥♦♠")
+                if q1.count() > 0: return("play", q1[0])
+            else:
+                q1 = q.loses(trick).select("♣♥♦♠")
+                if q1.count() > 0: return("play", q1[0])
 
-        print(snap.tricks[-1])
-        print(snap.tricks[-1].winner %2)
-        print(snap.for_player % 2)
+        return("play", random.choice(p))    

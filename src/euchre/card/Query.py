@@ -8,10 +8,18 @@ class Query(list):
 
     def __init__(self, trump, source):
         self.extend(source)
-        self.trump = trump
+        self._trump = trump
 
     def copy(self):
-        return Query(self.trump, self)
+        return Query(self._trump, self)
+
+    def trump(self, new_trump):
+        return Query(new_trump, self)
+
+    # if the query has any cards, perform this action
+    def then(self, cb):
+        if len(self) >= 0: cb(self)
+        return Query(self._trump, self)
 
     # return all cards that could win the current trick
     def beats(self, trick):
@@ -21,7 +29,7 @@ class Query(list):
             if trick.compare_card(card) > 0:
                 result.append(card)
 
-        return Query(self.trump, result)
+        return Query(self._trump, result)
 
     def loses(self, trick):
         result = []
@@ -30,36 +38,36 @@ class Query(list):
             if trick.compare_card(card) <= 0:
                 result.append(card)
 
-        return Query(self.trump, result)
+        return Query(self._trump, result)
 
-    def len(self, phrase = "9TJQKA♠♥♣♦"):
+    def count(self, phrase = "910JQKA♠♥♣♦"):
          return len(self.select(phrase))
 
-    def select(self, phrase = "9TJQKA♠♥♣♦"):
+    def select(self, phrase = "910JQKA♠♥♣♦"):
         result = []           
-        if len(self) == 0: return Query(self.trump, result)
+        if len(self) == 0: return Query(self._trump, result)
 
-        if self.trump is None: raise Exception("Can not query before trump is set")
+        phrase = expand_cards(phrase)
 
-        part1 = expand_cards(phrase)
-        part2 = denormalize_phrase(part1, self.trump)
+        if self._trump is not None:
+            phrase = denormalize_phrase(phrase, self._trump)
 
         for card in self:
-            if not card in part2: continue
+            if not card in phrase: continue
             if card in result: continue
             result.append(card)
 
-        return Query(self.trump, result)
+        return Query(self._trump, result)
 
-    def by_rank(self, phrase = "9TJQKA♠♥♣♦"):
+    def by_rank(self, phrase = "910JQKA♠♥♣♦"):
         q = self.select(phrase)
         list = sorted(q, key = lambda card: Query.ranks.index(card.rank))        
-        return Query(self.trump, list)
+        return Query(self._trump, list)
 
-    def by_suit(self, phrase = "9TJQKA♠♥♣♦"):
+    def by_suit(self, phrase = "910JQKA♠♥♣♦"):
         q = self.select(phrase)
         list = sorted(q, key = lambda card: Query.suits.index(card.suit))        
-        return Query(self.trump, list)
+        return Query(self._trump, list)
     
     def __str__(self):
         return f"[{del_string(self, ",", '"')}]"
@@ -69,7 +77,6 @@ class Query(list):
 
 def expand_cards(input_str):
     result = []
-    input_str = input_str.replace("T", "10")
     suit_opposites = {"♠": "♣", "♣": "♠", "♦": "♥", "♥": "♦"}
 
     for part in input_str.split(" "):    
