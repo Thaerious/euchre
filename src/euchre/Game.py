@@ -43,28 +43,6 @@ class Game:
         self.last_action: Optional[str] = None
         self.last_player: Optional[Player] = None
         self.debug_seed = -1 # set to -1 to prevent shuffling
-        self.bots = {}
-
-    @typechecked
-    def is_bot(self, index = -1) -> bool:
-        if index == -1: index = self.euchre.current_player.index
-        return index in self.bots
-
-    @typechecked
-    def set_bot(self, index: int, bot: Bot) -> None:
-        self.bots[index] = bot
-
-    @typechecked
-    def bot_action(self) -> Optional[None]:
-        pidx = self.euchre.current_player.index
-        pname = self.euchre.current_player.name
-
-        if pidx in self.bots:
-            bot = self.bots[pidx]
-            (action, data) = bot.decide(Snapshot(self, pname))  
-            self.input(pname, action, data)
-        else:     
-            raise ActionException("Current player is not a bot.")
 
     @typechecked
     def update_hash(self) -> None:

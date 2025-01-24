@@ -15,6 +15,9 @@ class Bot:
 
         q = Query(trump = snap.up_card.suit, source = snap.hand)
 
+        # alone when face trump >= 3
+        if q.count("LJAQK♠") >= 3: return ("alone", None)
+
         # order when face trump >= 2
         if q.count("LJAQK♠") >= 2: return ("order", None)
 
