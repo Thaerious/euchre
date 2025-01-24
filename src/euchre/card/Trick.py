@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Union
 from euchre.card.Card import Card
 from typeguard import typechecked
+from euchre.del_string import del_string
 
 class Trick(List[Card]):
     """
@@ -115,10 +116,7 @@ class Trick(List[Card]):
         Returns:
             str: A formatted string showing each player's played card.
         """
-        return " ".join(
-            f"[{self.who_played[card]}, {card}{'*' if card == self.best_card else ''}]"
-            for card in self
-        )
+        return f"[{del_string(self, ",", '"')}]:{self.trump}"
 
     @typechecked
     def __repr__(self) -> str:
