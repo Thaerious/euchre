@@ -1,12 +1,16 @@
+from euchre.class_getter import class_getter
+
 class Card:
     """Represents a single card in Euchre, with suit and value."""
 
     # Suits available in Euchre
-    
-    suits: list[str] = ["♥", "♠", "♣", "♦"]
+    @class_getter
+    def suits():
+        return ["♥", "♠", "♣", "♦"]
 
-    # Possible values of a card in Euchre (9 through Ace)
-    ranks: list[str] = ["9", "10", "J", "Q", "K", "A"]
+    @class_getter
+    def ranks():
+        return ["9", "10", "J", "Q", "K", "A"]
 
     # Dictionary to determine the left bower suit (Jack of the same color as trump)
     left_bower_suit: dict[str, str] = {
@@ -89,6 +93,7 @@ class Card:
         Returns:
             str: The effective suit (adjusts for Left Bower being counted as trump).
         """
+        if trump is None: return self._suit
         if self.is_left_bower(trump):
             return self._deck.trump  # Left Bower is considered part of the trump suit
         return self._suit
