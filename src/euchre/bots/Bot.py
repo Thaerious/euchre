@@ -31,9 +31,6 @@ class Bot:
         
         if q.count("910JQKA♦") == 1: 
             return ("up", q.select("910JQKA♦")[0])
-
-        if q.by_rank("910JQK♣♥♦").count() > 0: 
-            return ("up", q.by_rank("910JQK♣♥♦")[0])
         
         return("down", None)
 

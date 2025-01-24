@@ -37,5 +37,5 @@ class Deck(list):
             Deck: The shuffled deck (self).
         """
         if seed is not None: random.seed(seed)
-        if seed is not -1: random.shuffle(self)
+        if seed != -1: random.shuffle(self)
         return self
