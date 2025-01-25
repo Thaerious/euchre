@@ -2,7 +2,6 @@ from euchre.card import *
 from euchre.del_string import del_string
 from euchre.Euchre import *
 from euchre.Player import Player
-from euchre.bots import Bot
 import random
 from typing import *
 from typeguard import typechecked
@@ -282,6 +281,5 @@ class Game:
         sb += f"last action: {self.last_action}\n"
         sb += f"last player: {self.last_player}\n"
         sb += f"state: {self.current_state}\n"
-        sb += f"bots: {[self.is_bot(i) for i in range(4)]}\n"
 
         return sb
