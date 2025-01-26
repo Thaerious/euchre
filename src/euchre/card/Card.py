@@ -61,6 +61,9 @@ class Card:
         """Return a formal representation of the card (same as __str__)."""
         return self._value + self._suit
 
+    def __json__(self):
+        return str(self)
+
     def __eq__(self, that: object) -> bool:
         """
         Check if two cards are equal.

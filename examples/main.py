@@ -47,7 +47,12 @@ else:
 
     game.input(None, "start")
 
-    while is_game_over(game.euchre.score) == False:
-        decide(game)    
+    decide(game) 
+    decide(game) 
+    decide(game) 
+    decide(game) 
+
+    # while is_game_over(game.euchre.score) == False:
+    #     decide(game)    
 
     print(game.euchre.score)

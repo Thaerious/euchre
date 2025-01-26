@@ -1,4 +1,5 @@
 from .Normalized import Normalized
+from .custom_json_serializer import custom_json_serializer
 import json
 from typing import Any, Dict
 
@@ -50,19 +51,19 @@ class Snapshot:
             "for_player": self.for_player,
             "active_player": self.active,
             "state": self.state,
-            "up_card": str(self.up_card) if self.up_card else None,
+            "up_card": self.up_card,
+            "down_card": self.down_card,
             "trump": self.trump,
             "current_tricks": self.tricks,
             "maker": self.maker,
             "dealer": self.dealer,
-            "hand": [str(card) for card in self.hand],
+            "hand": self.hand,
             "order": self.order,
             "hands_played": self.hands_played,
             "score": self.score,
             "last_action": self.last_action,
             "last_player": self.last_player,
-            "hash": self.hash,
-            "down_card": str(self.down_card) if self.down_card else None,
+            "hash": self.hash,           
             # "normalized": str(self.normalized),  # Assuming Normalized can be converted to a string
         }
 
@@ -70,7 +71,8 @@ class Snapshot:
         """
         Converts the Snapshot object to a JSON string.
         """
-        return json.dumps(self.to_dict(), indent=2)
+
+        return json.dumps(self.to_dict(), indent=2, default=custom_json_serializer)
 
     def __str__(self) -> str:
         """

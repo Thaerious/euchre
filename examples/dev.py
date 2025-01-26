@@ -3,11 +3,16 @@ from euchre.bots import Bot
 from euchre.card import *
 from euchre.class_getter import *
 
-class Snafu:
+names = ["Player1", "Player2", "Player3", "Player4"]
+game = Game(names)
+game.debug_seed = 100
 
-    @class_getter
-    def hello():
-        print("Hello method invoked")
+game.input(None, "start")
+game.input("Player1", "order")
+game.input("Player4", "down")
+game.input("Player1", "play", "K♠")
 
-Snafu.hello
+snap = Snapshot(game, "Player1")
+print(game)
+print(snap.to_json())
 
