@@ -12,8 +12,14 @@ class Snapshot:
             self.players.append({
                 "name": player.name,
                 "cards": len(player.cards),
-                "tricks": player.tricks
+                "tricks": player.tricks,
+                "played": ""
             })
+
+        trick = game.euchre.tricks[-1]
+        for card in trick:
+            i = trick.get_player(card).index
+            self.players[i].played = card
 
         self.for_player = for_player.index
         self.active = game.euchre.current_player.index
@@ -54,7 +60,6 @@ class Snapshot:
             "up_card": self.up_card,
             "down_card": self.down_card,
             "trump": self.trump,
-            "current_tricks": self.tricks,
             "maker": self.maker,
             "dealer": self.dealer,
             "hand": self.hand,

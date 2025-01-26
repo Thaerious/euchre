@@ -20,6 +20,10 @@ class Trick(List[Card]):
         self.who_played: Dict[Card, int] = {}  # Maps cards to player indices
         self._trump: str = trump  # The trump suit for this trick
 
+    def get_player(self, card):
+        if card not in self.who_played: return None
+        return self.who_played[card]
+
     def copy(self) -> "Trick":
         """
         Creates shallow copy of the trick, including the base list and all fields.
