@@ -125,7 +125,7 @@ class Game:
 
         if action == "pass":
             if self.euchre.activate_next_player() == self.euchre.first_player:
-                self.state = self.state_3
+                self.enter_state_3()
         elif action == "order":
             self.euchre.make_trump()
             self.enter_state_2()
@@ -160,6 +160,11 @@ class Game:
 
         self.euchre.activate_first_player()
         self.enter_state_5()
+
+    @typechecked
+    def enter_state_3(self):
+        self.euchre.turn_down_card()
+        self.state = self.state_3
 
     @typechecked
     def state_3(self, action: str, suit: Optional[str]) -> None:
