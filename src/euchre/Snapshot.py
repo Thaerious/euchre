@@ -13,6 +13,7 @@ class Snapshot:
                 "name": player.name,
                 "cards": len(player.cards),
                 "tricks": player.tricks,
+                "index": player.index,
                 "played": ""
             })
 
