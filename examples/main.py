@@ -52,6 +52,10 @@ else:
     decide(game) 
     decide(game) 
 
+    print()
+    print(game.euchre.tricks[0])
+    print(game.euchre.tricks[0].who_played)
+
     # while is_game_over(game.euchre.score) == False:
     #     decide(game)    
 

@@ -16,10 +16,11 @@ class Snapshot:
                 "played": ""
             })
 
-        trick = game.euchre.tricks[-1]
-        for card in trick:
-            i = trick.get_player(card).index
-            self.players[i].played = card
+        if len(game.euchre.tricks) > 0:
+            trick = game.euchre.tricks[-1]
+            for card in trick:
+                i = trick.get_player(card)
+                self.players[i]["played"] = card
 
         self.for_player = for_player.index
         self.active = game.euchre.current_player.index

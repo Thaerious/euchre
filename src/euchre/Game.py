@@ -74,22 +74,25 @@ class Game:
         Raises:
             ActionException: If the action or player is invalid.
         """
-        if self.current_state == 6:
+        self.update_hash() 
+        self.last_action = action
+
+        if self.current_state == 0:
+            self.state(action, data)
+        elif self.current_state == 6:           
             if player is not None:
                 raise ActionException(f"Incorrect Player: expected 'None' found '{player}'.")
-        elif self.current_state != 0 and player != self.euchre.current_player.name:
-            raise ActionException(f"Incorrect Player: expected '{self.euchre.current_player.name}' found '{player}'.")
-
-        # States 2 & 5 expect a card object
-        if self.current_state == 2 or self.current_state == 5:
-            if isinstance(data, str):
-                data = self.euchre.deck.get_card(data[-1], data[:-1])
-
-        # Activate the current state
-        self.update_hash()
-        self.last_action = action
-        self.last_player = self.euchre.current_player
-        self.state(action, data)
+            self.state(action, data)
+        elif self.current_state == 2 or self.current_state == 5:
+            # States 2 & 5 expect a card object
+            if player != self.euchre.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.euchre.current_player.name}' found '{player}'.")
+            if isinstance(data, str): data = self.euchre.deck.get_card(data[-1], data[:-1])
+            self.last_player = self.euchre.current_player            
+            self.state(action, data)
+        else:
+            if player != self.euchre.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.euchre.current_player.name}' found '{player}'.")
+            self.last_player = self.euchre.current_player            
+            self.state(action, data)
 
     @typechecked
     def state_0(self, action: str, __: Any) -> None:
