@@ -15,7 +15,7 @@ class ActionException(EuchreException):
     def __init__(self, msg: str):
         super().__init__(msg)
 
-class Game:
+class Game(Euchre):
     """
     Manages the overall flow and state of a Euchre game.
 
@@ -35,7 +35,7 @@ class Game:
         Args:
             names (list of str): List of player names.
         """
-        self.euchre: Euchre = Euchre(names)
+        super().__init__(names)
         self.state: Callable[[str, Any], None] = self.state_0
         self.update_hash()
         self.last_action: Optional[str] = None
@@ -84,13 +84,13 @@ class Game:
             self.state(action, data)
         elif self.current_state == 2 or self.current_state == 5:
             # States 2 & 5 expect a card object
-            if player != self.euchre.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.euchre.current_player.name}' found '{player}'.")
-            if isinstance(data, str): data = self.euchre.deck.get_card(data[-1], data[:-1])
-            self.last_player = self.euchre.current_player            
+            if player != self.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.current_player.name}' found '{player}'.")
+            if isinstance(data, str): data = self.deck.get_card(data[-1], data[:-1])
+            self.last_player = self.current_player            
             self.state(action, data)
         else:
-            if player != self.euchre.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.euchre.current_player.name}' found '{player}'.")
-            self.last_player = self.euchre.current_player            
+            if player != self.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.current_player.name}' found '{player}'.")
+            self.last_player = self.current_player            
             self.state(action, data)
 
     @typechecked
@@ -110,8 +110,8 @@ class Game:
         """
         Transition to state 1: Shuffle and deal cards.
         """
-        self.euchre.shuffle_deck(self.debug_seed)
-        self.euchre.deal_cards()
+        self.shuffle_deck(self.debug_seed)
+        self.deal_cards()
         self.state = self.state_1
 
     @typechecked
@@ -126,14 +126,14 @@ class Game:
         self.allowed_actions(action, "pass", "order", "alone")
 
         if action == "pass":
-            if self.euchre.activate_next_player() == self.euchre.first_player:
+            if self.activate_next_player() == self.first_player:
                 self.enter_state_3()
         elif action == "order":
-            self.euchre.make_trump(self.euchre.up_card.suit)
+            self.make_trump(self.up_card.suit)
             self.enter_state_2()
         elif action == "alone":
-            self.euchre.make_trump(self.euchre.up_card.suit)
-            self.euchre.go_alone()
+            self.make_trump(self.up_card.suit)
+            self.go_alone()
             self.enter_state_5()
 
     @typechecked
@@ -141,7 +141,7 @@ class Game:
         """
         Transition to state 2: Dealer's turn to decide.
         """
-        self.euchre.activate_dealer()
+        self.activate_dealer()
         self.state = self.state_2
 
     @typechecked
@@ -156,16 +156,16 @@ class Game:
         self.allowed_actions(action, "down", "up")
 
         if action == "up":
-            self.euchre.dealer_swap_card(card)
+            self.dealer_swap_card(card)
         else:
-            self.euchre.turn_down_card()
+            self.turn_down_card()
 
-        self.euchre.activate_first_player()
+        self.activate_first_player()
         self.enter_state_5()
 
     @typechecked
     def enter_state_3(self):
-        self.euchre.turn_down_card()
+        self.turn_down_card()
         self.state = self.state_3
 
     @typechecked
@@ -180,13 +180,13 @@ class Game:
         self.allowed_actions(action, "pass", "make", "alone")
 
         if action == "pass":
-            if self.euchre.activate_next_player() == self.euchre.dealer:
+            if self.activate_next_player() == self.dealer:
                 self.state = self.state_4
         elif action in ["make", "alone"]:
-            self.euchre.make_trump(suit)
+            self.make_trump(suit)
             if action == "alone":
-                self.euchre.go_alone()
-            self.euchre.activate_first_player()
+                self.go_alone()
+            self.activate_first_player()
             self.enter_state_5()
 
     @typechecked
@@ -200,10 +200,10 @@ class Game:
         """
         self.allowed_actions(action, "make", "alone")
 
-        self.euchre.make_trump(suit)
+        self.make_trump(suit)
         if action == "alone":
-            self.euchre.go_alone()
-        self.euchre.activate_first_player()
+            self.go_alone()
+        self.activate_first_player()
         self.enter_state_5()
 
     @typechecked
@@ -211,7 +211,7 @@ class Game:
         """
         Transition to state 5: Players play tricks.
         """
-        self.euchre.add_trick()
+        self.add_trick()
         self.state = self.state_5
 
     @typechecked
@@ -224,25 +224,25 @@ class Game:
             card (Card): Card to play.
         """
         self.allowed_actions(action, "play")
-        self.euchre.play_card(card)
+        self.play_card(card)
 
-        if not self.euchre.is_trick_finished:
+        if not self.is_trick_finished:
             return
 
-        self.euchre.score_trick()
+        self.score_trick()
 
-        if self.euchre.is_hand_finished:
-            is_alone = len(self.euchre.order) == 3
-            tricks = [p.tricks for p in self.euchre.players]
-            hand_score = score_hand(self.euchre.maker.index, tricks, is_alone)
-            self.euchre.adjust_score(hand_score)
+        if self.is_hand_finished:
+            is_alone = len(self.order) == 3
+            tricks = [p.tricks for p in self.players]
+            hand_score = score_hand(self.maker.index, tricks, is_alone)
+            self.adjust_score(hand_score)
 
-            if is_game_over(self.euchre.score):
+            if is_game_over(self.score):
                 self.state = self.state_0
             else:
                 self.state = self.state_6
         else:
-            self.euchre.add_trick()
+            self.add_trick()
 
     @typechecked
     def state_6(self, action: str, __: Any) -> None:
@@ -254,7 +254,7 @@ class Game:
             __: Unused parameter.
         """
         self.allowed_actions(action, "continue")        
-        self.euchre.next_hand()
+        self.next_hand()
         self.enter_state_1()
 
     @typechecked
@@ -284,7 +284,7 @@ class Game:
         Returns:
             str: Debug information for the game.
         """
-        sb = str(self.euchre)
+        sb = super().__str__()
         sb += f"last action: {self.last_action}\n"
         sb += f"last player: {self.last_player}\n"
         sb += f"state: {self.current_state}\n"

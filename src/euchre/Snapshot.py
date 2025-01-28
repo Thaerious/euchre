@@ -5,10 +5,10 @@ from typing import Any, Dict
 
 class Snapshot:
     def __init__(self, game, player_name):
-        for_player = game.euchre.get_player(player_name)
+        for_player = game.get_player(player_name)
 
         self.players = []
-        for player in game.euchre.players:
+        for player in game.players:
             self.players.append({
                 "name": player.name,
                 "cards": len(player.cards),
@@ -17,35 +17,35 @@ class Snapshot:
                 "played": ""
             })
 
-        if len(game.euchre.tricks) > 0:
-            trick = game.euchre.tricks[-1]
+        if len(game.tricks) > 0:
+            trick = game.tricks[-1]
             for card in trick:
                 i = trick.get_player(card)
                 self.players[i]["played"] = card
 
         self.for_player = for_player.index
-        self.active = game.euchre.current_player.index
+        self.active = game.current_player.index
         self.state = game.current_state
-        self.up_card = game.euchre.up_card
-        self.down_card = game.euchre.down_card        
-        self.trump = game.euchre.trump
-        self.tricks = game.euchre.tricks 
-        self.maker = game.euchre.maker.index if game.euchre.maker != None else None
-        self.dealer = game.euchre.dealer.index
+        self.up_card = game.up_card
+        self.down_card = game.down_card        
+        self.trump = game.trump
+        self.tricks = game.tricks 
+        self.maker = game.maker.index if game.maker != None else None
+        self.dealer = game.dealer.index
         self.hand = for_player.cards
-        self.order = game.euchre.order   
-        self.hands_played = game.euchre.hands_played
-        self.score = game.euchre.score
+        self.order = game.order   
+        self.hands_played = game.hands_played
+        self.score = game.score
         self.last_action = game.last_action
 
         self.last_player = game.last_player.index if game.last_player is not None else None
         
         self.hash = game.hash
-        # self.normalized = Normalized(game.euchre, for_player)
+        # self.normalized = Normalized(game, for_player)
         self.state = game.current_state
 
-        if game.euchre.dealer == for_player:
-            self.discard = game.euchre.discard
+        if game.dealer == for_player:
+            self.discard = game.discard
         else:
             self.discard = None      
 
