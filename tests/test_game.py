@@ -1,14 +1,12 @@
 import pytest
-import numpy as np
 from euchre.Euchre import *
 from euchre.Game import *
-import random
 
 @pytest.fixture
 def game():
     names = ["Player1", "Player2", "Player3", "Player4"]
     game = Game(names)
-    game.debug_mode = True
+    game.debug_seed = -1
     return game
 
 def test_print(game):
@@ -209,9 +207,11 @@ def test_state_5_play_hand(game):
 
     game.input("Player4", "play", "Q♥")
     
-    assert game.current_state == 5
+    assert game.current_state == 6
     assert game.current_player.name == "Player4"
     assert game.current_player.tricks == 1
+
+    game.input(None, "continue", None)
     assert len(game.current_trick) == 0  # new trick
 
     assert len(game.tricks) == 2 

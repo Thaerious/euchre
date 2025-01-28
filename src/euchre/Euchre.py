@@ -437,9 +437,12 @@ class Euchre:
             return False
         return self.is_trick_finished
 
-    def adjust_score(self, hand_score):
+    def score_hand(self):
+        is_alone = len(self.order) == 3
+        tricks = [p.tricks for p in self.players]
+        hand_score = do_score_hand(self.maker.index, tricks, is_alone)
         self._score[0] = self._score[0] + hand_score[0]
-        self._score[1] = self._score[1] + hand_score[1]
+        self._score[1] = self._score[1] + hand_score[1]      
 
     def __str__(self) -> str:  # pragma: no cover
         """
@@ -482,7 +485,7 @@ def is_game_over(score: List[int]) -> bool:
     return score[0] >= 10 or score[1] >= 10
 
 
-def score_hand(maker: int, tricks: List[int], isAlone: bool) -> int:
+def do_score_hand(maker: int, tricks: List[int], isAlone: bool) -> int:
     """
     Score a completed Euchre hand based on the tricks won by each side.
 
@@ -521,4 +524,4 @@ def score_hand(maker: int, tricks: List[int], isAlone: bool) -> int:
     return result
 
 
-__all__ = ["Euchre", "EuchreException", "score_hand", "is_game_over"]
+__all__ = ["Euchre", "EuchreException", "is_game_over"]

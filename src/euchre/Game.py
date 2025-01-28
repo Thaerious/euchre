@@ -1,5 +1,4 @@
 from euchre.card import *
-from euchre.del_string import del_string
 from euchre.Euchre import *
 from euchre.Player import Player
 import random
@@ -78,7 +77,7 @@ class Game(Euchre):
 
         if self.current_state == 0:
             self.state(action, data)
-        elif self.current_state == 6:           
+        elif self.current_state == 6 or self.current_state == 7:
             if player is not None:
                 raise ActionException(f"Incorrect Player: expected 'None' found '{player}'.")
             self.state(action, data)
@@ -226,28 +225,39 @@ class Game(Euchre):
         self.allowed_actions(action, "play")
         self.play_card(card)
 
-        if not self.is_trick_finished:
-            return
+        if not self.is_trick_finished: return
+        self.enter_state_6()
 
+    @typechecked
+    def enter_state_6(self) -> None:
         self.score_trick()
-
-        if self.is_hand_finished:
-            is_alone = len(self.order) == 3
-            tricks = [p.tricks for p in self.players]
-            hand_score = score_hand(self.maker.index, tricks, is_alone)
-            self.adjust_score(hand_score)
-
-            if is_game_over(self.score):
-                self.state = self.state_0
-            else:
-                self.state = self.state_6
-        else:
-            self.add_trick()
+        self.state = self.state_6
 
     @typechecked
     def state_6(self, action: str, __: Any) -> None:
         """
-        State 6: Transition to the next hand.
+        State 6: Transition to the next trick.
+
+        Args:
+            action (str): Expected action "continue".
+            __: Unused parameter.
+        """        
+        self.allowed_actions(action, "continue") 
+
+        if not self.is_hand_finished:
+            self.enter_state_5()
+
+        self.score_hand()
+        if is_game_over(self.score):
+            self.state = self.state_0
+        else:
+            self.state = self.state_7
+
+
+    @typechecked
+    def state_7(self, action: str, __: Any) -> None:
+        """
+        State 7: Transition to the next hand.
 
         Args:
             action (str): Expected action "continue".
