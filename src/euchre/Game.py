@@ -246,6 +246,7 @@ class Game(Euchre):
 
         if not self.is_hand_finished:
             self.enter_state_5()
+            return
 
         self.score_hand()
         if is_game_over(self.score):

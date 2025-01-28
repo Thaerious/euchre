@@ -350,4 +350,4 @@ def test_score_hand(maker, tricks, isAlone, expected_score):
         isAlone (bool): Whether the maker's team went alone.
         expected_score (int): Expected score based on the input.
     """
-    assert score_hand(maker, tricks, isAlone) == expected_score
+    assert do_score_hand(maker, tricks, isAlone) == expected_score

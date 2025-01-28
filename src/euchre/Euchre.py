@@ -208,7 +208,7 @@ class Euchre:
 
     def get_player(self, index: Union[int, str]) -> Player:
         """
-        Retrieve a player by playing order.
+        Retrieve a player by playing order or name.
 
         Args:
             index (int): The index of the player in the list.
@@ -524,4 +524,4 @@ def do_score_hand(maker: int, tricks: List[int], isAlone: bool) -> int:
     return result
 
 
-__all__ = ["Euchre", "EuchreException", "is_game_over"]
+__all__ = ["Euchre", "EuchreException", "is_game_over", "do_score_hand"]

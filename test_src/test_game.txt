@@ -1,0 +1,102 @@
+test pass_alot
+names ["Player1", "Player2", "Player3", "Player4"]
+seed 100
+assert current_state == 0
+
+start
+assert current_state == 1
+assert current_player.name == "Player1"
+
+Player1 pass
+Player2 pass
+Player3 pass
+Player4 pass
+
+# all players pass, move to select suit
+assert current_state == 3
+assert current_player.name == "Player1"
+
+Player1 pass
+Player2 pass
+Player3 pass
+
+# non-dealers pass, dealer must choose suit
+assert current_state == 4
+assert current_player.name == "Player4"
+assert current_player.name == game.dealer.name
+
+Player4 Make ♠
+
+# playing trick
+assert current_state == 5
+assert current_player.name == "Player1"
+
+Player1 play A♣
+Player2 play 10♣
+Player3 play A♠
+Player4 play 9♣
+
+# player3 won
+assert current_state == 6
+assert get_player("Player3").tricks == 1
+assert current_player.name == "Player3"
+
+# play the next 3 tricks
+continue
+Player3 play J♠
+Player4 play 9♦
+Player1 play 9♠
+Player2 play Q♠
+assert get_player("Player3").tricks == 2
+
+continue
+Player3 play J♥
+Player4 play Q♥
+Player1 play 9♥
+Player2 play 10♥
+assert get_player("Player4").tricks == 1
+
+# player3 trumps to win the trick
+continue
+Player4 play Q♣
+Player1 play K♣
+Player2 play 10♦
+Player3 play 10♠
+assert get_player("Player3").tricks == 3
+
+continue
+Player3 play Q♦
+Player4 play J♦
+Player1 play K♠
+Player2 play A♦
+assert get_player("Player1").tricks == 1
+
+
+test play_game
+names ["Player1", "Player2", "Player3", "Player4"]
+seed 100
+
+start
+
+Player1 pass
+Player2 pass
+Player3 pass
+Player4 pass
+
+Player1 pass
+Player2 pass
+Player3 pass
+Player4 Make ♠
+
+# play first trick
+play A♣ 10♣ A♠ 9♣
+continue
+play J♠ 9♦ 9♠ Q♠
+continue
+play J♥ Q♥ 9♥ 10♥
+continue
+play Q♣ K♣ 10♦ 10♠
+continue
+play Q♦ J♦ K♠ A♦
+
+print

@@ -183,63 +183,63 @@ def test_state_3_alone(game):
 
     assert game.current_player.name == "Player2"
 
-def test_state_5_play_hand(game):
-    test_state_4_make(game)       
+# def test_state_5_play_hand(game):
+#     test_state_4_make(game)       
 
-    assert len(game.tricks) == 1
-    game.input("Player1", "play", "9♥")
+#     assert len(game.tricks) == 1
+#     game.input("Player1", "play", "9♥")
     
-    assert game.current_state == 5
-    assert game.current_player.name == "Player2"
-    assert len(game.current_trick) == 1
+#     assert game.current_state == 5
+#     assert game.current_player.name == "Player2"
+#     assert len(game.current_trick) == 1
 
-    game.input("Player2", "play", "10♥")
+#     game.input("Player2", "play", "10♥")
     
-    assert game.current_state == 5
-    assert game.current_player.name == "Player3"
-    assert len(game.current_trick) == 2
+#     assert game.current_state == 5
+#     assert game.current_player.name == "Player3"
+#     assert len(game.current_trick) == 2
 
-    game.input("Player3", "play", "J♥")
+#     game.input("Player3", "play", "J♥")
     
-    assert game.current_state == 5
-    assert game.current_player.name == "Player4"
-    assert len(game.current_trick) == 3    
+#     assert game.current_state == 5
+#     assert game.current_player.name == "Player4"
+#     assert len(game.current_trick) == 3    
 
-    game.input("Player4", "play", "Q♥")
+#     game.input("Player4", "play", "Q♥")
     
-    assert game.current_state == 6
-    assert game.current_player.name == "Player4"
-    assert game.current_player.tricks == 1
+#     assert game.current_state == 6
+#     assert game.current_player.name == "Player4"
+#     assert game.current_player.tricks == 1
 
-    game.input(None, "continue", None)
-    assert len(game.current_trick) == 0  # new trick
+#     game.input(None, "continue", None)
+#     assert len(game.current_trick) == 0  # new trick
 
-    assert len(game.tricks) == 2 
-    game.input("Player4", "play", "10♠")
-    game.input("Player1", "play", "J♠")
-    game.input("Player2", "play", "Q♠")    
-    game.input("Player3", "play", "K♠")
+#     assert len(game.tricks) == 2 
+#     game.input("Player4", "play", "10♠")
+#     game.input("Player1", "play", "J♠")
+#     game.input("Player2", "play", "Q♠")    
+#     game.input("Player3", "play", "K♠")
 
-    assert len(game.tricks) == 3     
-    game.input("Player1", "play", "K♥")
-    game.input("Player2", "play", "A♥")
-    game.input("Player3", "play", "9♠")
-    game.input("Player4", "play", "A♠")
+#     assert len(game.tricks) == 3     
+#     game.input("Player1", "play", "K♥")
+#     game.input("Player2", "play", "A♥")
+#     game.input("Player3", "play", "9♠")
+#     game.input("Player4", "play", "A♠")
 
-    assert len(game.tricks) == 4
-    game.input("Player4", "play", "Q♣")
-    game.input("Player1", "play", "9♣")
-    game.input("Player2", "play", "10♣")
-    game.input("Player3", "play", "J♣")
+#     assert len(game.tricks) == 4
+#     game.input("Player4", "play", "Q♣")
+#     game.input("Player1", "play", "9♣")
+#     game.input("Player2", "play", "10♣")
+#     game.input("Player3", "play", "J♣")
 
-    assert len(game.tricks) == 5
-    game.input("Player3", "play", "9♦")
-    game.input("Player4", "play", "10♦")
-    game.input("Player1", "play", "K♣")
-    game.input("Player2", "play", "A♣")
+#     assert len(game.tricks) == 5
+#     game.input("Player3", "play", "9♦")
+#     game.input("Player4", "play", "10♦")
+#     game.input("Player1", "play", "K♣")
+#     game.input("Player2", "play", "A♣")
 
-    assert game.current_state == 6
-    assert game.score == [0, 1]
+#     assert game.current_state == 6
+#     assert game.score == [0, 1]
     
 
 def test_state_5_alone_play_hand(game):

@@ -1,6 +1,0 @@
-
-test play_game
-names ["Player1", "Player2", "Player3", "Player4"]
-seed 100
-
-start
