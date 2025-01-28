@@ -146,7 +146,7 @@ def test_make_trump_up_card(euchre):
     # precondition
     assert euchre.up_card == "J♦"
 
-    euchre.make_trump()
+    euchre.make_trump(euchre.up_card.suit)
     assert euchre.trump == "♦"
     assert euchre.maker.name == "Player1"
 
@@ -166,18 +166,6 @@ def test_make_trump_exception_0(euchre):
 
     with pytest.raises(EuchreException, match="Trump can not match the down card."):
         euchre.make_trump("♦") 
-
-# default trump can not be made if there is no up_card
-def test_make_trump_exception_1(euchre):
-    euchre.deal_cards()    
-    euchre.turn_down_card()
-
-    # precondition
-    assert euchre.up_card == None
-
-    with pytest.raises(EuchreException, match="Default trump requires an up card."):
-        euchre.make_trump() 
-
 
 # must make trump before adding trick
 def test_add_trick_exception_0(euchre):

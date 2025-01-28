@@ -126,22 +126,7 @@ def test_state_3_make(game):
     assert game.euchre.trump == "♠"
     assert game.euchre.maker.name == "Player1"
     assert game.euchre.discard == None
-    assert game.euchre.down_card == None
-    assert game.euchre.up_card == up_card_before    
-
-def test_state_3_make(game):
-    test_state_1_pass_x4(game)
-
-    assert game.euchre.current_player == game.euchre.first_player
-    up_card_before = game.euchre.up_card
-
-    game.input("Player1", "make", "♠")
-       
-    assert game.current_state == 5
-    assert game.euchre.trump == "♠"
-    assert game.euchre.maker.name == "Player1"
-    assert game.euchre.discard == None
-    assert game.euchre.down_card == None
+    assert game.euchre.down_card == "J♦"
     assert game.euchre.up_card == up_card_before    
 
 def test_state_3_alone(game):
@@ -171,7 +156,7 @@ def test_state_4_make(game):
     assert game.euchre.trump == "♠"
     assert game.euchre.maker.name == "Player4"
     assert game.euchre.discard == None
-    assert game.euchre.down_card == None
+    assert game.euchre.down_card == "J♦"
     assert game.euchre.up_card == up_card_before
 
 def test_state_4_alone(game):
@@ -185,7 +170,7 @@ def test_state_4_alone(game):
     assert game.euchre.trump == "♠"
     assert game.euchre.maker.name == "Player4"
     assert game.euchre.discard == None
-    assert game.euchre.down_card == None
+    assert game.euchre.down_card == "J♦"
     assert game.euchre.up_card == up_card_before   
     assert game.euchre.get_player(3).alone      
     assert game.euchre.current_player.name == "Player1"
@@ -196,7 +181,7 @@ def test_state_3_alone(game):
     test_state_1_pass_x4(game)
     game.input("Player1", "pass")
     game.input("Player2", "pass")
-    game.input("Player3", "alone")    
+    game.input("Player3", "alone", "♥")
 
     assert game.euchre.current_player.name == "Player2"
 

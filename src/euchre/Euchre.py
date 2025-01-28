@@ -294,9 +294,9 @@ class Euchre:
         partner_index = self.players.index(self.current_player.partner)
         self.order.remove(partner_index)
 
-    def make_trump(self, suit: Optional[str] = None) -> None:
+    def make_trump(self, suit: str) -> None:
         """
-        Declare the trump suit. If no suit is provided, the suit of the upCard is used.
+        Declare the trump suit.
         
         Args:
             suit (Optional[str]): The desired trump suit.
@@ -308,12 +308,9 @@ class Euchre:
         if self._down_card is not None and self._down_card._suit == suit:
             raise EuchreException("Trump can not match the down card.")
 
-        if self._up_card is None and suit is None:
-            raise EuchreException("Default trump requires an up card.")
-
         self.maker_index = self.current_player_index
-        self.current_trump = suit if suit is not None else self._up_card._suit
-        self.deck.trump = self.current_trump
+        self.current_trump = suit
+        self.deck.trump = suit
 
     @property
     def is_trick_finished(self) -> bool:

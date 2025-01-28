@@ -5,7 +5,6 @@ from euchre.Player import Player
 import random
 from typing import *
 from typeguard import typechecked
-from .Snapshot import Snapshot
 
 class ActionException(EuchreException):
     """
@@ -130,10 +129,10 @@ class Game:
             if self.euchre.activate_next_player() == self.euchre.first_player:
                 self.enter_state_3()
         elif action == "order":
-            self.euchre.make_trump()
+            self.euchre.make_trump(self.euchre.up_card.suit)
             self.enter_state_2()
         elif action == "alone":
-            self.euchre.make_trump()
+            self.euchre.make_trump(self.euchre.up_card.suit)
             self.euchre.go_alone()
             self.enter_state_5()
 
