@@ -189,3 +189,16 @@ def test_compare_both_off_suit_neither_trump_different_order(deck):
     card1 = deck.get_card('10♣')  # Off-suit, not lead or trump
     card2 = deck.get_card('Q♥')  # Off-suit, not lead or trump
     assert card1.compare(card2, lead='♠') == 0  # Neither follows lead or is trump → Tie
+
+def test_effective_suit_trump_not_set_j(deck):
+    card1 = deck.get_card('J♣')
+    assert card1.suit_effective() == '♣'
+
+def test_effective_suit_override_trump_not_set(deck):
+    card1 = deck.get_card('J♣')
+    assert card1.suit_effective('♠') == '♠'    
+
+def test_effective_suit_override_trump_set(deck):
+    deck.trump = "♦"
+    card1 = deck.get_card('J♣')
+    assert card1.suit_effective('♠') == '♠'        

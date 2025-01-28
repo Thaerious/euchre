@@ -95,10 +95,12 @@ class Card:
 
         Returns:
             str: The effective suit (adjusts for Left Bower being counted as trump).
-        """
+        """                
+        if trump is None: trump = self.deck.trump
         if trump is None: return self._suit
+
         if self.is_left_bower(trump):
-            return self._deck.trump  # Left Bower is considered part of the trump suit
+            return trump  # Left Bower is considered part of the trump suit
         return self._suit
 
     def compare(self, that: "Card", lead: str) -> int:
