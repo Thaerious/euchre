@@ -40,6 +40,21 @@ class Game(Euchre):
         self.last_action: Optional[str] = None
         self.last_player: Optional[Player] = None
         self.debug_seed = -1 # set to -1 to prevent shuffling
+        self._hooks = {}
+
+    @typechecked
+    def register_hook(self, event: str, func):
+        """Register a function to a hook event."""
+        if event not in self._hooks:
+            self._hooks[event] = []
+        self._hooks[event].append(func)
+
+    @typechecked
+    def trigger_hook(self, event: str, *args, **kwargs):
+        """Trigger all hooks associated with an event."""
+        if event in self._hooks:
+            for func in self._hooks[event]:
+                func(*args, **kwargs)
 
     @typechecked
     def update_hash(self) -> None:
@@ -72,6 +87,9 @@ class Game(Euchre):
         Raises:
             ActionException: If the action or player is invalid.
         """
+        self.trigger_hook("before_input", action = action, data = data)
+        prev_state = self.current_state
+
         self.update_hash() 
         self.last_action = action
 
@@ -91,6 +109,8 @@ class Game(Euchre):
             if player != self.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.current_player.name}' found '{player}'.")
             self.last_player = self.current_player            
             self.state(action, data)
+
+        self.trigger_hook("after_input", prev_state = prev_state, action = action, data = data)            
 
     @typechecked
     def state_0(self, action: str, __: Any) -> None:
