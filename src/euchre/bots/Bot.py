@@ -10,9 +10,7 @@ class Bot:
         method = getattr(self, method_name)
         return method(snap)
 
-    def state_1(self, snap):
-        # pass / order / alone
-
+    def state_1(self, snap): # pass / order / alone        
         q = Query(trump = snap.up_card.suit, source = snap.hand)
 
         # alone when face trump >= 3
@@ -21,9 +19,12 @@ class Bot:
         # order when face trump >= 2
         if q.count("LJAQK♠") >= 2: return ("order", None)
 
+        # order when trump >= 3
+        if q.count("♠") >= 3: return ("order", None)
+
         return ("pass", None)
 
-    def state_2(self, snap):
+    def state_2(self, snap): # dealer up / down
         q = Query(trump = snap.trump, source = snap.hand)
 
         if q.count("910JQKA♣") == 1: 
@@ -37,30 +38,37 @@ class Bot:
         
         return("down", None)
 
-    def state_3(self, snap):
+    def state_3(self, snap): # pass / make / alone
         q = Query(trump = None, source = snap.hand)
 
         suits = Card.suits
         suits.remove(snap.up_card.suit)
 
+        # 4 of a suit -> go alone
+        # 3 of a suit -> make
         for suit in suits:
             if q.trump(suit).count(suit) >= 4: return ("alone", suit)
             if q.trump(suit).count(suit) >= 3: return ("make", suit)
+
         return ("pass", None)
 
-    def state_4(self, snap):
+    def state_4(self, snap): # Dealer make / alone
         q = Query(trump = None, source = snap.hand)
 
         suits = Card.suits
         suits.remove(snap.up_card.suit)
 
+        # 4 of a suit -> go alone
+        # 3 of a suit -> make
         for suit in suits:
             if q.count(suit) >= 4: return ("alone", suit)
             if q.count(suit) >= 3: return ("make", suit)
 
+        # first suit > 3 make
         for suit in suits:
             if q.count(suit) >= 2: return ("make", suit)           
 
+        # make highest ranked card
         cards = q.select("".join(suits)).by_rank()
         return ("make", cards[0].suit)
         
