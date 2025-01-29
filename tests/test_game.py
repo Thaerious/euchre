@@ -6,7 +6,7 @@ from euchre.Game import *
 def game():
     names = ["Player1", "Player2", "Player3", "Player4"]
     game = Game(names)
-    game.debug_seed = -1
+    game.seed = -1
     return game
 
 def test_print(game):

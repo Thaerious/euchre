@@ -5,7 +5,7 @@ from euchre.class_getter import *
 
 names = ["Player1", "Player2", "Player3", "Player4"]
 game = Game(names)
-game.debug_seed = 100
+game.seed = 100
 
 game.input(None, "start")
 game.input("Player1", "order")

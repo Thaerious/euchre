@@ -2,6 +2,7 @@ from euchre.card import *
 from euchre.Euchre import *
 from euchre.Player import Player
 import random
+import sys
 from typing import *
 from typeguard import typechecked
 
@@ -39,7 +40,7 @@ class Game(Euchre):
         self.update_hash()
         self.last_action: Optional[str] = None
         self.last_player: Optional[Player] = None
-        self.debug_seed = -1 # set to -1 to prevent shuffling
+        self.seed = random.randint(0, sys.maxsize) # set to -1 to prevent shuffling
         self._hooks = {}
 
     @typechecked
@@ -129,7 +130,7 @@ class Game(Euchre):
         """
         Transition to state 1: Shuffle and deal cards.
         """
-        self.shuffle_deck(self.debug_seed)
+        self.shuffle_deck(self.seed)
         self.deal_cards()
         self.state = self.state_1
 

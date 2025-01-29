@@ -4,7 +4,7 @@ from euchre.Game import *
 
 def test_pass_alot():
     game = Game(["Player1", "Player2", "Player3", "Player4"])
-    game.debug_seed = 100
+    game.seed = 100
     assert game.current_state == 0
 
     game.input(None, 'start', None)
@@ -78,7 +78,7 @@ def test_pass_alot():
 
 def test_play_game():
     game = Game(["Player1", "Player2", "Player3", "Player4"])
-    game.debug_seed = 100
+    game.seed = 100
 
     game.input(None, 'start', None)
 

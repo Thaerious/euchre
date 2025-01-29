@@ -30,7 +30,7 @@ if len(sys.argv) == 1:
 
         seed = random.randint(0, 10000)
         print(f"{i} {seed}")
-        game.debug_seed = seed
+        game.seed = seed
         bot = Bot()
 
         game.input(None, "start")
@@ -42,7 +42,7 @@ else:
     game = Game(names)
 
     seed = int(sys.argv[1])    
-    game.debug_seed = seed
+    game.seed = seed
     bot = Bot()
 
     game.input(None, "start")

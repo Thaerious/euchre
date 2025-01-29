@@ -30,7 +30,7 @@ with open(sys.argv[1], "r") as file:
             output.append(f"{indent}game = Game([{matches[0]}])")
         
         elif line.startswith("seed"):
-            output.append(f"{indent}game.debug_seed = {split[1]}")
+            output.append(f"{indent}game.seed = {split[1]}")
 
         elif line.startswith("assert"):
             modified_line = re.sub(r'^(assert)\s+', r'\1 game.', line)
