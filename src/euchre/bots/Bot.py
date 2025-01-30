@@ -42,7 +42,9 @@ class Bot:
         q = Query(trump = None, source = snap.hand)
 
         suits = Card.suits
-        suits.remove(snap.up_card.suit)
+        up_suit = snap.up_card.suit
+        if suits in up_suit:
+            suits.remove(snap.up_card.suit)
 
         # 4 of a suit -> go alone
         # 3 of a suit -> make
