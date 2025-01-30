@@ -141,7 +141,7 @@ class Euchre:
         """
         return self._tricks[-1]
 
-    def shuffle_deck(self, seed = None) -> None:
+    def shuffle_deck(self) -> None:
         """
         Shuffle the deck. Typically called after next_hand but before dealing.
         """
@@ -155,7 +155,7 @@ class Euchre:
 
         # requires a new deck because cards are removed from the deck during dealing
         self.deck = Deck()
-        self.deck.shuffle(seed)
+        self.deck.shuffle()
 
     def next_hand(self) -> None:
         """

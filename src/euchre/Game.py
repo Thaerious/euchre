@@ -40,7 +40,7 @@ class Game(Euchre):
         self.update_hash()
         self.last_action: Optional[str] = None
         self.last_player: Optional[Player] = None
-        self.seed = random.randint(0, sys.maxsize) # set to -1 to prevent shuffling
+        self.do_shuffle = True
         self._hooks = {}
 
     @typechecked
@@ -130,7 +130,9 @@ class Game(Euchre):
         """
         Transition to state 1: Shuffle and deal cards.
         """
-        self.shuffle_deck(self.seed)
+        if self.do_shuffle:
+            self.shuffle_deck()
+
         self.deal_cards()
         self.state = self.state_1
 

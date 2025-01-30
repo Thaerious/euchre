@@ -37,7 +37,6 @@ class Snapshot:
         self.hands_played = game.hands_played
         self.score = game.score
         self.last_action = game.last_action
-        self.seed = game.seed
 
         self.last_player = game.last_player.index if game.last_player is not None else None
         
@@ -72,7 +71,6 @@ class Snapshot:
             "last_action": self.last_action,
             "last_player": self.last_player,
             "hash": self.hash,          
-            "seed": self.seed,
             # "normalized": str(self.normalized),  # Assuming Normalized can be converted to a string
         }
 
