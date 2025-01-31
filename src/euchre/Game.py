@@ -271,7 +271,7 @@ class Game(Euchre):
             return
 
         self.score_hand()
-        if is_game_over(self.score):
+        if self.is_game_over():
             self.state = self.state_0
         else:
             self.state = self.state_7

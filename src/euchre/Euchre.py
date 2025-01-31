@@ -443,6 +443,18 @@ class Euchre:
         self._score[0] = self._score[0] + hand_score[0]
         self._score[1] = self._score[1] + hand_score[1]      
 
+    def is_game_over(self) -> bool:
+        """
+        Determine if the game is over based on the current score.
+
+        Args:
+            score (List[int]): A two-element list representing the team scores.
+
+        Returns:
+            bool: True if either team has reached or exceeded 10 points, otherwise False.
+        """
+        return self.score[0] >= 10 or self.score[1] >= 10
+
     def __str__(self) -> str:  # pragma: no cover
         """
         String representation of the Euchre object, containing debug info.
@@ -469,20 +481,6 @@ class Euchre:
             sb = sb + "  " + str(trick) + "\n"
 
         return sb
-
-
-def is_game_over(score: List[int]) -> bool:
-    """
-    Determine if the game is over based on the current score.
-
-    Args:
-        score (List[int]): A two-element list representing the team scores.
-
-    Returns:
-        bool: True if either team has reached or exceeded 10 points, otherwise False.
-    """
-    return score[0] >= 10 or score[1] >= 10
-
 
 def do_score_hand(maker: int, tricks: List[int], isAlone: bool) -> int:
     """
@@ -523,4 +521,4 @@ def do_score_hand(maker: int, tricks: List[int], isAlone: bool) -> int:
     return result
 
 
-__all__ = ["Euchre", "EuchreException", "is_game_over", "do_score_hand"]
+__all__ = ["Euchre", "EuchreException", "do_score_hand"]
