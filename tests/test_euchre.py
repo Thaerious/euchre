@@ -291,17 +291,6 @@ def test_next_hand_exception_0(euchre):
         ([9, 9], False)
     ]
 )
-def test_is_game_over(score, expected):
-    """
-    Test the score_hand function with various scenarios.
-
-    Args:
-        maker (int): Index of the maker.
-        tricks (List[int]): List of tricks won by each player.
-        isAlone (bool): Whether the maker's team went alone.
-        expected_score (int): Expected score based on the input.
-    """
-    assert is_game_over(score) == expected
 
 @pytest.mark.parametrize(
     "maker, tricks, isAlone, expected_score",

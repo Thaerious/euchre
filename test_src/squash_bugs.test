@@ -1,8 +1,12 @@
+from euchre.bots.Bot import Bot
+
 fixture game
     seed 61753
     names ["Bot_1","Bot_3","Adam","Bot_2"]
 
 test dealer_alone game
+    bot = Bot()
+
     start
     Bot_1 pass
     Bot_3 pass
