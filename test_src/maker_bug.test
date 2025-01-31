@@ -1,0 +1,16 @@
+# Recreate a bug when a player orders up the dealer
+# the dealer swaps a card, the maker should be the player that
+# does the ordering up
+
+fixture game
+    names ["Player1", "Player2", "Player3", "Player4"]
+    seed 100
+    start
+
+test maker_bug game
+    Player1 pass
+    Player2 order
+    Player4 up 9♠
+
+    # the bug incorectly makes this Player4
+    assert maker.name == "Player2"

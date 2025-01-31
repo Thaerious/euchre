@@ -2,7 +2,6 @@ from euchre.Player import PlayerList, Player
 from euchre.card import *
 from euchre.rotate import rotateTo
 from typing import List, Optional, Union
-import random
 
 NUM_PLAYERS = 4
 NUM_CARDS_PER_PLAYER = 5
@@ -349,7 +348,7 @@ class Euchre:
         self.dealer.cards.remove(card)
         self.dealer.cards.append(self._up_card)
         self.discard = card
-        self.maker_index = self.dealer_index
+        # self.maker_index = self.dealer_index
 
     def turn_down_card(self) -> None:
         """

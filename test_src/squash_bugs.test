@@ -1,0 +1,14 @@
+fixture game
+    seed 61753
+    names ["Bot_1","Bot_3","Adam","Bot_2"]
+
+test dealer_alone game
+    start
+    Bot_1 pass
+    Bot_3 pass
+    Adam pass
+    Bot_2 pass
+
+    assert current_state == 3
+
+    print

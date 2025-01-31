@@ -2,7 +2,6 @@ from euchre.card import *
 from euchre.Euchre import *
 from euchre.Player import Player
 import random
-import sys
 from typing import *
 from typeguard import typechecked
 
@@ -41,7 +40,7 @@ class Game(Euchre):
         self.last_action: Optional[str] = None
         self.last_player: Optional[Player] = None
         self.do_shuffle = True
-        self._hooks = {}
+        self._hooks = {} 
 
     @typechecked
     def register_hook(self, event: str, func):
@@ -156,7 +155,7 @@ class Game(Euchre):
         elif action == "alone":
             self.make_trump(self.up_card.suit)
             self.go_alone()
-            self.enter_state_5()
+            self.enter_state_2()
 
     @typechecked
     def enter_state_2(self) -> None:
