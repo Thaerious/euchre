@@ -1,16 +1,25 @@
 from euchre import *
-from euchre.bots import Bot
+from euchre.bots import *
 from euchre.card import *
 from euchre.class_getter import *
 import random
 import time
+import sys
+
+run_count = 10
+if len(sys.argv) > 1:
+    run_count = int(sys.argv[1])
 
 names = ["Player1", "Player2", "Player3", "Player4"]
-bot = Bot()
+bot = Bot_2()
 
 start = time.time()
 
-for i in range(250):
+for i in range(run_count):
+    seed = random.randint(0, 1000)
+    print(seed)
+    random.seed(seed)
+
     random.shuffle(names)
     game = Game(names)
     game.input(None, "start")

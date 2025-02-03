@@ -1,31 +1,32 @@
 from euchre.card import *
 from euchre import Snapshot
+from .tools.Hand_Evaluator import Hand_Evaluator
 import random
 
 # ["♠", "♥", "♣", "♦"]
 
-class Bot:
+class Bot_1:
     def decide(self, snap: Snapshot):
         method_name = f"state_{snap.state}"
         method = getattr(self, method_name)
         return method(snap)
 
     def state_1(self, snap): # pass / order / alone        
-        q = Query(trump = snap.up_card.suit, source = snap.hand)
+        hnd_ev = Hand_Evaluator(trump = snap.up_card.suit, source = snap.hand)
 
         # alone when face trump >= 3
-        if q.count("LJAQK♠") >= 3: return ("alone", None)
+        if hnd_ev.count("LJAQK♠") >= 3: return ("alone", None)
 
         # order when face trump >= 2
-        if q.count("LJAQK♠") >= 2: return ("order", None)
+        if hnd_ev.count("LJAQK♠") >= 2: return ("order", None)
 
         # order when trump >= 3
-        if q.count("♠") >= 3: return ("order", None)
+        if hnd_ev.count("♠") >= 3: return ("order", None)
 
         return ("pass", None)
 
     def state_2(self, snap): # dealer up / down
-        q = Query(trump = snap.trump, source = snap.hand)
+        q = Hand_Evaluator(trump = snap.trump, source = snap.hand)
 
         if q.count("910JQKA♣") == 1: 
             return ("up", q.select("910JQKA♣")[0])
@@ -39,12 +40,12 @@ class Bot:
         return("down", None)
 
     def state_3(self, snap): # pass / make / alone
-        q = Query(trump = None, source = snap.hand)
+        q = Hand_Evaluator(trump = None, source = snap.hand)
 
         suits = Card.suits
         down_suit = snap.down_card.suit
-        if snap.down_card.suit in suits:
-            suits.remove(snap.down_card.suit)
+        if down_suit in suits:
+            suits.remove(down_suit)
 
         # 4 of a suit -> go alone
         # 3 of a suit -> make
@@ -55,7 +56,7 @@ class Bot:
         return ("pass", None)
 
     def state_4(self, snap): # Dealer make / alone
-        q = Query(trump = None, source = snap.hand)
+        q = Hand_Evaluator(trump = None, source = snap.hand)
 
         suits = Card.suits
         suits.remove(snap.down_card.suit)
@@ -79,7 +80,7 @@ class Bot:
         trick = snap.tricks[-1]
 
         p = playable(snap.tricks[-1], snap.hand)
-        q = Query(trump = snap.trump, source = p)
+        q = Hand_Evaluator(trump = snap.trump, source = p)
 
         if len(trick) == 0:
             if q.count("LJA♠") >= 2: 

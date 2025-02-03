@@ -86,6 +86,11 @@ class Euchre:
         """
         return self.current_trump
 
+    @trump.setter
+    def trump(self, value):
+        if not value in ["♠", "♥", "♣", "♦"]: raise Exception("Sanity check failed")
+        self.current_trump = value
+
     @property
     def score(self) -> List[int]:
         """
@@ -308,7 +313,7 @@ class Euchre:
             raise EuchreException("Trump can not match the down card.")
 
         self.maker_index = self.current_player_index
-        self.current_trump = suit
+        self.trump = suit
         self.deck.trump = suit
 
     @property
