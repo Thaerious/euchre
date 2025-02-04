@@ -62,15 +62,8 @@ class Compiler():
                 elif line.startswith("@"): self.append(f"pytest.raises({line[1:]}):\n")
                 elif self.process_player_action(line): pass
                 elif self.process_actions(line): pass
-
-                elif line.startswith("play"):
-                    for s in split[1:]:
-                        self.append(f"game.input(game.current_player.name, 'play', '{s}')")
-
-               
-
-                else:
-                    self.append(f"{line}")
+                elif self.process_call(line): pass
+                else: self.append(f"{line}")
 
         return self
     
@@ -146,6 +139,11 @@ class Compiler():
         
         return True
 
+    def process_call(self, line):
+        if not line.startswith("call"): return False
+        split = line.split()
+        self.append(f"test_{split[1]}({split[2]})")
+        return True
 
 # python test_compiler.py <filename>.test
 # input path only
