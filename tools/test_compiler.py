@@ -2,6 +2,7 @@ import sys
 import re
 import os
 from euchre.del_string import del_string
+from collections import deque
 
 class Header(list):
     def write_out(self, file):
@@ -45,25 +46,32 @@ class Compiler():
                 routine.write_out(file)                    
 
     def run(self, path):
+        lineno = 0
+
         with open(path, "r") as file:
             for _line in file:
+                lineno = lineno + 1
                 line = _line.strip()       
                 split = line.split()
 
-                if len(split) == 0: self.append("")
-                elif line.startswith("#"): self.append(f"{line}")
-                elif line.startswith("seed"): self.append(f"random.seed({split[1]})")
-                elif self.process_fixture(line): pass
-                elif self.process_test(line): pass
-                elif self.process_names(line): pass 
-                elif self.process_set(line): pass 
-                elif self.process_assert(line): pass
-                elif line.startswith("print"): self.append(f"print(game)")
-                elif line.startswith("@"): self.append(f"pytest.raises({line[1:]}):\n")
-                elif self.process_player_action(line): pass
-                elif self.process_actions(line): pass
-                elif self.process_call(line): pass
-                else: self.append(f"{line}")
+                try:
+                    if len(split) == 0: self.append("")
+                    elif line.startswith("#"): self.append(f"{line}")
+                    elif line.startswith("seed"): self.append(f"random.seed({split[1]})")
+                    elif self.process_fixture(line): pass
+                    elif self.process_test(line): pass
+                    elif self.process_names(line): pass 
+                    elif self.process_set(line): pass 
+                    elif self.process_assert(line): pass
+                    elif line.startswith("print"): self.append(f"print(game)")
+                    elif line.startswith("@"): self.append(f"pytest.raises({line[1:]}):\n")
+                    elif self.process_player_action(line): pass
+                    elif self.process_actions(line): pass
+                    elif self.process_call(line): pass
+                    else: self.append(f"{line}")
+                except Exception as ex:
+                    print(f"Error on line {lineno}:\n    {line}\n")
+                    raise
 
         return self
     
@@ -123,17 +131,21 @@ class Compiler():
             self.append(f"game.input('{split[0]}', '{split[1]}', '{split[2]}')")             
         return True
 
-    def process_actions(self, line):        
-        split = line.split()
+    def process_actions(self, line): 
+        split = deque(line.split())
         if not split[0] in Compiler.actions: return False
 
-        for i, action in enumerate(split):
-            if not action in Compiler.actions: continue
+        while len(split) > 0:
+            action = split.popleft()
 
+            if re.match(r'(10|[9JQKAL])[♠♥♣♦]', action) != None:
+                self.append(f"game.input(game.current_player.name, 'play', '{action}')") 
+
+            if not action in Compiler.actions: continue
             if action in ["start", "continue"]:
                 self.append(f"game.input(None, '{action}', None)")        
             elif action in ["play", "up", "make"]:
-                self.append(f"game.input(game.current_player.name, '{action}', '{split[i+1]}')") 
+                self.append(f"game.input(game.current_player.name, '{action}', '{split.popleft()}')") 
             else: 
                 self.append(f"game.input(game.current_player.name, '{action}', None)")
         

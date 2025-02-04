@@ -37,6 +37,7 @@ class Euchre:
         self.order: List[int] = [0, 1, 2, 3]
         self.current_player_index = self.order[0]
         self.dealer_index = self.order[3]
+        self.lead = self.order[0]
         self.hand_count = 0
 
         self.deck = Deck()      
@@ -53,6 +54,10 @@ class Euchre:
         self.discard: Optional[Card] = None
         self.current_trump: Optional[str] = None
         self.maker_index: Optional[int] = None
+
+    @property
+    def lead_player(self) -> Player:
+        return self.players[self.lead]
 
     @property
     def score(self) -> List[int]:
@@ -185,6 +190,7 @@ class Euchre:
         # current player is first after dealer
         # can not use old current, as it is set by trick winner see #score_trick
         self.current_player_index = (self.dealer_index + 1) % NUM_PLAYERS
+        self.lead = self.current_player_index
 
         # Recompute the order, where the previous dealer is now the f
         for i in range(NUM_PLAYERS):
@@ -432,6 +438,7 @@ class Euchre:
         winner_index = self.players.index(player)
         rotateTo(self.order, winner_index)
         self.current_player_index = winner_index
+        self.lead = winner_index
 
     @property
     def is_hand_finished(self) -> bool:
@@ -489,6 +496,7 @@ class Euchre:
         sb = sb + f"discard: {self.discard}" + "\n"
         sb = sb + f"trump: {self.trump}" + "\n"
         sb = sb + f"maker: {self.maker}" + "\n"
+        sb = sb + f"lead: {self.lead}" + "\n"
         sb = sb + f"score: {self._score}" + "\n"
 
         sb = sb + f"tricks:\n"

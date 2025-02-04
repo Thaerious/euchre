@@ -9,16 +9,40 @@ fixture game
     set Player4 = [A♣, K♣, A♥, 10♦, 9♠]
     set up_card = 10♥
 
-test first_hand game
+test before_first_hand game
     assert current_state == 1
     assert current_player.name == "Player1"
     
     # Lead is the first player after the dealer when not playing (state 5)
-    assert lead == "Player1" 
+    assert lead_player.name == "Player1"
 
     pass pass pass order up 9♠
 
     assert current_state == 5
     assert current_player.name == "Player1"
+
+    #First player is lead when play first begins (state 5)
+    assert lead_player.name == "Player1"
+
+test play_first_hand game
+    call before_first_hand game
+
+    play 10♣ Q♣ Q♦ A♣ continue
+    assert lead_player.name == "Player4"
+
+    play A♥ J♦ K♥ 9♥ continue
+    assert lead_player.name == "Player1"
+
+    play Q♥ 10♠ K♠ 10♥ continue
+    assert lead_player.name == "Player1"
+
+    play Q♠ 9♦ A♠ K♣ continue
+    assert lead_player.name == "Player3"
+
+    play A♦ 10♦ 9♣ K♦ continue
+    assert lead_player.name == "Player3"
+
+    continue # move to next hand
+    assert lead_player.name == "Player2"
 
     print
