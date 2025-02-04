@@ -8,7 +8,7 @@ class Trick(List[Card]):
     Represents a trick in Euchre, storing cards played in order and tracking the winner.
     """
 
-    def __init__(self, trump: str):
+    def __init__(self, trump: str, lead: int):
         """
         Initializes an empty trick.
 
@@ -16,8 +16,8 @@ class Trick(List[Card]):
             trump (str): The trump suit for this round.
         """
         super().__init__()
-        self.who_played: Dict[Card, int] = {}  # Maps cards to player indices
         self._trump: str = trump  # The trump suit for this trick
+        self._lead = lead
 
     def copy(self) -> "Trick":
         """
@@ -28,7 +28,6 @@ class Trick(List[Card]):
         """
         new_trick = Trick(self._trump)  # Create a new Trick with the same trump suit
         new_trick.extend(self)
-        new_trick.who_played = self.who_played
         return new_trick
 
     @property
@@ -47,6 +46,10 @@ class Trick(List[Card]):
         return self._trump
 
     @property
+    def lead(self) -> str:
+        return self._lead
+
+    @property
     def lead_suit(self) -> str:
         """
         Retrieves the lead suit of the trick, considering Left Bower rules.
@@ -55,17 +58,6 @@ class Trick(List[Card]):
             str: The suit of the first played card, adjusted for Left Bower.
         """        
         return self[0].suit_effective()
-
-    def append(self, pIndex: int, card: Card) -> None:
-        """
-        Adds a card to the trick, associating it with a player.
-
-        Args:
-            pIndex (int): The player index who played this card.
-            card (Union[Card, str]): The card being played (as a Card object or string).
-        """
-        super().append(card)
-        self.who_played[card] = pIndex
 
     @property
     def best_card(self) -> Optional[Card]:
@@ -101,11 +93,17 @@ class Trick(List[Card]):
             Optional[int]: The index of the winning player, or None if the trick is empty.
         """
         best = self.best_card
-        if best is None:
-            return None
+        if best is None: return None
+        return self.who_played(best)
 
-        return self.who_played.get(best, None)   
+    def who_played(self, card_in_question):
+        i = self.lead
 
+        for card_in_trick in self:
+            if card_in_trick == card_in_question: return i
+            i = (i + 1) % 4
+
+        return i
 
     def __str__(self) -> str:
         """

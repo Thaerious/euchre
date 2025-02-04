@@ -131,7 +131,7 @@ class Euchre:
             raise EuchreException("Trump must be made before adding a trick.")
         if self.has_trick and not self.is_trick_finished:
             raise EuchreException("Previous trick not complete.")
-        self._tricks.append(Trick(self.current_trump))
+        self._tricks.append(Trick(self.current_trump, self.lead))
 
     @property
     def tricks(self) -> List[Trick]:
@@ -411,7 +411,7 @@ class Euchre:
         player.played.append(card)
 
         # Add to the current trick
-        self._tricks[-1].append(self.current_player_index, card)
+        self._tricks[-1].append(card)
 
         # Advance to the next player
         self.activate_next_player()

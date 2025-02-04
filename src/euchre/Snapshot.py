@@ -20,6 +20,7 @@ class Snapshot:
         if len(game.tricks) > 0:
             trick = game.tricks[-1]
             i = game.lead
+            
             for card in trick:
                 self.players[i]["played"] = card
                 i = (i + 1) % 4
