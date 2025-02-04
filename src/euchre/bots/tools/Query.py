@@ -90,10 +90,14 @@ class Query(list):
         if not m in digits: return self.copy([])
         return self.copy()
 
-    def lead(self, query):
-        l = (self.snap.active_player - self.snap.for_player) % 4
+    def lead(self, query):    
+        if self.snap.lead is None:
+            if query == "": return self.copy()
+            else: return self.copy([])
+
+        l = (self.snap.lead - self.snap.for_player) % 4
         digits = [int(char) for char in query]
-        if not m in digits: return self.copy([])
+        if not l in digits: return self.copy([])
         return self.copy()
 
     def down(self, phrase):
