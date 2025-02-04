@@ -108,6 +108,15 @@ class Query(list):
             return self.copy()
         else:
             return self.copy([])
+        
+    def up(self, phrase):
+        q = self.copy([self.snap.up_card])
+        r = q.select(phrase)
+
+        if r.len > 0:
+            return self.copy()
+        else:
+            return self.copy([])        
 
     # if has returns all, doesn't return select
     # if not has returns none
@@ -122,10 +131,6 @@ class Query(list):
 
         if self.trump is not None: 
             phrase = denormalize(self.trump, phrase)
-
-        # if the first phrase starts with ~ start with all selected
-        if phrase.strip().startswith('~'):
-            all_selected.extend(self)
 
         for split_phrase in phrase.split():
             match = Query.pattern.match(split_phrase)
@@ -151,11 +156,33 @@ class Query(list):
                     rejected = select_suits(suits, rejected, self.trump)
                     rejected = select_ranks(ranks, rejected, self.trump)
 
-                for card in all_selected:
+                all_selected.extend(self)
+
+                for card in self.copy():
                     if card in rejected:
                         all_selected.remove(card)
             
-        return self.copy(all_selected)    
+        return self.copy(all_selected)   
+
+    def normalize(self, string):
+        if self.snap.trump == None: return string
+
+        raw = list(string)
+        normalized = []
+
+        iTrump = Query.suits.index(self.snap.trump)
+        opposite = Query.suits[(iTrump + 2) % 4]
+        off1 = Query.suits[(iTrump + 1) % 4]
+        off2 = Query.suits[(iTrump + 3) % 4]
+
+        for c in raw:
+            if c == self.snap.trump: normalized.append("♠")
+            elif c == opposite:      normalized.append("♣")
+            elif c == off1:          normalized.append("♥")
+            elif c == off2:          normalized.append("♦")
+            else:                    normalized.append(c)
+
+        return "".join(normalized) 
 
 def select_ranks(ranks, cards, trump):
     selected = []

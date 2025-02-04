@@ -3,7 +3,6 @@ from euchre.Euchre import *
 from euchre.Player import Player
 import random
 from typing import *
-from typeguard import typechecked
 
 class ActionException(EuchreException):
     """
@@ -26,7 +25,6 @@ class Game(Euchre):
         last_player (Optional[Player]): Last player who performed an action.
     """
 
-    @typechecked
     def __init__(self, names: list[str]):
         """
         Initialize the Game object with player names.
@@ -42,21 +40,18 @@ class Game(Euchre):
         self.do_shuffle = True
         self._hooks = {} 
 
-    @typechecked
     def register_hook(self, event: str, func):
         """Register a function to a hook event."""
         if event not in self._hooks:
             self._hooks[event] = []
         self._hooks[event].append(func)
 
-    @typechecked
     def trigger_hook(self, event: str, *args, **kwargs):
         """Trigger all hooks associated with an event."""
         if event in self._hooks:
             for func in self._hooks[event]:
                 func(*args, **kwargs)
 
-    @typechecked
     def update_hash(self) -> None:
         """
         Updates the unique hash identifier for the game state.
@@ -64,7 +59,6 @@ class Game(Euchre):
         self.hash = ''.join(random.choices('0123456789abcdef', k=8))
 
     @property
-    @typechecked
     def current_state(self) -> int:
         """
         Get the current state as an integer based on the function name.
@@ -74,7 +68,6 @@ class Game(Euchre):
         """
         return int(self.state.__name__[6:])
 
-    @typechecked
     def input(self, player: Optional[str], action: str, data: Optional[Union[str, Card]] = None) -> None:
         """
         Process player input based on the current game state.
@@ -112,7 +105,6 @@ class Game(Euchre):
 
         self.trigger_hook("after_input", prev_state = prev_state, action = action, data = data)            
 
-    @typechecked
     def state_0(self, action: str, __: Any) -> None:
         """
         Initial state where the game starts.
@@ -124,7 +116,6 @@ class Game(Euchre):
         self.allowed_actions(action, "start")
         self.enter_state_1()
 
-    @typechecked
     def enter_state_1(self) -> None:
         """
         Transition to state 1: Shuffle and deal cards.
@@ -135,7 +126,6 @@ class Game(Euchre):
         self.deal_cards()
         self.state = self.state_1
 
-    @typechecked
     def state_1(self, action: str, __: Any) -> None:
         """
         State 1: Players decide to pass, order up, or go alone.
@@ -157,7 +147,6 @@ class Game(Euchre):
             self.go_alone()
             self.enter_state_2()
 
-    @typechecked
     def enter_state_2(self) -> None:
         """
         Transition to state 2: Dealer's turn to decide.
@@ -165,7 +154,6 @@ class Game(Euchre):
         self.activate_dealer()
         self.state = self.state_2
 
-    @typechecked
     def state_2(self, action: str, card: Optional[Card]) -> None:
         """
         State 2: Dealer decides to pick up the card or pass.
@@ -184,12 +172,10 @@ class Game(Euchre):
         self.activate_first_player()
         self.enter_state_5()
 
-    @typechecked
     def enter_state_3(self):
         self.turn_down_card()
         self.state = self.state_3
 
-    @typechecked
     def state_3(self, action: str, suit: Optional[str]) -> None:
         """
         State 3: Players decide to pass, make, or go alone for trump.
@@ -210,7 +196,6 @@ class Game(Euchre):
             self.activate_first_player()
             self.enter_state_5()
 
-    @typechecked
     def state_4(self, action: str, suit: Optional[str]) -> None:
         """
         State 4: Dealer decides to make trump or go alone.
@@ -227,7 +212,6 @@ class Game(Euchre):
         self.activate_first_player()
         self.enter_state_5()
 
-    @typechecked
     def enter_state_5(self) -> None:
         """
         Transition to state 5: Players play tricks.
@@ -235,7 +219,6 @@ class Game(Euchre):
         self.add_trick()
         self.state = self.state_5
 
-    @typechecked
     def state_5(self, action: str, card: Card) -> None:
         """
         State 5: Players play cards and score tricks.
@@ -250,12 +233,10 @@ class Game(Euchre):
         if not self.is_trick_finished: return
         self.enter_state_6()
 
-    @typechecked
     def enter_state_6(self) -> None:
         self.score_trick()
         self.state = self.state_6
 
-    @typechecked
     def state_6(self, action: str, __: Any) -> None:
         """
         State 6: Transition to the next trick.
@@ -277,7 +258,6 @@ class Game(Euchre):
             self.state = self.state_7
 
 
-    @typechecked
     def state_7(self, action: str, __: Any) -> None:
         """
         State 7: Transition to the next hand.
@@ -290,7 +270,6 @@ class Game(Euchre):
         self.next_hand()
         self.enter_state_1()
 
-    @typechecked
     def allowed_actions(self, action: str, *allowed_actions: str) -> None:
         """
         Validate if the given action is allowed in the current state.
@@ -309,7 +288,6 @@ class Game(Euchre):
 
         raise ActionException("Unhandled Action " + str(action))
 
-    @typechecked
     def __str__(self) -> str:  # pragma: no cover
         """
         String representation of the Game object for debugging purposes.

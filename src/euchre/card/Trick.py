@@ -8,7 +8,6 @@ class Trick(List[Card]):
     Represents a trick in Euchre, storing cards played in order and tracking the winner.
     """
 
-    @typechecked
     def __init__(self, trump: str):
         """
         Initializes an empty trick.
@@ -61,7 +60,6 @@ class Trick(List[Card]):
         """        
         return self[0].suit_effective()
 
-    @typechecked
     def append(self, pIndex: int, card: Card) -> None:
         """
         Adds a card to the trick, associating it with a player.
@@ -112,7 +110,7 @@ class Trick(List[Card]):
 
         return self.who_played.get(best, None)   
 
-    @typechecked
+
     def __str__(self) -> str:
         """
         Returns a formatted string representation of the trick.
@@ -122,7 +120,7 @@ class Trick(List[Card]):
         """
         return f"[{del_string(self, ",", '"')}]:{self.trump}"
 
-    @typechecked
+
     def __repr__(self) -> str:
         """
         Returns a string representation of the trick (same as __str__).

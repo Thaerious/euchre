@@ -11,7 +11,7 @@ if len(sys.argv) > 1:
     run_count = int(sys.argv[1])
 
 names = ["Player1", "Player2", "Player3", "Player4"]
-bot = Bot_2()
+bot = Bot_1()
 
 start = time.time()
 
@@ -33,4 +33,4 @@ for i in range(run_count):
 
 end = time.time()
 print(f"Elapsed time: {end - start} seconds")
-print(f"Average time: {(end - start) / 250} seconds")
+print(f"Average time: {(end - start) / run_count} seconds")
