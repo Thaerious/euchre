@@ -19,9 +19,10 @@ class Snapshot:
 
         if len(game.tricks) > 0:
             trick = game.tricks[-1]
+            i = game.lead
             for card in trick:
-                i = trick.get_player(card)
                 self.players[i]["played"] = card
+                i = (i + 1) % 4
 
         self.for_player = for_player.index
         self.active = game.current_player.index
