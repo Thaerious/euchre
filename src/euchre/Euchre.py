@@ -131,7 +131,7 @@ class Euchre:
             raise EuchreException("Trump must be made before adding a trick.")
         if self.has_trick and not self.is_trick_finished:
             raise EuchreException("Previous trick not complete.")
-        self._tricks.append(Trick(self.current_trump, self.lead))
+        self._tricks.append(Trick(self.current_trump, self.order))
 
     @property
     def tricks(self) -> List[Trick]:
@@ -429,16 +429,14 @@ class Euchre:
         if not self.is_trick_finished:
             raise EuchreException("Cannot score an unfinished trick.")
 
-        # Determine the trick winner, update order
-        pindex = self.current_trick.winner
-        player = self.players[pindex]
-        player.tricks += 1
+        # Determine the trick winner, update player data
+        winner_pindex = self.current_trick.winner
+        self.players[winner_pindex].tricks += 1
 
         # Move the winner to the front of the order
-        winner_index = self.players.index(player)
-        rotateTo(self.order, winner_index)
-        self.current_player_index = winner_index
-        self.lead = winner_index
+        rotateTo(self.order, winner_pindex)
+        self.current_player_index = winner_pindex
+        self.lead = winner_pindex
 
     @property
     def is_hand_finished(self) -> bool:
@@ -488,15 +486,15 @@ class Euchre:
             sb = sb + "  " + str(player) + "\n"
 
         sb = sb + f"order: {self.order}" + "\n"
-        sb = sb + f"current: {self.current_player}" + "\n"
-        sb = sb + f"dealer: {self.dealer}" + "\n"
+        sb = sb + f"current: {self.current_player_index} -> {self.current_player}" + "\n"
+        sb = sb + f"dealer: {self.dealer_index} -> {self.dealer}" + "\n"
         sb = sb + f"hand count: {self.hand_count}" + "\n"
         sb = sb + f"up card: {self.up_card}" + "\n"
         sb = sb + f"down card: {self._down_card}" + "\n"
         sb = sb + f"discard: {self.discard}" + "\n"
         sb = sb + f"trump: {self.trump}" + "\n"
-        sb = sb + f"maker: {self.maker}" + "\n"
-        sb = sb + f"lead: {self.lead}" + "\n"
+        sb = sb + f"maker: {self.maker_index} -> {self.maker}" + "\n"
+        sb = sb + f"lead: {self.lead} -> {self.players[self.lead]}" + "\n"
         sb = sb + f"score: {self._score}" + "\n"
 
         sb = sb + f"tricks:\n"

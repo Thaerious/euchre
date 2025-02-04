@@ -40,8 +40,7 @@ class Snapshot:
         self.score = game.score
         self.last_action = game.last_action
         self.lead = game.lead
-
-        self.last_player = game.last_player.index if game.last_player is not None else None
+        self.last_player = game.last_player
         
         self.hash = game.hash
         # self.normalized = Normalized(game, for_player)

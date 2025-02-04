@@ -11,7 +11,7 @@ if len(sys.argv) > 1:
     run_count = int(sys.argv[1])
 
 names = ["Player1", "Player2", "Player3", "Player4"]
-bot = Bot_1()
+bot = Bot_R()
 
 start = time.time()
 

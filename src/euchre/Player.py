@@ -22,7 +22,7 @@ class Player:
         return newPlayer
 
     def __str__(this):     
-        sb = f"{this.name}@{this.index}[{del_string(this.cards)}][{del_string(this.played)}] {this.tricks}"
+        sb = f"{this.name}[{del_string(this.cards)}][{del_string(this.played)}] {this.tricks}"
         return sb
 
 class PlayerList(list):

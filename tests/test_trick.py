@@ -2,15 +2,15 @@ from euchre.card.Trick import Trick
 from euchre.card.Deck import Deck
 import pytest
 
-def build_trick(trump: str, lead: int):
+def build_trick(trump: str, order: int = [0, 1, 2, 3]):
     deck = Deck()
     deck.trump = trump
-    trick = Trick(trump, lead)
+    trick = Trick(trump, order)
     return (deck, trick)
 
 def test_trick_initialization():
     """Test Trick initialization with a valid set of cards."""
-    (deck, trick) = build_trick("♠", 0)
+    (deck, trick) = build_trick("♠")
 
     trick.append( deck.get_card("9♥"))
     trick.append(deck.get_card("K♥"))
@@ -26,19 +26,19 @@ def test_trick_initialization():
 
 def test_trick_winner_no_cards():
     """Test winner() when no cards are played."""
-    (deck, trick) = build_trick("♠", 0)
+    (deck, trick) = build_trick("♠")
     assert trick.winner is None, "Winner should be None if no cards are played"
 
 def test_trick_winner_one_card():
     """Test that a single played card is automatically the winner."""
-    (deck, trick) = build_trick("♠",0 )
+    (deck, trick) = build_trick("♠")
     trick.append( deck.get_card("A♠"))
 
     assert trick.winner == 0, "Single player should be the winner"
 
 def test_trick_append():
     """Test adding cards to a trick."""
-    (deck, trick) = build_trick("♠",0 )
+    (deck, trick) = build_trick("♠")
     trick.append( deck.get_card("10♥"))
     trick.append(deck.get_card("J♠"))
 
@@ -52,7 +52,7 @@ def test_trick_append():
 
 def test_trick_best_card_with_mixed_trump():
     """Test best_card when trick contains trump and non-trump cards."""
-    (deck, trick) = build_trick("♣",0 )
+    (deck, trick) = build_trick("♣")
     trick.append( deck.get_card("A♥"))
     trick.append(deck.get_card("K♣"))
     trick.append(deck.get_card("J♣"))
@@ -64,7 +64,7 @@ def test_trick_best_card_with_mixed_trump():
 
 def test_trick_winner_with_no_trump():
     """Test winner when no trump cards are played."""
-    (deck, trick) = build_trick("♠",0 )
+    (deck, trick) = build_trick("♠")
 
     trick.append(deck.get_card("9♦"))
     trick.append(deck.get_card("Q♦"))
@@ -77,7 +77,7 @@ def test_trick_winner_with_no_trump():
 
 def test_trick_winner_with_left_bower():
     """Test winner when Left Bower is played in a trick."""
-    (deck, trick) = build_trick("♣",0 )
+    (deck, trick) = build_trick("♣")
 
     trick.append( deck.get_card("A♠"))
     trick.append(deck.get_card("J♠"))
@@ -90,7 +90,7 @@ def test_trick_winner_with_left_bower():
 
 def test_trick_winner_with_only_one_card():
     """Test winner when only one card is played."""
-    (deck, trick) = build_trick("♠",0 )
+    (deck, trick) = build_trick("♠")
     trick.append(deck.get_card("K♠"))
 
     assert trick.winner == 0, "Single player should be the winner"
