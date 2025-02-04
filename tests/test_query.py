@@ -119,13 +119,13 @@ def test_has_doesnt_refine(snapshot):
     q = Query(snapshot).select("910JQKA♠♥♣♦").maker("0")
     assert q == []    
 
+# for_player = 0
+# maker = 0
 def test_maker_true(snapshot):
     set_hand(snapshot, ['J♦', '10♣', '9♣', 'Q♥', 'Q♠'])
     snapshot.trump = '♦'
     snapshot.maker = 0
     q = Query(snapshot).maker("0")
-
-    print(q)
     assert q == ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']   
 
 def test_down_true(snapshot):

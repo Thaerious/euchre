@@ -81,8 +81,11 @@ class Query(list):
         return self.copy()
 
     def maker(self, query):
-        m = (self.snap.dealer - self.snap.for_player) % 4
-        if query == "" and m is None: self.copy()        
+        if self.snap.maker is None:
+            if query == "": return self.copy()
+            else: return self.copy([])
+
+        m = (self.snap.maker - self.snap.for_player) % 4
         digits = [int(char) for char in query]
         if not m in digits: return self.copy([])
         return self.copy()

@@ -21,4 +21,4 @@ snap = Snapshot(game, "Player1")
 
 query = Query(snap)
 r = query.select("~J♦♥")
-print(snap)
+print(game)

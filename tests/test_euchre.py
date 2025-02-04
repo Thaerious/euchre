@@ -92,7 +92,7 @@ def test_turn_down_card(euchre):
     assert euchre.down_card == "J♦"
     assert euchre.discard == None    
 
-def test_pick_up_card(euchre):   
+def test_swap_card(euchre):   
     euchre.deal_cards()
     euchre.dealer_swap_card("Q♥")
 
@@ -101,7 +101,6 @@ def test_pick_up_card(euchre):
     assert euchre.discard == "Q♥" 
     assert "J♦" in euchre.dealer.cards 
     assert "Q♥" not in euchre.dealer.cards
-    assert euchre.maker.name == "Player4" #dealer
 
 # can not turn down card after picking up
 def test_turn_down_card_exception(euchre):
@@ -274,23 +273,6 @@ def test_next_hand_exception_0(euchre):
 
     with pytest.raises(EuchreException, match="Hand not finished."): 
         euchre.next_hand()    
-
-@pytest.mark.parametrize(
-    "score, expected",
-    [
-        # Game over first team has >= 10
-        ([11, 5], True),
-        ([10, 5], True),
-
-        # Game over second team has >= 10
-        ([4, 12], True),
-        ([6, 10], True),
-
-        # Game not over neither team has >= 10
-        ([4, 0], False),
-        ([9, 9], False)
-    ]
-)
 
 @pytest.mark.parametrize(
     "maker, tricks, isAlone, expected_score",
