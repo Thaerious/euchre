@@ -22,3 +22,5 @@ snap = Snapshot(game, "Player1")
 query = Query(snap)
 r = query.select("~J♦♥")
 print(game)
+c = game.get_player(0).cards[0]
+print(c, hex(c))

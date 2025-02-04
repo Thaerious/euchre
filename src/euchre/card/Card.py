@@ -182,3 +182,13 @@ class Card:
         if trump is None: trump = self.deck.trump
         if trump is None: return False
         return self._value == "J" and self._suit == Card.left_bower_suit[trump]
+    
+    def __int__(self):
+        b = Card.suits.index(self.suit) << 3
+        b = b | Card.ranks.index(self.rank)
+        return b
+    
+    def __index__(self):
+        b = Card.suits.index(self.suit) << 3
+        b = b | Card.ranks.index(self.rank)
+        return b    
