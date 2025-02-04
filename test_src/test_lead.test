@@ -12,6 +12,9 @@ fixture game
 test first_hand game
     assert current_state == 1
     assert current_player.name == "Player1"
+    
+    # Lead is the first player after the dealer when not playing (state 5)
+    assert lead == "Player1" 
 
     pass pass pass order up 9♠
 

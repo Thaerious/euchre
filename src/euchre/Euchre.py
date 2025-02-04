@@ -62,6 +62,10 @@ class Euchre:
     def up_card(self) -> str:
         return self._up_card
 
+    @up_card.setter
+    def up_card(self, value):
+        self._up_card = self.deck.get_card(value)
+
     @property
     def down_card(self) -> str:
         return self._down_card
@@ -459,6 +463,12 @@ class Euchre:
             bool: True if either team has reached or exceeded 10 points, otherwise False.
         """
         return self.score[0] >= 10 or self.score[1] >= 10
+
+    def set_cards(self, player, cards):
+        player = self.get_player(player)
+        player.cards.clear()
+        for card_string in cards:
+            player.cards.append(self.deck.get_card(card_string))
 
     def __str__(self) -> str:  # pragma: no cover
         """
