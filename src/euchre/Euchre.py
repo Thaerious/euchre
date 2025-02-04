@@ -231,11 +231,13 @@ class Euchre:
             Player: The player object at the given index.
         """
 
+        if index is None: return None
+
         if isinstance(index, str):
             for player in self.players:
                 if player.name == index:
                     return player
-        else:
+        else:            
             return self.players[index]
 
     @property

@@ -189,6 +189,4 @@ class Card:
         return b
     
     def __index__(self):
-        b = Card.suits.index(self.suit) << 3
-        b = b | Card.ranks.index(self.rank)
-        return b    
+        return self.__int__()  

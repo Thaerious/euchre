@@ -46,7 +46,7 @@ class Trick(List[Card]):
         return self._trump
 
     @property
-    def lead(self) -> str:
+    def lead_player(self) -> str:
         return self._order[0]
 
     @property

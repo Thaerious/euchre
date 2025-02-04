@@ -66,7 +66,7 @@ class Query(list):
         if len(self.snap.tricks[-1]) == 0:
             return self.copy()
         
-        lead_suit = self.snap.tricks[-1].lead_suit
+        lead_suit = self.snap.tricks[-1].lead_suit  
         lead_suit = normalize(self.trump, lead_suit)
 
         with self.select(f"910JLQKA{lead_suit}") as q:
@@ -126,6 +126,14 @@ class Query(list):
         else:
             return self.copy([])
     
+    # keep only cards that defeat 'card'
+    def beats(self, card):
+        selected = []
+        for self_card in self:
+            if card.compare(self_card) > 0:
+                selected.append(self_card)
+        return self.copy(selected)
+
     def select(self, phrase):
         all_selected = []
 

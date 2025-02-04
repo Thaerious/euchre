@@ -194,19 +194,11 @@ def test_select_not_suit(game):
     print(q)
     assert "K♠" not in q
     assert "10♠" not in q
-
-def test_playable_squash_bug(game):
-    game.input("Player1", "order")
-    game.input("Player4", "down")
-
-    game.set_cards("Player1", ["J♠"])
-    game.set_cards("Player2", ["A♦", "A♠", "J♦", "10♦", "K♥"])
-    game.trump = "♠"
-
-    game.input("Player1", "play", "J♠")
-    print(game)
-    snap = Snapshot(game, "Player2")
-    q = Query(snap).playable()
-    print(q)
-
-    # ♠ J♠ AKQJ109♠ [A♦, A♠, J♦, 10♦, K♥] [A♠]
+    
+# def test_beats(game):
+#     game.set_cards("Player1", ["Q♥", "10♦", "K♠", "10♠", "J♦"])
+#     game.trump = "♦"
+#     snapshot = Snapshot(game, "Player1")
+#     q = Query(snapshot).beats(game.deck.get_card("10♥"))
+#     print(q)
+#     assert q == ["Q♥", "10♦", "J♦"]

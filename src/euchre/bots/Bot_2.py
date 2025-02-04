@@ -103,8 +103,9 @@ class Bot_2(Bot_0):
             suit = q.normalize(suit)
             phrase = f"AKQJ109{suit}"
             r = q.select(phrase)
+
             if r.len > 0: 
-                print(snap.trump, snap.tricks[-1].best_card, phrase, q, r)
+                print(snap.tricks[-1], q, r[0])
                 return("play", r[0])    
 
             return("play", random.choice(q))    

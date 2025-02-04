@@ -19,8 +19,5 @@ snap = Snapshot(game, "Player1")
 # print(snap)
 # ['A♦', '9♣', 'J♦', 'K♠', 'J♥']
 
-query = Query(snap)
-r = query.select("~J♦♥")
-print(game)
-c = game.get_player(0).cards[0]
-print(c, hex(c))
+print(game.get_player(0).cards.hex())
+
