@@ -12,6 +12,8 @@ random.seed(1234)
 names = ["Player1", "Player2", "Player3", "Player4"]
 game = Game(names)
 game.input(None, "start")
+game.input("Player1", "order")
+game.input("Player4", "down")
 snap = Snapshot(game, "Player1")
 
 # print(snap)
@@ -19,4 +21,4 @@ snap = Snapshot(game, "Player1")
 
 query = Query(snap)
 r = query.select("~J♦♥")
-print(r)
+print(snap)

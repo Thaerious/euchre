@@ -74,17 +74,23 @@ class Query(list):
         
         return self.copy()
 
-    def dealer(self, query):
-        digits = [int(char) for char in query]        
-        if not self.snap.dealer in digits: self.clear()
+    def dealer(self, phrase):
+        d = (self.snap.dealer - self.snap.for_player) % 4
+        digits = [int(char) for char in phrase]        
+        if not d in digits: return self.copy([])
         return self.copy()
 
     def maker(self, query):
-        if query == "" and self.snap.maker is None:
-            return True
-        
+        m = (self.snap.dealer - self.snap.for_player) % 4
+        if query == "" and m is None: self.copy()        
         digits = [int(char) for char in query]
-        if not self.snap.maker in digits: self.clear()
+        if not m in digits: return self.copy([])
+        return self.copy()
+
+    def lead(self, query):
+        l = (self.snap.active_player - self.snap.for_player) % 4
+        digits = [int(char) for char in query]
+        if not m in digits: return self.copy([])
         return self.copy()
 
     def down(self, phrase):

@@ -17,7 +17,7 @@ start = time.time()
 
 for i in range(run_count):
     seed = random.randint(0, 1000)
-    # print(seed)
+    print(seed)
     random.seed(seed)
 
     random.shuffle(names)
