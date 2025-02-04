@@ -180,4 +180,5 @@ class Card:
             bool: True if this card is the Left Bower, False otherwise.
         """
         if trump is None: trump = self.deck.trump
+        if trump is None: return False
         return self._value == "J" and self._suit == Card.left_bower_suit[trump]

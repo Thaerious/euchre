@@ -3,10 +3,13 @@ import re
 class Query(list):
     suits: list[str] = ["♠", "♥", "♣", "♦"] # order matters
     ranks: list[str] = ["9", "10", "J", "Q", "K", "A", "L"]
+    pattern = re.compile(r"(~)?([910JKQLA]*)([♠♥♣♦]*)")
+    rank_pattern = re.compile(r"(9|10|J|Q|K|A|L)")
+    suit_pattern = re.compile(r"(♠|♥|♣|♦)")
 
     def __init__(self, snap, trump = None):
         self.snap = snap
-        self.extend(snap.hand)        
+        self.extend(snap.hand)
 
         if trump is None:
             self.trump = snap.trump
@@ -22,6 +25,17 @@ class Query(list):
         if value != None and not value in Query.suits:
             raise Exception(f"Trump must be None or a suit: {value}")
         self._trump = value
+    
+    @property
+    def len(self):
+        return len(self)
+    
+    @property
+    def first(self):
+        if self.len > 0:
+            return self[0]
+        else:        
+            return None
 
     def __enter__(self):
         return self
@@ -29,10 +43,15 @@ class Query(list):
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
-    def copy(self):
+    def copy(self, cards = None):
         copied = Query(self.snap, self.trump)
         copied.clear()
-        copied.extend(self)
+
+        if cards == None:
+            copied.extend(self)
+        else:
+            copied.extend(cards)
+
         return copied
 
     def set(self, cards):
@@ -68,99 +87,82 @@ class Query(list):
         if not self.snap.maker in digits: self.clear()
         return self.copy()
 
-    def down(self, query):
-        if self.snap.down_card is None: return self.copy()
+    def down(self, phrase):
+        q = self.copy([self.snap.down_card])
+        r = q.select(phrase)
 
-        expanded = expand_query(query, self.trump is not None)
-
-        if self.trump is not None:
-            expanded = denormalize(expanded, self.trump)   
-
-        if self.snap.down_card in expanded:
+        if r.len > 0:
             return self.copy()
-        
-        self.clear()
-        return self.copy()        
+        else:
+            return self.copy([])
 
-    def has(self, query):
-        expanded = expand_query(query)
-
-        if self.trump is not None:
-            expanded = denormalize(expanded, self.trump)
-
-        for card in expanded:
-            if card in self:
-                return self.copy()
-
-        self.clear()
-        return self.copy()
-
-    def select(self, query):
-        selected = []
-
-        expanded = expand_query(query, self.trump is not None)
-
-        if self.trump is not None:
-            expanded = denormalize(expanded, self.trump)
-
-        for card in expanded:
-            if card in self:
-                selected.append(card)
-
-        return Query(self.snap, self.trump).set(selected)
-
-    @property
-    def len(self):
-        return len(self)
+    # if has returns all, doesn't return select
+    # if not has returns none
+    def has(self, phrase):
+        if self.select(phrase).len > 0:
+            return self.copy()
+        else:
+            return self.copy([])
     
-    @property
-    def first(self):
-        if self.len > 0:
-            return self.copy()[0]
-        else:        
-            return None
+    def select(self, phrase):
+        all_selected = []
 
-def expand_query(phrase, normal = True):
-    cards = []    
-    for split in phrase.split():
-        cards.extend(_expand_cards(split, normal))
+        if self.trump is not None: 
+            phrase = denormalize(self.trump, phrase)
 
-    return cards
+        # if the first phrase starts with ~ start with all selected
+        if phrase.strip().startswith('~'):
+            all_selected.extend(self)
 
-# turn a card query string into an array of single card strings
-# if normal, there is no J♣ it is L♠
-# set normal to true when trump is set
-def _expand_cards(phrase, normal = True):   
-    cards = []
-    phrase = correct_phrase(phrase)
+        for split_phrase in phrase.split():
+            match = Query.pattern.match(split_phrase)
+            (inv, ranks, suits) = match.groups()
 
-    parts = re.findall(r'10|[9JQKAL♠♣♦♥]', phrase)
-    for part1 in parts:
-        if part1 in Query.ranks:
-            for part2 in parts:
-                if part2 in Query.suits:
-                    card = f"{part1}{part2}"
-                    if not card in cards: cards.append(card)
-        elif part1 in Query.suits:
-            for part2 in parts:
-                if part2 in Query.ranks:
-                    card = f"{part2}{part1}"
-                    if not card in cards: cards.append(card)                      
+            if (inv is None):
+                selected = self
+                if ranks == "": 
+                    selected = select_suits(suits, selected, self.trump)
+                elif suits == "": 
+                    selected = select_ranks(ranks, selected, self.trump)
+                else:
+                    selected = select_suits(suits, selected, self.trump)
+                    selected = select_ranks(ranks, selected, self.trump)
+                all_selected.extend(selected)
+            else:
+                rejected = self
+                if ranks == "": 
+                    rejected = select_suits(suits, rejected, self.trump)
+                elif suits == "": 
+                    rejected = select_ranks(ranks, rejected, self.trump)
+                else:
+                    rejected = select_suits(suits, rejected, self.trump)
+                    rejected = select_ranks(ranks, rejected, self.trump)
 
-    if "L♣" in cards: cards.remove("L♣")
-    if "L♦" in cards: cards.remove("L♦")
-    if "L♥" in cards: cards.remove("L♥")
+                for card in all_selected:
+                    if card in rejected:
+                        all_selected.remove(card)
+            
+        return self.copy(all_selected)    
 
-    if normal:
-        if "J♣" in cards: cards.remove("J♣")
-        if "L♠" in cards: cards[cards.index("L♠")] = "J♣"
-    else:
-        if "L♠" in cards: cards.remove("L♠")
+def select_ranks(ranks, cards, trump):
+    selected = []
+    find_ranks = Query.rank_pattern.findall(ranks)
+    for rank in find_ranks:
+        for card in cards:
+            if card.rank == rank:
+                selected.append(card)
+            if rank == "L" and card.is_left_bower(trump):
+                selected.append(card)
+    return selected
 
-    if "~" in phrase:    
-        return invert_expanded(cards)    
-    else:
-        return cards
+def select_suits(suits, cards, trump):
+    selected = []
+    find_suits = Query.suit_pattern.findall(suits)
+    for suit in find_suits:
+        for card in cards:
+            if card.suit_effective(trump) == suit:
+                selected.append(card)
+    return selected            
 
 def invert_expanded(cards):
     result = []
@@ -171,45 +173,38 @@ def invert_expanded(cards):
                 result.append(card) 
     return result
 
-def correct_phrase(phrase):
-    if not any(suit in phrase for suit in Query.suits):
-        phrase = phrase + "♠♥♣♦"
-
-    if not any(rank in phrase for rank in Query.ranks):
-        phrase = "910JQKAL" + phrase
-
-    return phrase
-
-
 def normalize(trump, string):
-    normed = ""
+    raw = list(string)
+    normalized = []
 
     iTrump = Query.suits.index(trump)
     opposite = Query.suits[(iTrump + 2) % 4]
     off1 = Query.suits[(iTrump + 1) % 4]
     off2 = Query.suits[(iTrump + 3) % 4]
 
-    for c in string:
-        if c == trump:      normed = normed + "♠"
-        elif c == opposite: normed = normed + "♣"
-        elif c == off1:     normed = normed + "♥"
-        elif c == off2:     normed = normed + "♦"
-        else: normed = normed + c
+    for c in raw:
+        if c == trump:      normalized.append("♠")
+        elif c == opposite: normalized.append("♣")
+        elif c == off1:     normalized.append("♥")
+        elif c == off2:     normalized.append("♦")
+        else: normalized.append(c)
 
-    return normed
+    return "".join(normalized)
 
-def denormalize(cards, trump):
-    result = []
+def denormalize(trump, string):
+    raw = list(string)
+    denormalized = []
 
     iTrump = Query.suits.index(trump)
     opposite = Query.suits[(iTrump + 2) % 4]
     off1 = Query.suits[(iTrump + 1) % 4]
     off2 = Query.suits[(iTrump + 3) % 4]
 
-    for card in cards:
-        if   "♠" in card: result.append(card.replace("♠", trump))
-        elif "♣" in card: result.append(card.replace("♣", opposite))
-        elif "♥" in card: result.append(card.replace("♥", off1))
-        elif "♦" in card: result.append(card.replace("♦", off2))
+    for c in raw:
+        if   c == "♠": denormalized.append(trump)
+        elif c == "♣": denormalized.append(opposite)
+        elif c == "♥": denormalized.append(off1)
+        elif c == "♦": denormalized.append(off2)
+        else: denormalized.append(c)
 
-    return result
+    return "".join(denormalized)

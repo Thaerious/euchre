@@ -6,7 +6,6 @@ import random
 import time
 import sys
 
-
 seed = random.randint(0, 1000)
 
 if len(sys.argv) > 1:

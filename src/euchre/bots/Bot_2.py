@@ -65,16 +65,16 @@ class Bot_2:
 
         # make highest ranked card
         with Query(snap).down("♦").select("♠♥♣") as q:
-            if q.len > 0: return("make", q[0][-1])
+            if q.len > 0: return("make", q[0].suit)
 
         with Query(snap).down("♥").select("♠♣♦") as q:
-            if q.len > 0: return("make", q[-1][-1])
+            if q.len > 0: return("make", q[-1].suit)
         
         with Query(snap).down("♣").select("♠♥♦") as q:
-            if q.len > 0: return("make", q[-1][-1])
+            if q.len > 0: return("make", q[-1].suit)
 
         with Query(snap).down("♠").select("♥♣♦") as q:
-            if q.len > 0: return("make", q[-1][-1])                  
+            if q.len > 0: return("make", q[-1].suit)                  
 
     def state_5(self, snap):   
         with Query(snap).playable() as q:           

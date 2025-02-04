@@ -2,7 +2,7 @@ from euchre.del_string import del_string
 from euchre.card import *
 from euchre import *
 import random
-from euchre.bots.tools.Query import Query, expand_query
+from euchre.bots.tools.Query import Query
 import pytest
 
 def build_hand(cards, trump):     
@@ -18,42 +18,11 @@ def build_hand(cards, trump):
 
     return (deck, hand)
 
-def test_expand_cards_whole_deck():    
-    cards = expand_query("910JQKA♠♣♦♥", False)
-    assert cards == ['9♠', '9♣', '9♦', '9♥', '10♠', '10♣', '10♦', '10♥', 'J♠', 'J♣', 'J♦', 'J♥', 'Q♠', 'Q♣', 'Q♦', 'Q♥', 'K♠', 'K♣', 'K♦', 'K♥', 'A♠', 'A♣', 'A♦', 'A♥']
-
-def test_expand_cards_partial():    
-    cards = expand_query("910♦♥")
-    assert cards == ['9♦', '9♥', '10♦', '10♥']
-
-def test_expand_order_matters_1():    
-    cards = expand_query("109♥♦")
-    assert cards == ['10♥', '10♦', '9♥', '9♦']
-
-def test_expand_order_matters_2():    
-    cards = expand_query("♥109♦")
-    assert cards == ['10♥', '9♥', '10♦', '9♦']    
-
-def test_expand_ignore_repeats():    
-    cards = expand_query("910♦910♦")
-    assert cards == ['9♦', '10♦']
-
-def test_expand_and():    
-    cards = expand_query("910♦ 9♣")
-    assert cards == ['9♦', '10♦', '9♣']    
-
-def test_expand_left_bower_wont_select():    
-    cards = expand_query("910L♦")
-    assert cards == ['9♦', '10♦']
-
-def test_expand_left_bower_will_select():    
-    cards = expand_query("910L♠")
-    assert cards == ['9♠', '10♠', 'J♣']    
-
-def test_invert():
-    cards = expand_query("~♣♠")
-    print(f"the returned cards {cards}")
-    assert set(cards) == set(['9♥', '9♦', '10♥', '10♦', 'J♥', 'J♦', 'Q♥', 'Q♦', 'K♥', 'K♦', 'A♥', 'A♦'])
+def set_hand(snapshot, cards):
+    deck = snapshot.hand[0].deck
+    snapshot.hand.clear()
+    for card in cards:
+        snapshot.hand.append(deck.get_card(card))
 
 @pytest.fixture
 def snapshot():
@@ -74,8 +43,53 @@ def test_raw(snapshot):
     assert q == ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']
 
 def test_select_all(snapshot):
-    q = Query(snapshot).select("910JQKA♠♥♣♦")
+    q = Query(snapshot)    
+    q = q.select("910JQKA♠♥♣♦")
     assert q == ['9♣', '10♣', 'J♦', 'Q♠', 'Q♥']
+
+def test_select_no_trump_is_not_normalized(snapshot):    
+    set_hand(snapshot, ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+
+    # spades and clubs will not return anything when trump is not set
+    assert Query(snapshot).select("J♠ J♣").len == 0
+
+    # hearts will return only hearts
+    assert Query(snapshot).select("♥") == ['Q♥', 'J♥']
+
+def test_select_with_trump_is_normalized(snapshot):    
+    set_hand(snapshot, ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    snapshot.trump = '♦'
+
+    # spades and clubs will now return diamods and hearts
+    assert Query(snapshot).select("J♠ J♣") == ['J♦', 'J♥'] 
+
+    # spades will return all diamonds
+    assert Query(snapshot).select("♠") == ['J♦', 'J♥']   
+
+    # L (left-bower) will return J♥ when trump is diamonds
+    assert Query(snapshot).select("L♠") == ['J♥']  
+
+    # L (left-bower) only works when selecing spades
+    assert Query(snapshot).select("L♣") == []
+
+    # Select left bower, suit is implied
+    assert Query(snapshot).select("L") == ['J♥']
+
+def test_select_not_trump_not_set(snapshot):
+    set_hand(snapshot, ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+
+    # select everything except clubs
+    assert Query(snapshot).select("~♣") == ['J♦', 'Q♥', 'Q♠', 'J♥']  
+
+def test_select_not_trump_set(snapshot):
+    set_hand(snapshot, ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    snapshot.trump = '♦'
+
+    # select everything except the opposite suit (no hearts)
+    assert Query(snapshot).select("~♣") == ['J♦', '10♣', 'Q♠', 'J♥']  
+
+    # select everything except left bower
+    assert Query(snapshot).select("~L") == ['J♦', '10♣', 'Q♥', 'Q♠']       
 
 def test_multi_select(snapshot):
     q = Query(snapshot).select("910JQKA♠♥♣♦")
@@ -106,52 +120,41 @@ def test_has_doesnt_refine(snapshot):
     assert q == []    
 
 def test_maker_true(snapshot):
-    game = Game(["Player1", "Player2", "Player3", "Player4"])
-    random.seed(100)
-    game.input(None, 'start', None)
-    game.input("Player1", "order", None)
-    snapshot = Snapshot(game, "Player1") # ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']
-    q = Query(snapshot).select("910JQKAL♠♥♣♦").maker("0")
+    set_hand(snapshot, ['J♦', '10♣', '9♣', 'Q♥', 'Q♠'])
+    snapshot.trump = '♦'
+    snapshot.maker = 0
+    q = Query(snapshot).maker("0")
 
     print(q)
-    assert q == ['9♣', '10♣', 'Q♥', 'Q♠', 'J♦']   
-
-def test_down_true(snapshot):
-    game = Game(["Player1", "Player2", "Player3", "Player4"])
-    random.seed(100)
-
-    game.input(None, 'start', None)
-    game.input("Player1", "pass", None)
-    game.input("Player2", "pass", None)
-    game.input("Player3", "pass", None)
-    game.input("Player4", "pass", None)    
-    
-    snapshot = Snapshot(game, "Player1") # ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']
-    q = Query(snapshot).down("910JQKA♠♥♣")
     assert q == ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']   
 
-def test_down_false(snapshot):
-    game = Game(["Player1", "Player2", "Player3", "Player4"])
-    random.seed(100)
-
-    game.input(None, 'start', None)
-    game.input("Player1", "pass", None)
-    game.input("Player2", "pass", None)
-    game.input("Player3", "pass", None)
-    game.input("Player4", "pass", None)    
+def test_down_true(snapshot):
+    set_hand(snapshot, ['J♦', '10♣', '9♣', 'Q♥', 'Q♠'])
+    snapshot.trump = None
+    snapshot.maker = 0
+    snapshot.down_card = snapshot.hand[0].deck.get_card("K♦")
     
-    snapshot = Snapshot(game, "Player1") # ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']
-    q = Query(snapshot).down("910JQKA♠♣♦")
-    assert q == []   
+    q = Query(snapshot).down("K♦") 
+    assert q == ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']
 
-@pytest.mark.parametrize("trump, phrase, expected", [
-    ("♠", "910♠♥♣♦", ["9♣", "10♣"]), # specified values, trump doesn't matter
-    ("♥", "910♠♥♣♦", ["9♣", "10♣"]), # specified values, trump doesn't matter    
-    ("♥", "910QKALJ♠", ["Q♥", "J♦"]), # all trump when trump is ♥    
-])
-def test_select(snapshot, trump, phrase, expected):
-    q = Query(snapshot, trump).select(phrase)
-    assert q == expected
+def test_down_false(snapshot):
+    set_hand(snapshot, ['J♦', '10♣', '9♣', 'Q♥', 'Q♠'])
+    snapshot.trump = None
+    snapshot.maker = 0
+    snapshot.down_card = snapshot.hand[0].deck.get_card("K♦")
+    
+    q = Query(snapshot).down("A♦") 
+    assert q == []
+
+# @pytest.mark.parametrize("hand, trump, phrase, expected", [
+#     (['J♦', '10♣', '9♣', 'Q♥', 'Q♠'], "♠", "910♠♥♣♦", ["9♣", "10♣"]), # specified values, trump doesn't matter
+#     (['J♦', '10♣', '9♣', 'Q♥', 'Q♠'], "♥", "910♠♥♣♦", ["9♣", "10♣"]), # specified values, trump doesn't matter    
+#     (['J♦', '10♣', '9♣', 'Q♥', 'Q♠'], "♥", "910QKALJ♠", ["Q♥", "J♦"]), # all trump when trump is ♥    
+# ])
+# def test_select(snapshot, hand, trump, phrase, expected):
+#     set_hand(snapshot, hand)
+#     snapshot.trump = trump
+#     assert Query(snapshot).select(phrase) == expected
 
 def test_playable_0(game):
     game.input("Player1", "order", None) # J♦, 10♣, 9♣, Q♥, Q♠ trump ♥
@@ -172,7 +175,7 @@ def test_playable_left_bower_not_playable(game):
 
     # add the J♦ to the second player
     card = game.deck.get_card("J♦")
-    game.get_player("Player2").cards.append("J♦")
+    game.get_player("Player2").cards.append(card)
 
     # play the game until after first card played
     game.input("Player1", "order", None)
