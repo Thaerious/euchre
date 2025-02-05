@@ -103,7 +103,7 @@ class Card:
             return trump  # Left Bower is considered part of the trump suit
         return self._suit
 
-    def compare(self, that: "Card", lead: str) -> int:
+    def compare(self, that: "Card", lead: str = None) -> int:
         """
         Compare two cards and determine the winner.
 
@@ -119,10 +119,12 @@ class Card:
                 - `-1` if `that` wins.
                 - `0` if it's a tie (neither follows lead or is trump).
         """
+        if lead == None:
+            lead = self.suit
+
         # If both cards are the same, `self` wins (played first)
         if self == that:
             return 1
-
         # Right Bower (Jack of trump) always wins
         if self.is_right_bower():
             return 1

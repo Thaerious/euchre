@@ -1,4 +1,5 @@
 import re
+from euchre.card.Card import Card
 
 class Query(list):
     suits: list[str] = ["♠", "♥", "♣", "♦"] # order matters
@@ -15,6 +16,10 @@ class Query(list):
             self.trump = snap.trump
         else:
             self.trump = trump
+
+    def append(self, card):
+        if not isinstance(card, Card): raise Exception("Card type expected")
+        list.append(self, card)
 
     @property
     def trump(self):
@@ -129,8 +134,9 @@ class Query(list):
     # keep only cards that defeat 'card'
     def beats(self, card):
         selected = []
-        for self_card in self:
-            if card.compare(self_card) > 0:
+
+        for self_card in self:            
+            if card.compare(self_card) < 0:
                 selected.append(self_card)
         return self.copy(selected)
 

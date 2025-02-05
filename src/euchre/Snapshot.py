@@ -19,7 +19,7 @@ class Snapshot:
 
         if len(game.tricks) > 0:
             trick = game.tricks[-1]
-            i = game.lead
+            i = game.lead_player.index
             
             for card in trick:
                 self.players[i]["played"] = card
@@ -39,7 +39,7 @@ class Snapshot:
         self.hands_played = game.hands_played
         self.score = game.score
         self.last_action = game.last_action
-        self.lead = game.lead
+        self.lead = game.lead_player.index
         self.last_player = game.last_player
         
         self.hash = game.hash
@@ -109,5 +109,6 @@ class Snapshot:
             f"  Last Player: {self.last_player}\n"
             f"  State: {self.state}\n"
             f"  Hash: {self.hash}\n"
+            f"  Lead: {self.lead}\n"
             # f"  Normalized: {self.normalized}\n"
         )            

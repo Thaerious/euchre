@@ -37,7 +37,7 @@ class Euchre:
         self.order: List[int] = [0, 1, 2, 3]
         self.current_player_index = self.order[0]
         self.dealer_index = self.order[3]
-        self.lead = self.order[0]
+        self.lead_player_index = self.order[0]
         self.hand_count = 0
 
         self.deck = Deck()      
@@ -52,12 +52,12 @@ class Euchre:
         self._up_card: Optional[Card] = None
         self._down_card: Optional[Card] = None
         self.discard: Optional[Card] = None
-        self.current_trump: Optional[str] = None
+        self.trump: Optional[str] = None
         self.maker_index: Optional[int] = None
 
     @property
     def lead_player(self) -> Player:
-        return self.players[self.lead]
+        return self.players[self.lead_player_index]
 
     @property
     def score(self) -> List[int]:
@@ -93,12 +93,12 @@ class Euchre:
         Returns:
             Optional[str]: The trump suit as a string, or None if no trump is set yet.
         """
-        return self.current_trump
+        return self.deck.trump
 
     @trump.setter
     def trump(self, value):
-        if not value in ["♠", "♥", "♣", "♦"]: raise Exception("Sanity check failed")
-        self.current_trump = value
+        if not value in ["♠", "♥", "♣", "♦", None]: raise Exception("Sanity check failed")
+        self.deck.trump = value
 
     @property
     def score(self) -> List[int]:
@@ -127,11 +127,11 @@ class Euchre:
         Raises:
             EuchreException: If trump hasn't been declared, or if the previous trick is not finished.
         """
-        if self.current_trump is None:
+        if self.trump is None:
             raise EuchreException("Trump must be made before adding a trick.")
         if self.has_trick and not self.is_trick_finished:
             raise EuchreException("Previous trick not complete.")
-        self._tricks.append(Trick(self.current_trump, self.order))
+        self._tricks.append(Trick(self.trump, self.order))
 
     @property
     def tricks(self) -> List[Trick]:
@@ -190,7 +190,7 @@ class Euchre:
         # current player is first after dealer
         # can not use old current, as it is set by trick winner see #score_trick
         self.current_player_index = (self.dealer_index + 1) % NUM_PLAYERS
-        self.lead = self.current_player_index
+        self.lead_player_index = self.current_player_index
 
         # Recompute the order, where the previous dealer is now the f
         for i in range(NUM_PLAYERS):
@@ -285,6 +285,9 @@ class Euchre:
         """
         self.current_player_index = self.order[0]         
 
+    def reset_lead_player(self):
+        self.lead_player_index = self.current_player_index
+
     def deal_cards(self) -> None:
         """
         Deal 5 cards to each player, then set the upCard from the top of the deck.
@@ -302,7 +305,7 @@ class Euchre:
         Raises:
             EuchreException: If trump is not set.
         """
-        if self.current_trump is None:
+        if self.trump is None:
             raise EuchreException("Trump must be made before going alone.")
 
         # Mark the current player as going alone
@@ -391,7 +394,7 @@ class Euchre:
             EuchreException: If trump isn't set, if the trick is finished, if the card isn't in the player's hand,
                              or if the suit cannot be followed.
         """
-        if self.current_trump is None:
+        if self.trump is None:
             raise EuchreException("Trump must be made before playing a card.")
         if self.is_trick_finished:
             raise EuchreException(f"Trick full, can't play card '{card}'.")
@@ -438,7 +441,7 @@ class Euchre:
         # Move the winner to the front of the order
         rotateTo(self.order, winner_pindex)
         self.current_player_index = winner_pindex
-        self.lead = winner_pindex
+        self.lead_player_index = winner_pindex
 
     @property
     def is_hand_finished(self) -> bool:
@@ -496,7 +499,7 @@ class Euchre:
         sb = sb + f"discard: {self.discard}" + "\n"
         sb = sb + f"trump: {self.trump}" + "\n"
         sb = sb + f"maker: {self.maker_index} -> {self.maker}" + "\n"
-        sb = sb + f"lead: {self.lead} -> {self.players[self.lead]}" + "\n"
+        sb = sb + f"lead: {self.lead_player_index} -> {self.players[self.lead_player_index]}" + "\n"
         sb = sb + f"score: {self._score}" + "\n"
 
         sb = sb + f"tricks:\n"

@@ -191,14 +191,12 @@ def test_select_not_suit(game):
     game.set_cards("Player1", ["Q♥", "10♦", "K♠", "10♠", "J♦"])
     snapshot = Snapshot(game, "Player1")
     q = Query(snapshot).select("~♠")
-    print(q)
     assert "K♠" not in q
     assert "10♠" not in q
     
-# def test_beats(game):
-#     game.set_cards("Player1", ["Q♥", "10♦", "K♠", "10♠", "J♦"])
-#     game.trump = "♦"
-#     snapshot = Snapshot(game, "Player1")
-#     q = Query(snapshot).beats(game.deck.get_card("10♥"))
-#     print(q)
-#     assert q == ["Q♥", "10♦", "J♦"]
+def test_beats(game):
+    game.set_cards("Player1", ["Q♥", "10♦", "K♠", "10♠", "J♦"])
+    game.trump = "♦"
+    snapshot = Snapshot(game, "Player1")
+    q = Query(snapshot).beats(game.deck.get_card("10♥"))
+    assert q == ["Q♥", "10♦", "J♦"]

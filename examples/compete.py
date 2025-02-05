@@ -6,20 +6,20 @@ import random
 import time
 import sys
 
-run_count = 300
+run_count = 2000
 if len(sys.argv) > 1:
     run_count = int(sys.argv[1])
 
 results = {
-    "Bot_00": 0,
+    "Bot_10": 0,
     "Bot_20": 0,
-    "Bot_01": 0,    
+    "Bot_11": 0,    
     "Bot_21": 0,
 }
 
 bots = {
-    "Bot_00": Bot_0(),
-    "Bot_01": Bot_0(),
+    "Bot_10": Bot_1(),
+    "Bot_11": Bot_1(),
     "Bot_20": Bot_2(),
     "Bot_21": Bot_2(),
 }
@@ -27,7 +27,6 @@ bots = {
 names = list(results.keys())
 start = time.time()
 seed = random.randint(0, 1000000)
-print(seed)
 random.seed(seed)
 
 for i in range(run_count):

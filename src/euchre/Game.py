@@ -217,6 +217,7 @@ class Game(Euchre):
         Transition to state 5: Players play tricks.
         """
         self.add_trick()
+        self.reset_lead_player()
         self.state = self.state_5
 
     def state_5(self, action: str, card: Card) -> None:
