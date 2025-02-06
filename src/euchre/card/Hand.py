@@ -7,6 +7,12 @@ class Hand(list):
     Represents a player's hand in Euchre, extending `CardList`.
     """
 
+    def normalize(self, source)-> "Hand":
+        norm_hand = Hand()
+        for card in self:
+            norm_hand.append(card.normalize(self))
+        return norm_hand
+
     def has_suit(self, suit: str) -> bool:
         """
         Checks if the hand contains at least one card of the specified suit,
@@ -28,8 +34,8 @@ class Hand(list):
         for card in self:
             if card.suit_effective() == suit:
                 return True
-        return False
-    
+        return False   
+
     def count_suit(self, suit: str) -> bool:
         """
         Counts the number of cards of the specified suit,
@@ -74,23 +80,10 @@ class Hand(list):
     
     def count(self, values: List[int] = Card.ranks, suits: List[str] = Card.suits) -> int:
         return len(self.select(values, suits))
-
-    def select_trump(self, trump: str) -> int:
-        """
-        Selects and returns all cards from the hand that match the trump suit.
-
-        Args:
-            trump (str): The trump suit to filter cards by.
-
-        Returns:
-            List[Card]: A list of cards in the hand that belong to the trump suit.
-        """        
-        selected = []
-        for card in self:
-            if card.suit_effective() == card.deck.trump:
-                selected.append(card)
-        return selected
     
-    def count_trump(self, values: List[int] = Card.ranks, suits: List[str] = Card.suits) -> int:
-        return len(self.select_trump(values, suits))   
+    def __str__(self):
+        return del_string(self, ",", "'")
+
+    def __repr__(self):
+        return del_string(self, ",", "'")
         

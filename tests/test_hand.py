@@ -95,11 +95,3 @@ def test_hand_has_suit_with_only_left_bower():
 def test_hand_select(cards, values, suits, expected):
     hand = build_hand(cards)
     assert len(hand.select(values, suits)) == expected
-
-@pytest.mark.parametrize("cards, trump, expected", [
-    (["J♠", "J♦", "9♦", "9♠", "9♥"], "♠", 2),
-    (["J♠", "J♣", "9♦", "9♠", "9♥"], "♠", 3),
-])
-def test_hand_select_trump(cards, trump, expected):
-    hand = build_hand(cards)
-    assert len(hand.select_trump(trump)) == expected    

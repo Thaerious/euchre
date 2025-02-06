@@ -30,6 +30,12 @@ class Trick(List[Card]):
         new_trick.extend(self)
         return new_trick
 
+    def normalize(self)-> "Trick":
+        norm_trick = Trick('♠', self._order)
+        for card in self:
+            norm_trick.append(card.normalize(self))
+        return norm_trick
+
     @property
     def trump(self) -> str:
         """

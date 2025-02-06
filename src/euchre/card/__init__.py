@@ -6,7 +6,6 @@ from .Deck import Deck
 from .Hand import Hand
 from .playable import playable
 from .Trick import Trick
-from ..bots.tools.Hand_Evaluator import Hand_Evaluator
 
 # Define __all__ to specify what is exported when using 'from euchre.Card import *'
 __all__ = [
@@ -14,6 +13,5 @@ __all__ = [
     'Deck',
     'Hand',
     'playable',
-    'Trick',
-    'Hand_Evaluator'
+    'Trick'
 ]

@@ -132,7 +132,7 @@ def test_down_true(snapshot):
     set_hand(snapshot, ['J♦', '10♣', '9♣', 'Q♥', 'Q♠'])
     snapshot.trump = None
     snapshot.maker = 0
-    snapshot.down_card = snapshot.hand[0].deck.get_card("K♦")
+    snapshot.down_card = snapshot.hand[0]._source.get_card("K♦") # breaking the interface todo fix
     
     q = Query(snapshot).down("K♦") 
     assert q == ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']
@@ -141,7 +141,7 @@ def test_down_false(snapshot):
     set_hand(snapshot, ['J♦', '10♣', '9♣', 'Q♥', 'Q♠'])
     snapshot.trump = None
     snapshot.maker = 0
-    snapshot.down_card = snapshot.hand[0].deck.get_card("K♦")
+    snapshot.down_card = snapshot.hand[0]._source.get_card("K♦")# breaking the interface todo fix
     
     q = Query(snapshot).down("A♦") 
     assert q == []

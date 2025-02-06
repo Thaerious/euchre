@@ -1,10 +1,12 @@
-from .Normalized import Normalized
 from .custom_json_serializer import custom_json_serializer
 import json
 from typing import Any, Dict
+from euchre.card.Hand import Hand
 
 class Snapshot:
     def __init__(self, game, player_name):
+        self.game = game
+        self.player_name = player_name
         for_player = game.get_player(player_name)
 
         self.players = []
@@ -30,7 +32,7 @@ class Snapshot:
         self.state = game.current_state
         self.up_card = game.up_card
         self.down_card = game.down_card        
-        self.trump = game.trump
+        self._trump = game.trump
         self.tricks = game.tricks 
         self.maker = game.maker.index if game.maker != None else None
         self.dealer = game.dealer.index
@@ -43,13 +45,29 @@ class Snapshot:
         self.last_player = game.last_player
         
         self.hash = game.hash
-        # self.normalized = Normalized(game, for_player)
         self.state = game.current_state
 
         if game.dealer == for_player:
             self.discard = game.discard
         else:
             self.discard = None      
+
+    @property
+    def trump(self):
+        return self._trump
+
+    # return a new normalized snapshot
+    def normalize(self):
+        norm = Snapshot(self.game, self.self.player_name)
+        norm.hand = self.hand.normalize(self)
+
+        norm.tricks = []
+        for trick in self.tricks:
+            norm.tricks.append(trick.normalize(self))
+
+        norm.up_card = None if self.up_card is None else self.up_card.normalize(self)
+        norm.down_card = None if self.down_card is None else self.down_card.normalize(self)
+
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -74,7 +92,6 @@ class Snapshot:
             "last_player": self.last_player,
             "hash": self.hash,    
             "lead": self.lead      
-            # "normalized": str(self.normalized),  # Assuming Normalized can be converted to a string
         }
 
     def to_json(self) -> str:
@@ -110,5 +127,4 @@ class Snapshot:
             f"  State: {self.state}\n"
             f"  Hash: {self.hash}\n"
             f"  Lead: {self.lead}\n"
-            # f"  Normalized: {self.normalized}\n"
         )            
