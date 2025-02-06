@@ -2,7 +2,7 @@ import array
 import re
 import random
 
-RANKS = {'9':0, '10':1, 'J':2, 'Q':3, 'K':4, 'A':5}
+RANKS = {'9':0, '10':1, 'J':2, 'Q':3, 'K':4, 'A':5, 'L':2}
 SUITS = {"♠":0, "♥":1, "♣":2, "♦":3}
 
 CARDS = [
@@ -48,9 +48,8 @@ RETURN_SELECTOR = {
 }
 
 class QueryBase:
-    def __init__(self, size, parent):
-        self.values = array.array('B', [STATES['set']] * size)
-        self.parent = parent
+    def __init__(self, size, default = STATES['set']):
+        self.values = array.array('B', [default] * size)
 
     def set(self, index):
         self.values[index] = STATES['set']
@@ -58,35 +57,40 @@ class QueryBase:
     def clear(self, index):
         self.values[index] = STATES['unset']
 
-    def is_set(self, index):
+    def set_all(self):
+        self.values = array.array('B', [STATES['set']] * self.size)
+
+    def clear_all(self):
+        self.values = array.array('B', [STATES['unset']] * self.size)
+
+    @property
+    def size(self):
+        return len(self.values)
+
+    def test(self, index):
+        if index is None: return True
         if not isinstance(index, int):
             index = CARD_TO_INT[str(index)]        
         return self.values[index] == STATES['set']        
 
     def set_if(self, eval):
-        for i in range(0, len(self.values)):
+        for i in range(0, self.size):
             if eval(i): self.set(i)
             else: self.clear(i)
-        return self.parent
-
-    def test(self, index):
-        if index is None: return True
-        if not isinstance(index, int):
-            index = CARD_TO_INT[str(index)] 
-            return self.values[index] == STATES['set']
     
     def __str__(self):
         return str(self.values)    
 
 class QueryDeck(QueryBase):
-    def __init__(self, parent):
-        QueryBase.__init__(self, 24, parent)
+    def __init__(self, default = STATES['set']):
+        QueryBase.__init__(self, 24, default)
     
     def select(self, phrase):
-        self.cards = array.array('B', [STATES['unset']] * 24)
+        if phrase.startswith('~'):
+            self.set_all()
+
         for split in phrase.split():
             self._select(split)
-        return self.parent
 
     def _select(self, phrase):        
         ranks = re.findall(r'10|[9JQKAL]', phrase)
@@ -96,19 +100,51 @@ class QueryDeck(QueryBase):
             self.set(10)
             ranks.remove('L')
 
+        if phrase.startswith('~'):
+            if len(suits) == 0: return self._clear_cards(ranks, SUITS.keys())
+            elif len(ranks) == 0: return self._clear_cards(RANKS.keys(), suits)
+            else: return self._clear_cards(ranks, suits)
+        else:
+            if len(suits) == 0: return self._set_cards(ranks, SUITS.keys())
+            elif len(ranks) == 0: return self._set_cards(RANKS.keys(), suits)
+            else: return self._set_cards(ranks, suits)
+    
+    def _clear_cards(self, ranks, suits):
         for rank in ranks:
-            rank_idx = RANKS[rank]
             for suit in suits:
-                suit_idx = SUITS[suit]
-                idx = (rank_idx * 4) + suit_idx
-                self.set(idx)    
+                self._clear_card(rank, suit)
+
+    def _set_cards(self, ranks, suits):
+        for rank in ranks:
+            for suit in suits:
+                self._set_card(rank, suit)
+
+    def _clear_card(self, rank, suit):
+        rank_idx = RANKS[rank]
+        suit_idx = SUITS[suit]
+
+        if rank == "L": 
+            suit_idx = (suit_idx + 2) % 4
+
+        idx = (rank_idx * 4) + suit_idx
+        self.clear(idx)
+
+    def _set_card(self, rank, suit):
+        rank_idx = RANKS[rank]
+        suit_idx = SUITS[suit]
+
+        if rank == "L": 
+            suit_idx = (suit_idx + 2) % 4
+
+        idx = (rank_idx * 4) + suit_idx
+        self.set(idx)
 
     # return all matching cards
     def all(self, cards):
         selected = []
 
         for card in cards:
-            if self.is_set(card):
+            if self.test(card):
                 selected.append(card)
 
         return selected
@@ -116,36 +152,34 @@ class QueryDeck(QueryBase):
     # return true if any cards match
     def any(self, cards):
         for card in cards:
-            if self.is_set(card):
+            if self.test(card):
                 return True
             
         return False
 
 class QueryDigit(QueryBase):
-    def __init__(self, size, parent):
-        QueryBase.__init__(self, size, parent)
+    def __init__(self, size):
+        QueryBase.__init__(self, size)
 
     def select(self, phrase):
-        self.digits = array.array('B', [STATES['unset']] * len(self.digits))
+        self.clear_all()
         parts = re.findall(r'0123456789', phrase)
         for part in parts:
-            self.set(int(part))
-        
-        return self.parent            
+            self.set(int(part))        
 
 class CQuery:
     def __init__(self):
-        self.hand = QueryDeck(self)
-        self.up_card = QueryDeck(self)
-        self.down_card = QueryDeck(self)
-        self.lead_player = QueryDigit(4, self)
-        self.maker = QueryDigit(4, self)
-        self.dealer = QueryDigit(4, self)
-        self.count =  QueryDigit(6, self)        
-        self.beats = False # keep cards that beat the best current card
-        self.playable = False # keep only playable cards
+        self._hand = QueryDeck(STATES["unset"])
+        self._up_card = QueryDeck()
+        self._down_card = QueryDeck()
+        self._lead = QueryDigit(4)
+        self._maker = QueryDigit(4)
+        self._dealer = QueryDigit(4)
+        self._count =  QueryDigit(6)        
+        self._beats = False # keep cards that beat the best current card
+        self._playable = False # keep only playable cards
 
-        self.return_selector = RETURN_SELECTOR['random'] # return worst / best   
+        self.return_selector = RETURN_SELECTOR['random'] # return worst / best if not set, random 
  
     def best(self):
         self.return_selector = RETURN_SELECTOR['best']
@@ -155,13 +189,11 @@ class CQuery:
         self.return_selector = RETURN_SELECTOR['worst']
         return self
 
-    def random(self):
-        self.return_selector = RETURN_SELECTOR['worst']
-        return self
-
-    # used by bot to retrieve a seingle card, uses return_selector
+    # used by bot to retrieve a single card, uses return_selector
+    # must return either a single card or none
     def get(self, snap):
         all = self.all(snap)
+        if len(all) == 0: return None
 
         if self.return_selector == RETURN_SELECTOR['random']:
             return random.choice(all)
@@ -176,83 +208,31 @@ class CQuery:
                 print(f"{worst} - {card} = {worst.compare(card)}"); 
                 if worst.compare(card) >= 0: worst = card
             return worst
-
-    # used by bot to return a true/false value using count
-    def test(self, snap):
-        if not self.up_card.test(snap.up_card): return False
-        if not self.down_card.test(snap.down_card): return False
-        if not self.lead_player.test(snap.lead): return False
-        if not self.maker.test(snap.lead): return False
-        if not self.dealer.test(snap.lead): return False           
-
-        selected = self.hand.all(snap.hand)
-        return self.count.test(len(selected))
     
     # if up and down card tests pass, return all matching hand cards
     def all(self, snap):
-        if not self.up_card.test(snap.up_card): return []
-        if not self.down_card.test(snap.down_card): return []
-        if not self.lead_player.test(snap.lead): return []
-        if not self.maker.test(snap.lead): return []
-        if not self.dealer.test(snap.lead): return []
-        return self.hand.all(snap.hand)
+        if not self._up_card.test(snap.up_card): return []
+        if not self._down_card.test(snap.down_card): return []
+        if not self._lead.test(snap.lead): return []
+        if not self._maker.test(snap.maker): return []
+        if not self._dealer.test(snap.dealer): return []
+        return self._hand.all(snap.hand)
+
+    def playable(self, snap):
+        if len(snap.tricks) == 0 or len(snap.tricks[-1]) == 0: 
+            self._hand.set_all()
+            return self
+        
+        lead_suit = snap.tricks[-1].lead_suit
+        print(lead_suit)
+        self.select(f"910JLQKAL{lead_suit}")
+        
+        return self
     
-    # if up and down card tests pass, return true if any hand card matches
-    def any(self, snap):      
-        if not self.up_card.test(snap.up_card): return False
-        if not self.down_card.test(snap.down_card): return False
-        if not self.lead_player.test(snap.lead): return False
-        if not self.maker.test(snap.lead): return False
-        if not self.dealer.test(snap.lead): return False        
-        return self.hand.any(snap.hand)
-
-    def keep_playable(self, cards, snap):
-        if len(self.snap.tricks) == 0:
-            return cards
-        
-        if len(self.snap.tricks[-1]) == 0:
-            return cards
-        
-        lead_suit = self.snap.tricks[-1].lead_suit  
-        lead_suit = normalize(self.trump, lead_suit)
-
-        with self.select(f"910JLQKA{lead_suit}") as q:
-            if q.len > 0: return q
-        
-        return self.copy()
+    def select(self, phrase): 
+        self._hand.select(phrase)
+        return self
     
-def normalize(trump, string):
-    raw = list(string)
-    normalized = []
-
-    iTrump = SUITS.index(trump)
-    opposite = SUITS.suits[(iTrump + 2) % 4]
-    off1 = SUITS.suits[(iTrump + 1) % 4]
-    off2 = SUITS.suits[(iTrump + 3) % 4]
-
-    for c in raw:
-        if c == trump:      normalized.append("♠")
-        elif c == opposite: normalized.append("♣")
-        elif c == off1:     normalized.append("♥")
-        elif c == off2:     normalized.append("♦")
-        else: normalized.append(c)
-
-    return "".join(normalized)
-
-def denormalize(trump, string):
-    raw = list(string)
-    denormalized = []
-
-    iTrump = SUIT_TO_INT[trump]
-    opposite = INT_TO_SUIT[(iTrump + 2) % 4]
-    off1 = INT_TO_SUIT[(iTrump + 1) % 4]
-    off2 = INT_TO_SUIT[(iTrump + 3) % 4]
-
-    for c in raw:
-        if   c == "♠": denormalized.append(trump)
-        elif c == "♣": denormalized.append(opposite)
-        elif c == "♥": denormalized.append(off1)
-        elif c == "♦": denormalized.append(off2)
-        else: denormalized.append(c)
-
-    return "".join(denormalized)
+    def _count(self, eval):
+        self._count.set_if(eval)
+        return self

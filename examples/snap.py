@@ -8,19 +8,12 @@ names = ["Player1", "Player2", "Player3", "Player4"]
 game = Game(names)
 game.input(None, "start")
 
-game.set_cards("Player1", ['9♦', 'A♥', 'J♥', 'A♠', 'J♦'])
+game.set_cards("Player1", ['9♥', 'A♥', 'J♥', 'A♠', '9♦'])
 game.trump = "♥"
 game.up_card = "A♦"
 
 snap = Snapshot(game, "Player1")
 print(snap)
 
-q = CQuery()
-q.hand.select("LJ♠")
-q.count.set_if(lambda x: x >= 2)
-q.worst()
-
-print(q.count)
-print(q.test(snap))
+q = CQuery().playable(snap)
 print(q.all(snap))
-print(q.get(snap))
