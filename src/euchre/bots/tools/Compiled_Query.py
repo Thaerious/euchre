@@ -219,10 +219,14 @@ class CQuery:
         return self._hand.all(snap.hand)
 
     def playable(self, snap):
-        if len(snap.tricks) == 0 or len(snap.tricks[-1]) == 0: 
+        if len(snap.tricks) == 0: 
             self._hand.set_all()
             return self
         
+        if len(snap.tricks[-1]) == 0:
+            self._hand.set_all()
+            return self      
+
         lead_suit = snap.tricks[-1].lead_suit
         print(lead_suit)
         self.select(f"910JLQKAL{lead_suit}")

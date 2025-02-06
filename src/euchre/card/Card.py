@@ -32,8 +32,8 @@ class Card:
 
         if rank is None:
             # If rank is not provided, assume `suit` is a full card string (e.g., "10♥")
-            self._suit: str = suit[-1]  # Extract suit from last character
-            self._rank: str = suit[:-1]  # Extract rank from all preceding characters
+            self._suit = str(suit)[-1]  # Extract suit from last character
+            self._rank = str(suit)[:-1]  # Extract rank from all preceding characters
         else:
             self._suit = suit
             self._rank = rank

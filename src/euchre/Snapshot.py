@@ -58,16 +58,17 @@ class Snapshot:
 
     # return a new normalized snapshot
     def normalize(self):
-        norm = Snapshot(self.game, self.self.player_name)
+        norm = Snapshot(self.game, self.player_name)
         norm.hand = self.hand.normalize(self)
 
         norm.tricks = []
         for trick in self.tricks:
-            norm.tricks.append(trick.normalize(self))
+            norm.tricks.append(trick.normalize())
 
         norm.up_card = None if self.up_card is None else self.up_card.normalize(self)
         norm.down_card = None if self.down_card is None else self.down_card.normalize(self)
 
+        return norm
 
     def to_dict(self) -> Dict[str, Any]:
         """

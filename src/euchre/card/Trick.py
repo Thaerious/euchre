@@ -36,6 +36,9 @@ class Trick(List[Card]):
             norm_trick.append(card.normalize(self))
         return norm_trick
 
+    def append(self, card: Card):
+        super().append(Card(self, card))
+
     @property
     def trump(self) -> str:
         """
