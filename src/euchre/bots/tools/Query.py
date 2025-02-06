@@ -1,264 +1,242 @@
+import array
 import re
-from euchre.card.Card import Card
+import random
+from euchre.del_string import del_string
 
-class Query(list):
-    suits: list[str] = ["♠", "♥", "♣", "♦"] # order matters
-    ranks: list[str] = ["9", "10", "J", "Q", "K", "A", "L"]
-    pattern = re.compile(r"(~)?([910JKQLA]*)([♠♥♣♦]*)")
-    rank_pattern = re.compile(r"(9|10|J|Q|K|A|L)")
-    suit_pattern = re.compile(r"(♠|♥|♣|♦)")
+RANKS = {'9':0, '10':1, 'J':2, 'Q':3, 'K':4, 'A':5, 'L':2}
+SUITS = {"♠":0, "♥":1, "♣":2, "♦":3}
 
-    def __init__(self, snap, trump = None):
-        self.snap = snap
-        self.extend(snap.hand)
+CARDS = [
+    '9♠', '9♥', '9♣', '9♦',
+    '10♠', '10♥', '10♣', '10♦',
+    'J♠', 'J♥', 'J♣', 'J♦',
+    'Q♠', 'Q♥', 'Q♣', 'Q♦',
+    'K♠', 'K♥', 'K♣', 'K♦',
+    'A♠', 'A♥', 'A♣', 'A♦'
+]
 
-        if trump is None:
-            self.trump = snap.trump
-        else:
-            self.trump = trump
+INT_TO_CARD = {
+    0: '9♠', 1: '9♥', 2: '9♣', 3: '9♦',
+    4: '10♠', 5: '10♥', 6: '10♣', 7: '10♦',
+    8: 'J♠', 9: 'J♥', 10: 'J♣', 11: 'J♦',
+    12: 'Q♠', 13: 'Q♥', 14: 'Q♣', 15: 'Q♦',
+    16: 'K♠', 17: 'K♥', 18: 'K♣', 19: 'K♦',
+    20: 'A♠', 21: 'A♥', 22: 'A♣', 23: 'A♦',
+}
 
-    def append(self, card):
-        if not isinstance(card, Card): raise Exception("Card type expected")
-        list.append(self, card)
+CARD_TO_INT = {
+    '9♠': 0, '9♥': 1, '9♣': 2, '9♦': 3,
+    '10♠': 4, '10♥': 5, '10♣': 6, '10♦': 7,
+    'J♠': 8, 'J♥': 9, 'J♣': 10, 'J♦': 11,
+    'Q♠': 12, 'Q♥': 13, 'Q♣': 14, 'Q♦': 15,
+    'K♠': 16, 'K♥': 17, 'K♣': 18, 'K♦': 19,
+    'A♠': 20, 'A♥': 21, 'A♣': 22, 'A♦': 23,
+}
+
+SUIT_TO_INT = {"♠": 0, "♥": 1, "♣": 2, "♦": 3}
+INT_TO_SUIT = {0: "♠", 1: "♥", 2: "♣", 3: "♦"}
+
+STATES = {
+    "unset": 0,
+    "set": 1,
+    "none": 2
+}  
+
+RETURN_SELECTOR = {
+    "random": 0,
+    "best": 1,
+    "worst": 2
+}  
+
+class QueryBase:
+    def __init__(self, size, default = STATES['set']):
+        self.values = array.array('B', [default] * size)
+
+    def set(self, index):
+        self.values[index] = STATES['set']
+
+    def clear(self, index):
+        self.values[index] = STATES['unset']
+
+    def set_all(self):
+        self.values = array.array('B', [STATES['set']] * self.size)
+
+    def clear_all(self):
+        self.values = array.array('B', [STATES['unset']] * self.size)
 
     @property
-    def trump(self):
-        return self._trump
-    
-    @trump.setter
-    def trump(self, value):
-        if value != None and not value in Query.suits:
-            raise Exception(f"Trump must be None or a suit: {value}")
-        self._trump = value
-    
-    @property
-    def len(self):
-        return len(self)
-    
-    @property
-    def first(self):
-        if self.len > 0:
-            return self[0]
-        else:        
-            return None
+    def size(self):
+        return len(self.values)
 
-    def __enter__(self):
-        return self
+    def test(self, index):
+        if index is None: return True
+        if not isinstance(index, int):
+            index = CARD_TO_INT[str(index)]        
+        return self.values[index] == STATES['set']        
+
+    def set_if(self, eval):
+        for i in range(0, self.size):
+            if eval(i): self.set(i)
+            else: self.clear(i)
     
-    def __exit__(self, exc_type, exc_value, traceback):
-        return False
+    def __str__(self):
+        return del_string(self.values, ", ", "'")
+    
+    def __repr__(self):
+        return del_string(self.values, ", ", "'")    
 
-    def copy(self, cards = None):
-        copied = Query(self.snap, self.trump)
-        copied.clear()
+class QueryDeck(QueryBase):
+    def __init__(self, default = STATES['set']):
+        QueryBase.__init__(self, 24, default)
+    
+    def select(self, phrase):
+        if phrase.startswith('~'):
+            self.set_all()
 
-        if cards == None:
-            copied.extend(self)
+        for split in phrase.split():
+            self._select(split)
+
+    def _select(self, phrase):        
+        ranks = re.findall(r'10|[9JQKAL]', phrase)
+        suits = re.findall(r'[♠♥♣♦]', phrase)
+
+        if phrase.startswith('~'):
+            if len(suits) == 0: return self._clear_cards(ranks, SUITS.keys())
+            elif len(ranks) == 0: return self._clear_cards(RANKS.keys(), suits)
+            else: return self._clear_cards(ranks, suits)
         else:
-            copied.extend(cards)
-
-        return copied
-
-    def set(self, cards):
-        self.clear()
-        self.extend(cards)
-        return self
-
-    def playable(self):
-        if len(self.snap.tricks) == 0:
-            return self.copy()
-        
-        if len(self.snap.tricks[-1]) == 0:
-            return self.copy()
-        
-        lead_suit = self.snap.tricks[-1].lead_suit  
-        lead_suit = normalize(self.trump, lead_suit)
-
-        with self.select(f"910JLQKA{lead_suit}") as q:
-            if q.len > 0: return q
-        
-        return self.copy()
-
-    def dealer(self, phrase):
-        d = (self.snap.dealer - self.snap.for_player) % 4
-        digits = [int(char) for char in phrase]        
-        if not d in digits: return self.copy([])
-        return self.copy()
-
-    def maker(self, query):
-        if self.snap.maker is None:
-            if query == "": return self.copy()
-            else: return self.copy([])
-
-        m = (self.snap.maker - self.snap.for_player) % 4
-        digits = [int(char) for char in query]
-        if not m in digits: return self.copy([])
-        return self.copy()
-
-    def lead(self, query):    
-        if self.snap.lead is None:
-            if query == "": return self.copy()
-            else: return self.copy([])
-
-        l = (self.snap.lead - self.snap.for_player) % 4
-        digits = [int(char) for char in query]
-        if not l in digits: return self.copy([])
-        return self.copy()
-
-    def down(self, phrase):
-        q = self.copy([self.snap.down_card])
-        r = q.select(phrase)
-
-        if r.len > 0:
-            return self.copy()
-        else:
-            return self.copy([])
-        
-    def up(self, phrase):
-        q = self.copy([self.snap.up_card])
-        r = q.select(phrase)
-
-        if r.len > 0:
-            return self.copy()
-        else:
-            return self.copy([])        
-
-    # if has returns all, doesn't return select
-    # if not has returns none
-    def has(self, phrase):
-        if self.select(phrase).len > 0:
-            return self.copy()
-        else:
-            return self.copy([])
+            if len(suits) == 0: return self._set_cards(ranks, SUITS.keys())
+            elif len(ranks) == 0: return self._set_cards(RANKS.keys(), suits)
+            else: return self._set_cards(ranks, suits)
     
-    # keep only cards that defeat 'card'
-    def beats(self, card):
+    def _clear_cards(self, ranks, suits):
+        for rank in ranks:
+            for suit in suits:
+                self._clear_card(rank, suit)
+
+    def _set_cards(self, ranks, suits):
+        for rank in ranks:
+            for suit in suits:
+                self._set_card(rank, suit)
+
+    def _clear_card(self, rank, suit):
+        rank_idx = RANKS[rank]
+        suit_idx = SUITS[suit]
+
+        if rank == "L": 
+            suit_idx = (suit_idx + 2) % 4
+
+        idx = (rank_idx * 4) + suit_idx
+        self.clear(idx)
+
+    def _set_card(self, rank, suit):
+        rank_idx = RANKS[rank]
+        suit_idx = SUITS[suit]
+
+        if rank == "L": 
+            suit_idx = (suit_idx + 2) % 4
+
+        idx = (rank_idx * 4) + suit_idx
+        self.set(idx)
+
+    # return all matching cards
+    def all(self, cards):
         selected = []
 
-        for self_card in self:            
-            if card.compare(self_card) < 0:
-                selected.append(self_card)
-        return self.copy(selected)
+        for card in cards:
+            if self.test(card):
+                selected.append(card)
+
+        return selected
+    
+    # return true if any cards match
+    def any(self, cards):
+        for card in cards:
+            if self.test(card):
+                return True
+            
+        return False
+
+class QueryDigit(QueryBase):
+    def __init__(self, size):
+        QueryBase.__init__(self, size)
 
     def select(self, phrase):
-        all_selected = []
+        self.clear_all()
+        parts = re.findall(r'0123456789', phrase)
+        for part in parts:
+            self.set(int(part))        
 
-        if self.trump is not None: 
-            phrase = denormalize(self.trump, phrase)
+class Query:
+    def __init__(self):
+        self._hand = QueryDeck(STATES["unset"])
+        self._up_card = QueryDeck()
+        self._down_card = QueryDeck()
+        self._lead = QueryDigit(4)
+        self._maker = QueryDigit(4)
+        self._dealer = QueryDigit(4)
+        self._count =  QueryDigit(6)        
+        self._beats = False # keep cards that beat the best current card
+        self._playable = False # keep only playable cards
 
-        for split_phrase in phrase.split():
-            match = Query.pattern.match(split_phrase)
-            (inv, ranks, suits) = match.groups()
+        self.return_selector = RETURN_SELECTOR['random'] # return worst / best if not set, random 
+ 
+    def best(self):
+        self.return_selector = RETURN_SELECTOR['best']
+        return self
 
-            if (inv is None):
-                selected = self
-                if ranks == "": 
-                    selected = select_suits(suits, selected, self.trump)
-                elif suits == "": 
-                    selected = select_ranks(ranks, selected, self.trump)
-                else:
-                    selected = select_suits(suits, selected, self.trump)
-                    selected = select_ranks(ranks, selected, self.trump)
-                all_selected.extend(selected)
-            else:
-                rejected = self
-                if ranks == "": 
-                    rejected = select_suits(suits, rejected, self.trump)
-                elif suits == "": 
-                    rejected = select_ranks(ranks, rejected, self.trump)
-                else:
-                    rejected = select_suits(suits, rejected, self.trump)
-                    rejected = select_ranks(ranks, rejected, self.trump)
+    def worst(self):
+        self.return_selector = RETURN_SELECTOR['worst']
+        return self
 
-                all_selected.extend(self)
+    # used by bot to retrieve a single card, uses return_selector
+    # must return either a single card or none
+    def get(self, snap):
+        all = self.all(snap)
+        if len(all) == 0: return None
 
-                for card in self.copy():
-                    if card in rejected:
-                        all_selected.remove(card)
-            
-        return self.copy(all_selected)   
+        if self.return_selector == RETURN_SELECTOR['random']:
+            return random.choice(all)
+        elif self.return_selector == RETURN_SELECTOR['best']:
+            best = all[0]
+            for card in all[1:]:
+                if best.compare(card) < 0: best = card
+            return best
+        elif self.return_selector == RETURN_SELECTOR['worst']:
+            worst = all[0]
+            for card in all[1:]:
+                print(f"{worst} - {card} = {worst.compare(card)}"); 
+                if worst.compare(card) >= 0: worst = card
+            return worst
+    
+    # if up and down card tests pass, return all matching hand cards
+    def all(self, snap):
+        if not self._up_card.test(snap.up_card): return []
+        if not self._down_card.test(snap.down_card): return []
+        if not self._lead.test(snap.lead): return []
+        if not self._maker.test(snap.maker): return []
+        if not self._dealer.test(snap.dealer): return []
+        return self._hand.all(snap.hand)
 
-    def normalize(self, string):
-        if self.snap.trump == None: return string
+    def playable(self, snap):
+        if len(snap.tricks) == 0: 
+            self._hand.set_all()
+            return self
+        
+        if len(snap.tricks[-1]) == 0:
+            self._hand.set_all()
+            return self      
 
-        raw = list(string)
-        normalized = []
-
-        iTrump = Query.suits.index(self.snap.trump)
-        opposite = Query.suits[(iTrump + 2) % 4]
-        off1 = Query.suits[(iTrump + 1) % 4]
-        off2 = Query.suits[(iTrump + 3) % 4]
-
-        for c in raw:
-            if c == self.snap.trump: normalized.append("♠")
-            elif c == opposite:      normalized.append("♣")
-            elif c == off1:          normalized.append("♥")
-            elif c == off2:          normalized.append("♦")
-            else:                    normalized.append(c)
-
-        return "".join(normalized) 
-
-def select_ranks(ranks, cards, trump):
-    selected = []
-    find_ranks = Query.rank_pattern.findall(ranks)
-    for rank in find_ranks:
-        for card in cards:
-            if card.rank == rank:
-                selected.append(card)
-            if rank == "L" and card.is_left_bower(trump):
-                selected.append(card)
-    return selected
-
-def select_suits(suits, cards, trump):
-    selected = []
-    find_suits = Query.suit_pattern.findall(suits)
-    for suit in find_suits:
-        for card in cards:
-            if card.suit_effective(trump) == suit:
-                selected.append(card)
-    return selected            
-
-def invert_expanded(cards):
-    result = []
-    for rank in ["9", "10", "J", "Q", "K", "A"]:
-        for suit in Query.suits:
-            card = f"{rank}{suit}"            
-            if not card in cards: 
-                result.append(card) 
-    return result
-
-def normalize(trump, string):
-    raw = list(string)
-    normalized = []
-
-    iTrump = Query.suits.index(trump)
-    opposite = Query.suits[(iTrump + 2) % 4]
-    off1 = Query.suits[(iTrump + 1) % 4]
-    off2 = Query.suits[(iTrump + 3) % 4]
-
-    for c in raw:
-        if c == trump:      normalized.append("♠")
-        elif c == opposite: normalized.append("♣")
-        elif c == off1:     normalized.append("♥")
-        elif c == off2:     normalized.append("♦")
-        else: normalized.append(c)
-
-    return "".join(normalized)
-
-def denormalize(trump, string):
-    raw = list(string)
-    denormalized = []
-
-    iTrump = Query.suits.index(trump)
-    opposite = Query.suits[(iTrump + 2) % 4]
-    off1 = Query.suits[(iTrump + 1) % 4]
-    off2 = Query.suits[(iTrump + 3) % 4]
-
-    for c in raw:
-        if   c == "♠": denormalized.append(trump)
-        elif c == "♣": denormalized.append(opposite)
-        elif c == "♥": denormalized.append(off1)
-        elif c == "♦": denormalized.append(off2)
-        else: denormalized.append(c)
-
-    return "".join(denormalized)
+        lead_suit = snap.tricks[-1].lead_suit
+        print(lead_suit)
+        self.select(f"910JLQKAL{lead_suit}")
+        
+        return self
+    
+    def select(self, phrase): 
+        self._hand.select(phrase)
+        return self
+    
+    def _count(self, eval):
+        self._count.set_if(eval)
+        return self

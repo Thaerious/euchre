@@ -1,7 +1,7 @@
 from euchre import *
 from euchre.card import *
 from euchre.class_getter import *
-from euchre.bots.tools.Compiled_Query import CQuery
+from euchre.bots.tools.Query import Query
 from euchre.bots.tools.denormalize import denormalize
 
 # ["♠", "♥", "♣", "♦"]
@@ -21,5 +21,5 @@ snap.tricks = [Trick(snap.trump, snap.order)]
 snap.tricks[-1].append('9♥')
 snap_n = snap.normalize()
 
-q = CQuery().playable(snap_n)
+q = Query().playable(snap_n)
 print(denormalize(q.all(snap_n), snap.trump))
