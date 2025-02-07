@@ -60,6 +60,7 @@ class Snapshot:
     def normalize(self):
         norm = Snapshot(self.game, self.player_name)
         norm.hand = self.hand.normalize(self)
+        norm._trump = "♠"
 
         norm.tricks = []
         for trick in self.tricks:
@@ -116,7 +117,6 @@ class Snapshot:
             f"  Down Card: {self.down_card if self.down_card else 'None'}\n"            
             f"  Discard: {self.discard if self.down_card else 'None'}\n"
             f"  Trump: {self.trump}\n"
-            f"  Current Tricks: {self.tricks}\n"
             f"  Maker: {self.maker}\n"
             f"  Dealer: {self.dealer}\n"
             f"  Hand: {[str(card) for card in self.hand]}\n"

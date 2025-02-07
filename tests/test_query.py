@@ -7,173 +7,211 @@ import pytest
 
 @pytest.fixture
 def game():
-    game = Game(["Player1", "Player2", "Player3", "Player4"])
+    game = Game(['Player1', 'Player2', 'Player3', 'Player4'])
     random.seed(100)
     game.input(None, 'start', None)
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.set_cards('Player2', ['9♦', 'K♠', 'Q♣', 'K♦', '10♥'])    
+    game.set_cards('Player3', ['9♠', 'Q♦', 'A♥', 'A♦', 'K♥'])
+    game.set_cards('Player4', ['A♣', 'K♣', 'A♠', '10♦', '9♥'])      
+    game.up_card = "10♠"
     return game
 
 def test_raw(game):
-    snap = Snapshot(game, "Player1")
+    snap = Snapshot(game, 'Player1')
     q = Query().all(snap)
     assert q == []
 
 def test_select_all(game):
-    snap = Snapshot(game, "Player1")
+    snap = Snapshot(game, 'Player1')
     q = Query()    
-    q = q.select("~").all(snap)
+    q = q.select('~').all(snap)
     assert set(q) == set(['9♣', '10♣', 'J♦', 'Q♠', 'Q♥'])
 
-def test_select_no_trump_is_not_normalized(game):    
-    game.set_cards("Player1", ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
-    snap = Snapshot(game, "Player1")
+def test_select_no_trump_is_not_normalized(game):        
+    snap = Snapshot(game, 'Player1')
 
     # spades and clubs will not return anything when trump is not set
-    assert Query().select("J♠ J♣").all(snap) == []
+    assert Query().select('J♠ J♣').all(snap) == []
 
     # hearts will return only hearts
-    assert Query().select("♥").all(snap) == ['Q♥', 'J♥']
+    assert set(Query().select('♥').all(snap)) == set(['Q♥', 'J♥'])
 
-# def test_select_with_trump_is_normalized(game):    
-#     set_hand(snap, ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
-#     snap.trump = '♦'
+def test_select_with_trump_is_normalized(game):   
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = '♦'
+    snap = Snapshot(game, 'Player1')     
 
-#     # spades and clubs will now return diamods and hearts
-#     assert Query(snap).select("J♠ J♣") == ['J♦', 'J♥'] 
+    # there is no J♣, to properly get it it use L♠ when trump is set
+    assert Query().select('J♠ J♣').all(snap) == ['J♦'] 
 
-#     # spades will return all diamonds
-#     assert Query(snap).select("♠") == ['J♦', 'J♥']   
+    # there is no J♣, to properly get it it use L♣
+    assert Query().select('J♠ L♠').all(snap) == ['J♦', 'J♥'] 
 
-#     # L (left-bower) will return J♥ when trump is diamonds
-#     assert Query(snap).select("L♠") == ['J♥']  
+    # spades will return all diamonds
+    assert Query().select('♠').all(snap) == ['J♦', 'J♥']   
 
-#     # L (left-bower) only works when selecing spades
-#     assert Query(snap).select("L♣") == []
+    # clubs will return only the Q♥
+    assert Query().select('♣').all(snap) == ['Q♥'] 
 
-#     # Select left bower, suit is implied
-#     assert Query(snap).select("L") == ['J♥']
+    # L (left-bower) will return J♥ when trump is diamonds
+    assert Query().select('L♠').all(snap) == ['J♥']  
 
-# def test_select_not_trump_not_set(game):
-#     set_hand(snap, ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    # L (left-bower) only works when selecting spades
+    assert Query().select('L♣').all(snap) == []
 
-#     # select everything except clubs
-#     assert Query(snap).select("~♣") == ['J♦', 'Q♥', 'Q♠', 'J♥']  
+    # Select left bower, suit is implied
+    assert Query().select('L').all(snap) == ['J♥']
 
-# def test_select_not_trump_set(game):
-#     set_hand(snap, ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
-#     snap.trump = '♦'
+def test_select_not_trump_not_set(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = None
+    snap = Snapshot(game, 'Player1')     
 
-#     # select everything except the opposite suit (no hearts)
-#     assert Query(snap).select("~♣") == ['J♦', '10♣', 'Q♠', 'J♥']  
+    # select everything except clubs
+    assert Query().select('~♣').all(snap) == ['J♦', 'Q♥', 'Q♠', 'J♥']  
 
-#     # select everything except left bower
-#     assert Query(snap).select("~L") == ['J♦', '10♣', 'Q♥', 'Q♠']       
+def test_select_not_trump_set(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = '♦'
+    snap = Snapshot(game, 'Player1')  
 
-# def test_multi_select(game):
-#     q = Query(snap).select("910JQKA♠♥♣♦")
-#     assert q.select('9♣') == ['9♣']
+    # select everything except the opposite suit (no hearts) J♥ is not a heart
+    assert Query().select('~♣').all(snap) == ['J♦', '10♣', 'Q♠', 'J♥']  
 
-# def test_has_doesnt_clear_on_true(game):
-#     q = Query(snap).select("910JQKA♠♥♣♦")
-#     assert q.has('9♣') == ['9♣', '10♣', 'J♦', 'Q♠', 'Q♥']
+    # select everything except left bower
+    assert Query().select('~L').all(snap) == ['J♦', '10♣', 'Q♥', 'Q♠']
 
-# def test_has_clears_on_false(game):
-#     q = Query(snap).select("910JQKA♠♥♣♦")
-#     assert q.has('J♣') == []
+def test_select_right_bower_trump_set(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = '♦'
+    snap = Snapshot(game, 'Player1')  
 
-# def test_dealer_true(game):
-#     q = Query(snap).select("910JQKA♠♥♣♦").dealer("3")
-#     assert q == ['9♣', '10♣', 'J♦', 'Q♠', 'Q♥']
+    assert Query().select('J♠').all(snap) == ['J♦']
 
-# def test_dealer_false(game):
-#     q = Query(snap).select("910JQKA♠♥♣♦").dealer("2")
-#     assert q == []    
+def test_multi_select(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = '♦'
+    snap = Snapshot(game, 'Player1')  
 
-# def test_maker_false_when_none(game):
-#     q = Query(snap).select("910JQKA♠♥♣♦").maker("0")
-#     assert q == []    
+    q = Query().select('J♠ Q')
+    assert q.all(snap) == ['J♦', 'Q♥', 'Q♠']
 
-# def test_has_doesnt_refine(game):
-#     q = Query(snap).select("910JQKA♠♥♣♦").maker("0")
-#     assert q == []    
+def test_select_all(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = '♦'
+    snap = Snapshot(game, 'Player1')
 
-# # for_player = 0
-# # maker = 0
-# def test_maker_true(game):
-#     set_hand(snap, ['J♦', '10♣', '9♣', 'Q♥', 'Q♠'])
-#     snap.trump = '♦'
-#     snap.maker = 0
-#     q = Query(snap).maker("0")
-#     assert q == ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']   
+    assert Query().select('~').all(snap) == ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥']
 
-# def test_down_true(game):
-#     set_hand(snap, ['J♦', '10♣', '9♣', 'Q♥', 'Q♠'])
-#     snap.trump = None
-#     snap.maker = 0
-#     snap.down_card = snap.hand[0]._source.get_card("K♦") # breaking the interface todo fix
+def test_dealer_true(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = '♦'
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').dealer('3').all(snap)
+    assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+
+def test_dealer_false(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = '♦'
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').dealer('2').all(snap)
+    assert set(q) == set([])
+
+def test_maker_true(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.input('Player1', 'order')
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').maker('0').all(snap)
+    assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+
+def test_maker_false(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.input('Player1', 'order')
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').maker('2').all(snap)
+    assert set(q) == set([])
+
+def test_lead_true(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.input('Player1', 'order')
+    game.input('Player4', 'down')
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').lead('0').all(snap)
+    assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+
+def test_lead_false(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.input('Player1', 'order')
+    game.input('Player4', 'down')
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').lead('2').all(snap)
+    assert set(q) == set([])
+
+# this is to make sure that lead player is independent of the winning player
+def test_lead_true_when_not_winning(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.set_cards('Player2', ['J♣', '10♠', 'Q♠', 'Q♣', 'J♠'])    
+    game.input('Player1', 'order')
+    game.input('Player4', 'down')
+    game.input('Player1', 'play', 'Q♥')
+    game.input('Player2', 'play', '10♠')
+
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').lead('0').all(snap)
+    assert set(q) == set(['J♦', '10♣', 'Q♠', 'J♥'])
+
+
+def test_up_card_true(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = None
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').up_card('10♠')
+    assert set(q.all(snap)) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+
+def test_up_card_false(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = '♦'
+    snap = Snapshot(game, 'Player1')
+    q = Query().select('~')
+    q._up_card.select('10♣')
+
+    q = Query().select('~').up_card('10♣').all(snap)
+    assert set(q) == set([])
+
+def test_down_card_true(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.input('Player1', 'order')
+    game.input('Player4', 'down')
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').down_card('10♠') # trump is ♠
+    assert set(q.all(snap)) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+
+def test_down_card_false(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.input('Player1', 'order')
+    game.input('Player4', 'down')
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').down_card('10♣') # trump is ♠
+    assert set(q.all(snap)) == set([])
     
-#     q = Query(snap).down("K♦") 
-#     assert q == ['J♦', '10♣', '9♣', 'Q♥', 'Q♠']
+def test_beats(game):
+    game.input('Player1', 'order')
+    game.input('Player4', 'down')
+    game.input('Player1', 'play', 'Q♥')
+    game.input('Player2', 'play', '10♥')
+    snap = Snapshot(game, 'Player3')
 
-# def test_down_false(game):
-#     set_hand(snap, ['J♦', '10♣', '9♣', 'Q♥', 'Q♠'])
-#     snap.trump = None
-#     snap.maker = 0
-#     snap.down_card = snap.hand[0]._source.get_card("K♦")# breaking the interface todo fix
+    q = Query().select('~').beats()
+    assert set(q.all(snap)) == set(['9♠', 'A♥', 'K♥'])
     
-#     q = Query(snap).down("A♦") 
-#     assert q == []
-
-# # @pytest.mark.parametrize("hand, trump, phrase, expected", [
-# #     (['J♦', '10♣', '9♣', 'Q♥', 'Q♠'], "♠", "910♠♥♣♦", ["9♣", "10♣"]), # specified values, trump doesn't matter
-# #     (['J♦', '10♣', '9♣', 'Q♥', 'Q♠'], "♥", "910♠♥♣♦", ["9♣", "10♣"]), # specified values, trump doesn't matter    
-# #     (['J♦', '10♣', '9♣', 'Q♥', 'Q♠'], "♥", "910QKALJ♠", ["Q♥", "J♦"]), # all trump when trump is ♥    
-# # ])
-# # def test_select(snap, hand, trump, phrase, expected):
-# #     set_hand(snap, hand)
-# #     snap.trump = trump
-# #     assert Query(snap).select(phrase) == expected
-
-# def test_playable_0(game):
-#     game.input("Player1", "order", None) # J♦, 10♣, 9♣, Q♥, Q♠ trump ♥
-#     game.input("Player4", "down", None)
-#     snap = Snapshot(game, "Player1")
-#     assert Query(snap).playable().len == 5
-
-# def test_playable_1(game):
-#     test_playable_0(game)
-#     game.input("Player1", "play", "Q♠")
-#     snap = Snapshot(game, "Player2") # 9♦, K♥, Q♣, K♦, 10♠
-#     assert Query(snap).playable() == ['10♠']
-
-# def test_playable_left_bower_not_playable(game):
-#     # add the A♦ to the first player 
-#     card = game.deck.get_card("A♦")
-#     game.get_player("Player1").cards.append(card)
-
-#     # add the J♦ to the second player
-#     card = game.deck.get_card("J♦")
-#     game.get_player("Player2").cards.append(card)
-
-#     # play the game until after first card played
-#     game.input("Player1", "order", None)
-#     game.input("Player4", "down", None)
-#     game.input("Player1", "play", "A♦")
-
-#     snap = Snapshot(game, "Player2") # 9♦, K♥, Q♣, K♦, 10♠, J♦
-
-#     # only the 9♦ & K♦ are playable because the J♦ is trump
-#     assert Query(snap).playable() == ['9♦', 'K♦']
-
-# def test_select_not_suit(game):
-#     game.set_cards("Player1", ["Q♥", "10♦", "K♠", "10♠", "J♦"])
-#     snap = Snapshot(game, "Player1")
-#     q = Query(snap).select("~♠")
-#     assert "K♠" not in q
-#     assert "10♠" not in q
-    
-# def test_beats(game):
-#     game.set_cards("Player1", ["Q♥", "10♦", "K♠", "10♠", "J♦"])
-#     game.trump = "♦"
-#     snap = Snapshot(game, "Player1")
-#     q = Query(snap).beats(game.deck.get_card("10♥"))
-#     assert q == ["Q♥", "10♦", "J♦"]
