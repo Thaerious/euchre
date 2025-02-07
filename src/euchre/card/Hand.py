@@ -10,7 +10,7 @@ class Hand(list):
     def normalize(self, source)-> "Hand":
         norm_hand = Hand()
         for card in self:
-            norm_hand.append(card.normalize(self))
+            norm_hand.append(card.normalize(source))
         return norm_hand
 
     def has_suit(self, suit: str) -> bool:

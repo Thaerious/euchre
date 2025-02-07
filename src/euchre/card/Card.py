@@ -28,6 +28,8 @@ class Card:
             suit (str): Either a full card string (e.g., "10♥") or just the suit.
             rank (str, optional): The card rank (e.g., "10"). If not provided, `suit` is parsed as "10♥".
         """
+
+        if not hasattr(source, 'trump'): raise NotImplementedError("Expected attribute 'trump' not found.")
         self._source = source
 
         if rank is None:
