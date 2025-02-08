@@ -26,7 +26,15 @@ def test_select_all(game):
     snap = Snapshot(game, 'Player1')
     q = Query()    
     q = q.select('~').all(snap)
-    assert set(q) == set(['9♣', '10♣', 'J♦', 'Q♠', 'Q♥'])
+    assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+
+def test_select_all_trump_set(game):
+    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    game.trump = '♦'
+    snap = Snapshot(game, 'Player1')
+
+    assert Query().select('~').all(snap) == ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥']
+
 
 def test_select_no_trump_is_not_normalized(game):        
     snap = Snapshot(game, 'Player1')
@@ -96,13 +104,6 @@ def test_multi_select(game):
 
     q = Query().select('J♠ Q')
     assert q.all(snap) == ['J♦', 'Q♥', 'Q♠']
-
-def test_select_all(game):
-    game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
-    game.trump = '♦'
-    snap = Snapshot(game, 'Player1')
-
-    assert Query().select('~').all(snap) == ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥']
 
 def test_dealer_true(game):
     game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
@@ -256,5 +257,25 @@ def test_worst_1(game):
     snap = Snapshot(game, 'Player3') # '9♠', 'Q♦', 'A♥', 'A♦', 'K♥'
 
     q = Query().select('~').worst()
-    assert set(q.all(snap)) == set(['Q♦'])       
+    assert set(q.all(snap)) == set(['Q♦'])      
+
+
+def test_playable_0(game):
+    game.input('Player1', 'order') 
+    game.input('Player4', 'down')  
+    game.trump = '♠'
+    snap = Snapshot(game, 'Player1') # 'J♦', '10♣', 'Q♥', 'Q♠', 'J♥'
+
+    q = Query().select('~')
+    assert set(q.playable(snap)) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])       
+
+def test_playable_1(game):
+    game.input('Player1', 'order') 
+    game.input('Player4', 'down')  
+    game.trump = '♠'
+    game.input('Player1', 'play', 'Q♥') 
+    snap = Snapshot(game, 'Player2') #'9♦', 'K♠', 'Q♣', 'K♦', '10♥'
+
+    q = Query().select('~')
+    assert set(q.playable(snap)) == set(['10♥'])
     

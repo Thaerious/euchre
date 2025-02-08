@@ -82,7 +82,3 @@ def test_play_first_hand(game):
     
     game.input(None, 'continue', None)
     assert game.lead_player.name == "Player2"
-    
-    print(game)
-    
-

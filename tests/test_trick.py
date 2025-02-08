@@ -17,8 +17,6 @@ def test_trick_initialization():
     trick.append(deck.get_card("J♠"))
     trick.append(deck.get_card("9♣"))
 
-    print(trick.best_card)
-
     assert trick.trump == "♠", "Trump suit should be ♠"
     assert trick.best_card == "J♠", "Best card should be the Right Bower J♠"
     assert trick.winner == 2, "Winner should be player 2 who played J♠"

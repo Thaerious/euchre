@@ -139,14 +139,6 @@ class QueryDeck(QueryBase):
 
         return selected
     
-    # return true if any cards match
-    def any(self, cards):
-        for card in cards:
-            if self.test(card):
-                return True
-            
-        return False
-    
     def __str__(self):
         sb = ""
         for i in INT_TO_CARD.keys():
@@ -187,29 +179,14 @@ class Query:
 
     def worst(self):
         self.return_selector = RETURN_SELECTOR['worst']
-        return self
+        return self   
 
-    # used by bot to retrieve a single card, uses return_selector
-    # must return either a single card or none
-    def get(self, snap):
-        all = self.all(snap)
-        if len(all) == 0: return None
+    def playable(self, snap):
+        return self.all(snap).playable(snap)
 
-        if self.return_selector == RETURN_SELECTOR['random']:
-            return random.choice(all)
-        elif self.return_selector == RETURN_SELECTOR['best']:
-            best = all[0]
-            for card in all[1:]:
-                if best.compare(card) < 0: best = card
-            return best
-        elif self.return_selector == RETURN_SELECTOR['worst']:
-            worst = all[0]
-            for card in all[1:]:
-                if worst.compare(card) >= 0: worst = card
-            return worst
-    
     # if up and down card tests pass, return all matching hand cards
-    def all(self, snap: Snapshot):
+    def all(self, _snap: Snapshot):
+        snap = _snap
         trump = snap.trump
 
         if trump is not None:
@@ -233,7 +210,8 @@ class Query:
         if self._worst == True: all = self.do_worst(all, snap)
 
         if trump is not None:
-            return all.denormalize(trump)
+            a = all.denormalize(_snap)
+            return a
         else:
             return all        
 
@@ -294,20 +272,6 @@ class Query:
 
         selected.append(worst_card)
         return selected
-
-    def do_playable(self, snap):
-        if len(snap.tricks) == 0: 
-            self._hand.set_all()
-            return self
-        
-        if len(snap.tricks[-1]) == 0:
-            self._hand.set_all()
-            return self      
-
-        lead_suit = snap.tricks[-1].lead_suit
-        self.select(f"910JLQKAL{lead_suit}")
-        
-        return self
     
     def select(self, phrase): 
         self._hand.select(phrase)
