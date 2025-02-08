@@ -279,3 +279,61 @@ def test_playable_1(game):
     q = Query().select('~')
     assert set(q.playable(snap)) == set(['10♥'])
     
+def test_select_all_opposite_suit(game):
+    game.set_cards('Player1', ['J♦', 'J♥', 'A♦', 'A♥', 'Q♥', ])   
+    game.trump = "♦"
+    snap = Snapshot(game, 'Player1')
+    q = Query().select('♣')
+    assert set(q.all(snap)) == set(['A♥', 'Q♥'])
+
+def test_select_all_trump(game):
+    game.set_cards('Player1', ['J♦', 'J♥', 'A♦', 'A♥', 'Q♥', ])   
+    game.trump = "♦"
+    snap = Snapshot(game, 'Player1')
+    q = Query().select('♠')
+    assert set(q.all(snap)) == set(['J♦', 'J♥', 'A♦'])
+
+def test_jack_opposite_doesnt_exist(game):
+    game.set_cards('Player1', ['J♦', 'J♥', 'A♦', 'A♥', 'Q♥', ])   
+    game.trump = "♦"
+    snap = Snapshot(game, 'Player1')
+    q = Query().select('J♣')
+    assert set(q.all(snap)) == set([])
+
+def test_down_card_select_trump(game):
+    game.set_cards('Player1', ['10♦', 'J♥', 'A♦', 'A♥', 'Q♥'])   
+    game.trump = "♦"
+    game.down_card = 'J♦'
+    snap = Snapshot(game, 'Player1')
+    q = Query().select('~').down_card("♠")
+    print(q.all(snap))
+    assert set(q.all(snap)) == set(['10♦', 'J♥', 'A♦', 'A♥', 'Q♥'])    
+
+def test_down_card_select_trump_down_is_LB(game):
+    game.set_cards('Player1', ['J♦', '10♥', 'A♦', 'A♥', 'Q♥'])   
+    game.trump = "♦"
+    game.down_card = 'J♥'
+    snap = Snapshot(game, 'Player1')
+    q = Query().select('~').down_card("♠")
+    print(q.all(snap))
+    assert set(q.all(snap)) == set(['J♦', '10♥', 'A♦', 'A♥', 'Q♥'])      
+
+def test_down_card_select_opp_down_is_LB(game):
+    game.set_cards('Player1', ['J♦', '10♥', 'A♦', 'A♥', 'Q♥'])   
+    game.trump = "♦"
+    game.down_card = 'J♥'
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~').down_card("♣")
+    
+    assert set(q.all(snap)) == set([])           
+
+def test_down_card_is_LB_select_all(game):
+    game.set_cards('Player1', ['J♦', '10♥', 'A♦', 'A♥', 'Q♥'])   
+    game.trump = "♦"
+    game.down_card = 'J♥'
+    snap = Snapshot(game, 'Player1')
+
+    q = Query().select('~')
+    
+    assert set(q.all(snap)) == set(['J♦', '10♥', 'A♦', 'A♥', 'Q♥'])      

@@ -18,11 +18,12 @@ class Bot_0:
     def decide(self, snap: Snapshot):
         method_name = f"state_{snap.state}"
         method = getattr(self, method_name)
+        return method(snap)
     
     def state_1(self, snap): # pass / order / alone
         for query in self.queries["state_1"]:
             result = query[0].all().get(snap)
-            if result is not None:
+            if len(result) > 0:
                 return (query[1], result)
             
         return ("pass", None)
@@ -30,7 +31,7 @@ class Bot_0:
     def state_2(self, snap): # dealer up / down
         for query in self.queries["state_1"]:
             result = query[0].all().get(snap)
-            if result is not None:
+            if len(result) > 0:
                 return (query[1], result)
                     
         return("down", None)
@@ -38,15 +39,15 @@ class Bot_0:
     def state_3(self, snap): # pass / make / alone
         for query in self.queries["state_1"]:
             result = query[0].all().get(snap)
-            if result is not None:
-                return (query[1], result)
+            if len(result) > 0:
+                return (query[1], result.suit)
                     
         return ("pass", None)
 
     def state_4(self, snap): # Dealer make / alone
         for query in self.queries["state_1"]:
             result = query[0].all().get(snap)
-            if result is not None:
+            if len(result) > 0:
                 return (query[1], result.suit)
 
         options = ["♠", "♥", "♣", "♦"]
@@ -55,9 +56,9 @@ class Bot_0:
 
     def state_5(self, snap):
         for query in self.queries["state_1"]:
-            result = query[0].all(snap).playable(snap)
-            if result is not None:                
+            result = query[0].playable(snap)
+            if len(result) > 0:                
                 return (query[1], result)
 
-        with Query(snap).playable() as q:
-            return("play", random.choice(q))    
+        card = Query().select('~').playable(snap).get()
+        return("play", card)    

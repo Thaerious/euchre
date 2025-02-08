@@ -87,11 +87,24 @@ class QueryBase:
 
 class QueryDeck(QueryBase):
     def __init__(self, default = STATES['set']):
+        self.default = STATES['set']
         QueryBase.__init__(self, len(INT_TO_CARD), default)
+        if default == STATES['set']: 
+            self.flag_left_bower = True
+        else:
+            self.flag_left_bower = False
+
+    def set_all(self):
+        super().set_all()
+        self.flag_left_bower = True
+
+    def clear_all(self):
+        super().clear_all()
         self.flag_left_bower = False
 
     def normalize(self):
         self.clear(CARD_TO_INT["J♣"])
+
         if self.flag_left_bower:
             self.set(CARD_TO_INT["J♣"])
     
@@ -210,8 +223,7 @@ class Query:
         if self._worst == True: all = self.do_worst(all, snap)
 
         if trump is not None:
-            a = all.denormalize(_snap)
-            return a
+            return all.denormalize(_snap)
         else:
             return all        
 

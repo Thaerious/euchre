@@ -69,11 +69,15 @@ class Euchre:
 
     @up_card.setter
     def up_card(self, value):
-        self._up_card = self.deck.get_card(value)
+        self._up_card = Card(self.deck, value)
 
     @property
     def down_card(self) -> str:
         return self._down_card
+
+    @down_card.setter
+    def down_card(self, value):
+        self._down_card = Card(self.deck, value)
 
     @property 
     def hands_played(self) -> int:

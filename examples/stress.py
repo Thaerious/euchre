@@ -11,12 +11,12 @@ if len(sys.argv) > 1:
     run_count = int(sys.argv[1])
 
 names = ["Player1", "Player2", "Player3", "Player4"]
-bot = Bot_R()
+bot = Bot_0()
 
 start = time.time()
 
 for i in range(run_count):
-    seed = random.randint(0, 1000)
+    seed = random.randint(0, 100000)
     print(seed)
     random.seed(seed)
 
