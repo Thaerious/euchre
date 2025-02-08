@@ -59,7 +59,7 @@ class Snapshot:
     # return a new normalized snapshot
     def normalize(self):
         norm = Snapshot(self.game, self.player_name)
-        norm.hand = self.hand.normalize(self)
+        norm.hand = self.hand.normalize(norm)
         norm._trump = "♠"
 
         norm.tricks = []

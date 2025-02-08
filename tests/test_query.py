@@ -208,10 +208,53 @@ def test_down_card_false(game):
 def test_beats(game):
     game.input('Player1', 'order')
     game.input('Player4', 'down')
-    game.input('Player1', 'play', 'Q♥')
+    game.input('Player1', 'play', 'Q♥') # lead card
     game.input('Player2', 'play', '10♥')
     snap = Snapshot(game, 'Player3')
 
-    q = Query().select('~').beats()
+    q = Query().select('~').beats() # lead card
     assert set(q.all(snap)) == set(['9♠', 'A♥', 'K♥'])
+
+def test_loses_to(game):
+    game.input('Player1', 'order') # 'J♦', '10♣', 'Q♥', 'Q♠', 'J♥'
+    game.input('Player4', 'down')  # '9♦', 'K♠', 'Q♣', 'K♦', '10♥'
+    game.input('Player1', 'play', 'Q♥') 
+    game.input('Player2', 'play', '10♥')
+    snap = Snapshot(game, 'Player3') # '9♠', 'Q♦', 'A♥', 'A♦', 'K♥'
+
+    q = Query().select('~').loses()
+    assert set(q.all(snap)) == set(['Q♦', 'A♦'])    
+
+def test_best(game):
+    game.input('Player1', 'order') # 'J♦', '10♣', 'Q♥', 'Q♠', 'J♥'
+    game.input('Player4', 'down')  # '9♦', 'K♠', 'Q♣', 'K♦', '10♥'
+    game.trump = '♥'    
+    game.input('Player1', 'play', 'Q♥') 
+    game.input('Player2', 'play', '10♥')
+    snap = Snapshot(game, 'Player3') # '9♠', 'Q♦', 'A♥', 'A♦', 'K♥'
+
+    q = Query().select('~').best()
+    assert set(q.all(snap)) == set(['A♥'])
+
+def test_worst_0(game):
+    game.input('Player1', 'order') # 'J♦', '10♣', 'Q♥', 'Q♠', 'J♥'
+    game.input('Player4', 'down')  # '9♦', 'K♠', 'Q♣', 'K♦', '10♥'
+    game.input('Player1', 'play', 'Q♥') 
+    game.input('Player2', 'play', '10♥')
+    game.trump = '♥'
+    snap = Snapshot(game, 'Player3') # '9♠', 'Q♦', 'A♥', 'A♦', 'K♥'
+
+    q = Query().select('~').worst()
+    assert set(q.all(snap)) == set(['9♠'])         
+
+def test_worst_1(game):
+    game.input('Player1', 'order') # 'J♦', '10♣', 'Q♥', 'Q♠', 'J♥'
+    game.input('Player4', 'down')  # '9♦', 'K♠', 'Q♣', 'K♦', '10♥'
+    game.trump = '♠'
+    game.input('Player1', 'play', 'Q♥') 
+    game.input('Player2', 'play', '10♥')
+    snap = Snapshot(game, 'Player3') # '9♠', 'Q♦', 'A♥', 'A♦', 'K♥'
+
+    q = Query().select('~').worst()
+    assert set(q.all(snap)) == set(['Q♦'])       
     

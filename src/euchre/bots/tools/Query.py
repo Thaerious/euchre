@@ -175,6 +175,9 @@ class Query:
         self._dealer = QueryDigit(4)
         self._count =  QueryDigit(6)       
         self._beats = False # keep cards that beat the best current card
+        self._loses = False # keep cards that the current card beats
+        self._best = False # keep the highest rank card preferably trump
+        self._worst = False # keep the lowest rank card preferably not trump
 
         self.return_selector = RETURN_SELECTOR['random'] # return worst / best if not set, random 
  
@@ -206,7 +209,7 @@ class Query:
             return worst
     
     # if up and down card tests pass, return all matching hand cards
-    def all(self, snap):
+    def all(self, snap: Snapshot):
         trump = snap.trump
 
         if trump is not None:
@@ -225,23 +228,71 @@ class Query:
 
         if not self._count.test(len(all)): return Query_Result([])
         if self._beats == True: all = self.do_beats(all, snap)
+        if self._loses == True: all = self.do_loses(all, snap)
+        if self._best == True: all = self.do_best(all, snap)
+        if self._worst == True: all = self.do_worst(all, snap)
 
         if trump is not None:
             return all.denormalize(trump)
         else:
             return all        
 
+    def do_loses(self, all, snap: Snapshot):
+        if len(snap.tricks) == 0: return all
+        if len(snap.tricks[-1]) == 0: return all        
+
+        lead_suit = snap.tricks[-1].lead_suit
+        best_card = snap.tricks[-1][0]
+
+        selected = Query_Result()
+        for card in all:
+            if best_card.compare(card, lead_suit) >= 0:
+                selected.append(card)
+
+        return selected
+
     def do_beats(self, all, snap: Snapshot):
         if len(snap.tricks) == 0: return all
         if len(snap.tricks[-1]) == 0: return all        
 
-        best_card = snap.tricks[-1].best_card
+        lead_suit = snap.tricks[-1].lead_suit
+        best_card = snap.tricks[-1][0]
 
         selected = Query_Result()
         for card in all:
-            if best_card.compare(card) < 0:
+            if best_card.compare(card, lead_suit) < 0:
                 selected.append(card)
 
+        return selected
+
+    def do_best(self, all, snap: Snapshot):
+        if len(snap.tricks) == 0: return all
+        if len(snap.tricks[-1]) == 0: return all        
+
+        lead_suit = snap.tricks[-1].lead_suit
+        best_card = all[0]
+
+        selected = Query_Result()
+        for card in all:
+            if best_card.compare(card, lead_suit) < 0:
+                best_card = card
+
+        selected.append(best_card)
+        return selected
+
+    def do_worst(self, all, snap: Snapshot):
+        if len(snap.tricks) == 0: return all
+        if len(snap.tricks[-1]) == 0: return all        
+
+        lead_suit = snap.tricks[-1].lead_suit
+        worst_card = all[0]
+
+        selected = Query_Result()
+        for card in all:
+            if worst_card.compare(card, lead_suit) > 0:
+                worst_card = card
+
+        selected.append(worst_card)
         return selected
 
     def do_playable(self, snap):
@@ -294,6 +345,18 @@ class Query:
     def beats(self, value = True):
         self._beats = value
         return self
+    
+    def loses(self, value = True):
+        self._loses = value
+        return self    
+    
+    def worst(self, value = True):
+        self._worst = value
+        return self
+    
+    def best(self, value = True):
+        self._best = value
+        return self        
 
 def invert_phrase(phrase):
     split = re.findall(r"10|[9JQKAL♠♥♣♦]", phrase)
