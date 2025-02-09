@@ -57,7 +57,7 @@ class Snapshot:
         return self._trump
 
     # return a new normalized snapshot
-    def normalize(self):
+    def normalize_cards(self):
         norm = Snapshot(self.game, self.player_name)
         norm.hand = self.hand.normalize(norm)
         norm._trump = "♠"
@@ -68,6 +68,21 @@ class Snapshot:
 
         norm.up_card = None if self.up_card is None else self.up_card.normalize(self)
         norm.down_card = None if self.down_card is None else self.down_card.normalize(self)
+
+        return norm
+
+    def normalize_order(self):
+        norm = Snapshot(self.game, self.player_name)
+        norm.for_player = 0
+        norm.lead = (self.lead - self.for_player) % 4
+        norm.dealer = (self.dealer - self.for_player) % 4
+        norm.maker = (self.maker - self.for_player) % 4
+        norm.last_player = (self.last_player - self.for_player) % 4
+        norm.active = (self.active - self.for_player) % 4
+
+        norm.order = []
+        for i in self.order:
+            norm.order.append((i - self.for_player) % 4)
 
         return norm
 

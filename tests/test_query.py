@@ -110,7 +110,7 @@ def test_dealer_true(game):
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').dealer('3').all(snap)
+    q = Query().select('~').dealer('4').all(snap)
     assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
 
 def test_dealer_false(game):
@@ -126,7 +126,7 @@ def test_maker_true(game):
     game.input('Player1', 'order')
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').maker('0').all(snap)
+    q = Query().select('~').maker('1').all(snap)
     assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
 
 def test_maker_false(game):
@@ -143,7 +143,7 @@ def test_lead_true(game):
     game.input('Player4', 'down')
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').lead('0').all(snap)
+    q = Query().select('~').lead('1').all(snap)
     assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
 
 def test_lead_false(game):
@@ -166,9 +166,16 @@ def test_lead_true_when_not_winning(game):
 
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').lead('0').all(snap)
+    q = Query().select('~').lead('1').all(snap)
     assert set(q) == set(['J♦', '10♣', 'Q♠', 'J♥'])
 
+def test_lead_different_order(game):
+    game.order = [1, 2, 3, 0]
+    game.input('Player2', 'order')
+    game.input('Player1', 'down')
+    snap = Snapshot(game, 'Player2')
+    q = Query().select('~').lead("234")
+    assert set(q.all(snap)) == set(['9♦', 'K♠', 'Q♣', 'K♦', '10♥'])
 
 def test_up_card_true(game):
     game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
@@ -306,7 +313,7 @@ def test_down_card_select_trump(game):
     game.down_card = 'J♦'
     snap = Snapshot(game, 'Player1')
     q = Query().select('~').down_card("♠")
-    print(q.all(snap))
+    (q.all(snap))
     assert set(q.all(snap)) == set(['10♦', 'J♥', 'A♦', 'A♥', 'Q♥'])    
 
 def test_down_card_select_trump_down_is_LB(game):
@@ -315,7 +322,6 @@ def test_down_card_select_trump_down_is_LB(game):
     game.down_card = 'J♥'
     snap = Snapshot(game, 'Player1')
     q = Query().select('~').down_card("♠")
-    print(q.all(snap))
     assert set(q.all(snap)) == set(['J♦', '10♥', 'A♦', 'A♥', 'Q♥'])      
 
 def test_down_card_select_opp_down_is_LB(game):
