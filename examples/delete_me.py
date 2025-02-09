@@ -1,6 +1,4 @@
-from euchre.bots.tools.denormalize import denormalize
+from euchre.bots.tools.Query import Query
 
-# ["♠", "♥", "♣", "♦"]
-
-x = denormalize(["10♠"], "♥")
-print(x)
+q = Query("♥")
+print(q.name, q)

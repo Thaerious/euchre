@@ -11,17 +11,17 @@ if len(sys.argv) > 1:
     run_count = int(sys.argv[1])
 
 results = {
+    "Bot_00": 0,
     "Bot_10": 0,
-    "Bot_20": 0,
-    "Bot_11": 0,    
-    "Bot_21": 0,
+    "Bot_01": 0,    
+    "Bot_11": 0,
 }
 
 bots = {
+    "Bot_00": Bot_0(),
+    "Bot_01": Bot_0(),
     "Bot_10": Bot_1(),
     "Bot_11": Bot_1(),
-    "Bot_20": Bot_2(),
-    "Bot_21": Bot_2(),
 }
 
 names = list(results.keys())

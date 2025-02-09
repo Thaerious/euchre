@@ -1,6 +1,5 @@
 import array
 import re
-import random
 from euchre import *
 from euchre.del_string import del_string
 from .Query_Result import Query_Result
@@ -171,7 +170,7 @@ class QueryDigit(QueryBase):
             self.set(int(part))        
 
 class Query:
-    def __init__(self):
+    def __init__(self, phrase = None, name = None):
         self._hand = QueryDeck(STATES["unset"])
         self._up_card = QueryDeck(STATES["set"])
         self._down_card = QueryDeck(STATES["set"])
@@ -183,9 +182,12 @@ class Query:
         self._loses = False # keep cards that the current card beats
         self._best = False # keep the highest rank card preferably trump
         self._worst = False # keep the lowest rank card preferably not trump
+        self.name = name
+        if phrase is not None: self.select(phrase)
 
-        self.return_selector = RETURN_SELECTOR['random'] # return worst / best if not set, random 
- 
+    def __str__(self):
+        return f"[{self.name}]"
+
     def best(self):
         self.return_selector = RETURN_SELECTOR['best']
         return self
@@ -256,8 +258,9 @@ class Query:
         return selected
 
     def do_best(self, all, snap: Snapshot):
+        if len(all) == 0: return Query_Result()
         if len(snap.tricks) == 0: return all
-        if len(snap.tricks[-1]) == 0: return all        
+        if len(snap.tricks[-1]) == 0: return all
 
         lead_suit = snap.tricks[-1].lead_suit
         best_card = all[0]
@@ -271,6 +274,7 @@ class Query:
         return selected
 
     def do_worst(self, all, snap: Snapshot):
+        if len(all) == 0: return Query_Result()        
         if len(snap.tricks) == 0: return all
         if len(snap.tricks[-1]) == 0: return all        
 
@@ -286,6 +290,9 @@ class Query:
         return selected
     
     def select(self, phrase): 
+        if self.name is None: 
+            self.name = phrase
+
         self._hand.select(phrase)
         return self
     
