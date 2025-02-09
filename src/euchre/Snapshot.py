@@ -75,14 +75,21 @@ class Snapshot:
         norm = Snapshot(self.game, self.player_name)
         norm.for_player = 0
         norm.lead = (self.lead - self.for_player) % 4
-        norm.dealer = (self.dealer - self.for_player) % 4
-        norm.maker = (self.maker - self.for_player) % 4
-        norm.last_player = (self.last_player - self.for_player) % 4
+        norm.dealer = (self.dealer - self.for_player) % 4        
         norm.active = (self.active - self.for_player) % 4
+
+        if self.last_player is not None:
+            norm.last_player = (self.last_player - self.for_player) % 4
+
+        if self.maker is not None:
+            norm.maker = (self.maker - self.for_player) % 4
 
         norm.order = []
         for i in self.order:
             norm.order.append((i - self.for_player) % 4)
+
+        for player in norm.players:
+            player["index"] = (player["index"] - self.for_player) % 4
 
         return norm
 

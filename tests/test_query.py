@@ -110,7 +110,7 @@ def test_dealer_true(game):
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').dealer('4').all(snap)
+    q = Query().select('~').dealer('3').all(snap)
     assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
 
 def test_dealer_false(game):
@@ -126,7 +126,7 @@ def test_maker_true(game):
     game.input('Player1', 'order')
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').maker('1').all(snap)
+    q = Query().select('~').maker('0').all(snap)
     assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
 
 def test_maker_false(game):
@@ -143,7 +143,7 @@ def test_lead_true(game):
     game.input('Player4', 'down')
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').lead('1').all(snap)
+    q = Query().select('~').lead('0').all(snap)
     assert set(q) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
 
 def test_lead_false(game):
@@ -166,7 +166,7 @@ def test_lead_true_when_not_winning(game):
 
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').lead('1').all(snap)
+    q = Query().select('~').lead('0').all(snap)
     assert set(q) == set(['J♦', '10♣', 'Q♠', 'J♥'])
 
 def test_lead_different_order(game):
@@ -174,8 +174,21 @@ def test_lead_different_order(game):
     game.input('Player2', 'order')
     game.input('Player1', 'down')
     snap = Snapshot(game, 'Player2')
-    q = Query().select('~').lead("234")
+    q = Query().select('~').lead("123")
     assert set(q.all(snap)) == set(['9♦', 'K♠', 'Q♣', 'K♦', '10♥'])
+
+def test_lead_different_order_self_not_first(game):
+    game.order = [1, 2, 3, 0]
+    game.input('Player2', 'order')
+    game.input('Player1', 'down')
+
+    # the current lead is Player2, which is '1' in order
+    # self is Player3/pindex-2
+    # lead 2 means first player after self which is Player4/pindex-3
+
+    snap = Snapshot(game, 'Player3')
+    q = Query().select('~').lead("0")
+    assert set(q.all(snap)) == set([])
 
 def test_up_card_true(game):
     game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])

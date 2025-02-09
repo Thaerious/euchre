@@ -165,9 +165,12 @@ class QueryDigit(QueryBase):
 
     def select(self, phrase):
         self.clear_all()
-        parts = re.findall(r'[0123456789]', phrase)[0]
+        parts = re.findall(r'[0123456789]', phrase)
         for part in parts:
             self.set(int(part))        
+
+    def __str__(self):
+        return f"[{del_string(self.values)}]"
 
 class Query:
     def __init__(self, phrase = None, name = None):
@@ -204,14 +207,17 @@ class Query:
         snap = _snap
         trump = snap.trump
 
+        snap = snap.normalize_order()
+
         if trump is not None:
-            snap = snap.normalize()
+            snap = snap.normalize_cards()
             self._up_card.normalize()
             self._down_card.normalize()
             self._hand.normalize()
 
         if not self._up_card.test(snap.up_card): return Query_Result([])
         if not self._down_card.test(snap.down_card): return Query_Result([])
+
         if not self._lead.test(snap.lead): return Query_Result([])
         if not self._maker.test(snap.maker): return Query_Result([])
         if not self._dealer.test(snap.dealer): return Query_Result([])

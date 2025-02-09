@@ -29,28 +29,6 @@ class Stat:
         return f" - {(self.activated / self.call_count * 100):.1f}%"
 
 class Bot_0:
-    trick_count = 0
-
-    state_counts = {
-        "state_1": 0,
-        "state_2": 0,
-        "state_3": 0,
-        "state_4": 0,
-        "state_5": 0,
-    }  
-
-    queries = {
-        "state_1":[],
-        "state_2":[],
-        "state_3":[],
-        "state_4":[],
-        "state_5":[],
-    }  
-
-    stats: list[Stat] = {
-        # Query -> Stat dictionary
-    }
-
     def print_stats(self):
         for state in self.queries:
             print(f"{state}: {self.state_counts[state]}")
@@ -63,7 +41,36 @@ class Bot_0:
 
                 print(f" - {query} {percent_activated:.1f}")
 
-    def __init__(self):
+    def __init__(self, queries = None):
+        self.trick_count = 0
+
+        self.state_counts = {
+            "state_1": 0,
+            "state_2": 0,
+            "state_3": 0,
+            "state_4": 0,
+            "state_5": 0,
+        }  
+
+        self.queries = {
+            "state_1": [],
+            "state_2": [],
+            "state_3": [],
+            "state_4": [],
+            "state_5": [],
+        }  
+
+        self.stats: list[Stat] = {
+            # Query -> Stat dictionary
+        }
+
+        if queries is not None:
+            self.queries["state_1"].extend(queries["state_1"])
+            self.queries["state_2"].extend(queries["state_2"])
+            self.queries["state_3"].extend(queries["state_3"])
+            self.queries["state_4"].extend(queries["state_4"])
+            self.queries["state_5"].extend(queries["state_5"])           
+
         self.queries["state_1"].append((Query('~', 'default'), "pass"))
         self.queries["state_2"].append((Query('~', 'default'), "down"))
         self.queries["state_3"].append((Query('~', 'default'), "pass"))

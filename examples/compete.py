@@ -52,8 +52,10 @@ for i in range(run_count):
         results[game.get_player(3).name] = results[game.get_player(3).name] + 1
 
 end = time.time()
-print(f"Elapsed time: {end - start} seconds")
-print(f"Average time: {(end - start) / run_count} seconds")
+bots["Bot_10"].print_stats()
+
+print(f"\nElapsed time: {end - start} seconds")
+print(f"Average time: {(end - start) / run_count} seconds\n")
 
 for key in results.keys():
     print(f"{key} {round(results[key] / run_count, 2)}")
