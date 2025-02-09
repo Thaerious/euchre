@@ -49,6 +49,13 @@ class Euchre:
     def order(self):
         return self._order.copy()
 
+    @order.setter
+    def order(self, value):
+        self._order = value.copy()
+        self.current_player_index = self._order[0]
+        self.dealer_index = self._order[3]
+        self.lead_player_index = self._order[0]
+
     def __reset(self) -> None:
         """
         Reset the state for a new hand (e.g., on dealing a new hand).
