@@ -34,16 +34,20 @@ class Euchre:
             names (List[str]): A list of player names, in seating order.
         """
         self.players = PlayerList(names)
-        self.order: List[int] = [0, 1, 2, 3]
-        self.current_player_index = self.order[0]
-        self.dealer_index = self.order[3]
-        self.lead_player_index = self.order[0]
+        self._order: List[int] = [0, 1, 2, 3]
+        self.current_player_index = self._order[0]
+        self.dealer_index = self._order[3]
+        self.lead_player_index = self._order[0]
         self.hand_count = 0
 
         self.deck = Deck()      
         self._score: List[int] = [0, 0] 
         self.__reset()
         self._tricks: List[Trick] = []
+
+    @property
+    def order(self):
+        return self._order.copy()
 
     def __reset(self) -> None:
         """
@@ -135,7 +139,7 @@ class Euchre:
             raise EuchreException("Trump must be made before adding a trick.")
         if self.has_trick and not self.is_trick_finished:
             raise EuchreException("Previous trick not complete.")
-        self._tricks.append(Trick(self.trump, self.order))
+        self._tricks.append(Trick(self.trump, self._order))
 
     @property
     def tricks(self) -> List[Trick]:
@@ -186,7 +190,7 @@ class Euchre:
 
         self._tricks = []
         self.hand_count += 1
-        self.order = []
+        self._order = []
 
         # the dealer is advanced by one
         self.dealer_index = (self.dealer_index + 1) % NUM_PLAYERS
@@ -198,7 +202,7 @@ class Euchre:
 
         # Recompute the order, where the previous dealer is now the f
         for i in range(NUM_PLAYERS):
-            self.order.append((self.current_player_index + i) % NUM_PLAYERS)
+            self._order.append((self.current_player_index + i) % NUM_PLAYERS)
 
         self.__reset()
 
@@ -209,9 +213,9 @@ class Euchre:
         Returns:
             Player: The player who is now active.
         """
-        currentOrderIndex = self.order.index(self.current_player_index)
-        nextOrderIndex = (currentOrderIndex + 1) % len(self.order)
-        self.current_player_index = self.order[nextOrderIndex]
+        currentOrderIndex = self._order.index(self.current_player_index)
+        nextOrderIndex = (currentOrderIndex + 1) % len(self._order)
+        self.current_player_index = self._order[nextOrderIndex]
         return self.current_player 
 
     @property
@@ -264,7 +268,7 @@ class Euchre:
         Returns:
             Player: The first player in the current order.
         """
-        index = self.order[0]
+        index = self._order[0]
         return self.players[index]
 
     @property
@@ -287,7 +291,7 @@ class Euchre:
         """
         Make the first player from the order the current player.
         """
-        self.current_player_index = self.order[0]         
+        self.current_player_index = self._order[0]         
 
     def reset_lead_player(self):
         self.lead_player_index = self.current_player_index
@@ -315,7 +319,7 @@ class Euchre:
         # Mark the current player as going alone
         self.current_player.alone = True
         partner_index = self.players.index(self.current_player.partner)
-        self.order.remove(partner_index)
+        self._order.remove(partner_index)
 
     def make_trump(self, suit: str) -> None:
         """
@@ -350,7 +354,7 @@ class Euchre:
         if len(self._tricks) == 0:
             raise EuchreException("No tricks available.")
         
-        return len(self._tricks[-1]) == len(self.order)
+        return len(self._tricks[-1]) == len(self._order)
 
     def dealer_swap_card(self, card: Card) -> None:
         """
@@ -443,7 +447,7 @@ class Euchre:
         self.players[winner_pindex].tricks += 1
 
         # Move the winner to the front of the order
-        rotateTo(self.order, winner_pindex)
+        rotateTo(self._order, winner_pindex)
         self.current_player_index = winner_pindex
         self.lead_player_index = winner_pindex
 
@@ -460,7 +464,7 @@ class Euchre:
         return self.is_trick_finished
 
     def score_hand(self):
-        is_alone = len(self.order) == 3
+        is_alone = len(self._order) == 3
         tricks = [p.tricks for p in self.players]
         hand_score = do_score_hand(self.maker.index, tricks, is_alone)
         self._score[0] = self._score[0] + hand_score[0]
@@ -494,7 +498,7 @@ class Euchre:
         for player in self.players:
             sb = sb + "  " + str(player) + "\n"
 
-        sb = sb + f"order: {self.order}" + "\n"
+        sb = sb + f"order: {self._order}" + "\n"
         sb = sb + f"current: {self.current_player_index} -> {self.current_player}" + "\n"
         sb = sb + f"dealer: {self.dealer_index} -> {self.dealer}" + "\n"
         sb = sb + f"hand count: {self.hand_count}" + "\n"
