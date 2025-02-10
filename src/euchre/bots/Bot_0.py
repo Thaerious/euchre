@@ -114,4 +114,4 @@ class Bot_0:
         return self.do_state("state_4", snap, lambda q: q.all(snap))
 
     def state_5(self, snap):        
-        return self.do_state("state_5", snap, lambda q: q.playable(snap))        
+        return self.do_state("state_5", snap, lambda q: q.playable().all(snap))        
