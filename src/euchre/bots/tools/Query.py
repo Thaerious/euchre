@@ -186,6 +186,7 @@ class Query:
         self._loses = False # only keep cards that the current card beats
         self._best = False # only keep the highest rank card preferably trump
         self._worst = False # only keep the lowest rank card preferably not trump
+        self._playable = False # process only cards that are playable
         self.name = name
         if phrase is not None: self.select(phrase)
 
@@ -199,9 +200,6 @@ class Query:
     def worst(self):
         self.return_selector = RETURN_SELECTOR['worst']
         return self   
-
-    def playable(self, snap):
-        return self.all(snap).playable(snap)
 
     # if up and down card tests pass, return all matching hand cards
     def all(self, _snap: Snapshot):
@@ -226,6 +224,7 @@ class Query:
         all = self._hand.all(snap.hand)
 
         if not self._count.test(len(all)): return Query_Result([])
+        if self._playable == True: all = self.do_playable(all, snap)
         if self._wins == True: all = self.do_wins(all, snap)
         if self._loses == True: 
             all = self.do_loses(all, snap)
@@ -236,6 +235,18 @@ class Query:
             return all.denormalize(_snap)
         else:
             return all        
+
+    def do_playable(self, all: Query_Result, snap: Snapshot):   
+        if len(snap.tricks) == 0: return all        
+        if len(snap.tricks[-1]) == 0: return all
+        if not snap.hand.has_suit(snap.tricks[-1].lead_suit): return all
+
+        playable = Query_Result()
+        for card in all:
+            if card.suit_effective() == snap.tricks[-1].lead_suit:
+                playable.append(card)
+
+        return playable
 
     def do_loses(self, all, snap: Snapshot):
         if len(snap.tricks) == 0: return all
@@ -348,7 +359,11 @@ class Query:
     
     def best(self, value = True):
         self._best = value
-        return self        
+        return self    
+
+    def playable(self, value = True):
+        self._playable = value
+        return self          
 
 def invert_phrase(phrase):
     split = re.findall(r"10|[9JQKAL♠♥♣♦]", phrase)
