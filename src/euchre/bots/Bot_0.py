@@ -19,6 +19,7 @@ class Default_Suit(Query_Base):
         if snap.down_card.suit in options:
             options.remove(snap.down_card.suit)
         
+        #todo what happens if they only have the turned down suit?
         return Query_Result([random.choice(options)])        
 
 class Stat:

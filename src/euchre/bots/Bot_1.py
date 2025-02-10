@@ -13,7 +13,8 @@ class Print_Query(Query_Base):
     name = "print"
 
     def all(self, snap: Snapshot):
-        print(snap)    
+        snap = snap.normalize_order()
+        print(snap)
         return Query_Result([]) 
 
 class Bot_1(Bot_0):
@@ -27,9 +28,9 @@ class Bot_1(Bot_0):
             (Query("♦").lead("0").best(), "play"),
             (Query("♣").lead("0").best(), "play"),
             (Query("♠").lead("0").best(), "play"),
-            (Query("~", "beats").lead("123").beats().worst(), "play"),
+            (Query("~", "beats").lead("123").wins().worst(), "play"),
+            (Query("~", "loses").lead("123").loses().worst(), "play"),
             (Print_Query(), "play"),
-            (Query("~", "loses").lead("123"), "play"),
         ],
     }     
 

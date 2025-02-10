@@ -1,4 +1,5 @@
 from euchre.class_getter import class_getter
+from typing import Optional
 
 class Card:
     """Represents a single card in Euchre, with suit and rank."""
@@ -30,6 +31,7 @@ class Card:
         """
 
         if not hasattr(source, 'trump'): raise NotImplementedError("Expected attribute 'trump' not found.")
+        if suit is None: raise AttributeError("Suit can not be None.")
         self._source = source
 
         if rank is None:
@@ -199,3 +201,54 @@ class Card:
     def __index__(self):
         return self.__int__()
 
+def winning_card(lead_suit: str, card1: Card, card2: Card) -> Optional[Card]:
+    """
+    Determines which card wins in a trick based on suit and rank.
+    
+    The evaluation follows this priority order:
+    1. A trump card beats a non-trump card.
+    2. A card following the lead suit beats one that does not.    
+    3. The higher-ranked card wins if both are the same suit.
+    4. If both are off-suit with the same rank, the result is None (moot).
+    
+    Args:
+        lead_suit (str): The suit that was led in the trick.
+        card1 (Card): The first card in play.
+        card2 (Card): The second card in play.
+    
+    Returns:
+        Optional[Card]: The winning card, or None if neither wins definitively.
+    """
+    if card1.is_right_bower(): return card1
+    if card2.is_right_bower(): return card2
+    if card1.is_left_bower(): return card1
+    if card2.is_left_bower(): return card2
+
+    if card1.suit_effective() == card1.trump and card2.suit_effective() != card2.trump:
+        return card1
+    
+    if card1.suit_effective() != card1.trump and card2.suit_effective() == card2.trump:
+        return card2
+
+    if card1.suit_effective() == lead_suit and card2.suit_effective() != lead_suit:
+        return card1
+    
+    if card1.suit_effective() != lead_suit and card2.suit_effective() == lead_suit:
+        return card2   
+
+    rank1_index = Card.ranks.index(card1.rank)
+    rank2_index = Card.ranks.index(card2.rank)
+    
+    if rank1_index > rank2_index:
+        return card1
+    
+    if rank1_index < rank2_index:
+        return card2
+    
+    return None
+
+def losing_card(lead_suit: str, card1: Card, card2: Card) -> Optional[Card]:
+    winner = winning_card(lead_suit, card1, card2)
+    if winner == card1: return card2
+    if winner == card2: return card1
+    return None

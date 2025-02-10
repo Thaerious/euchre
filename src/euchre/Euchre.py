@@ -80,7 +80,10 @@ class Euchre:
 
     @up_card.setter
     def up_card(self, value):
-        self._up_card = Card(self.deck, value)
+        if value is None: 
+            self._up_card = None
+        else:
+            self._up_card = Card(self.deck, value)
 
     @property
     def down_card(self) -> str:

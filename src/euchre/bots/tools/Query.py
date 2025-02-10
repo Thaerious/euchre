@@ -3,6 +3,7 @@ import re
 from euchre import *
 from euchre.del_string import del_string
 from .Query_Result import Query_Result
+from euchre.card.Card import *
 
 RANKS = {'9':0, '10':1, 'J':2, 'Q':3, 'K':4, 'A':5, 'L': -1}
 SUITS = {"♠":0, "♥":1, "♣":2, "♦":3}
@@ -181,10 +182,10 @@ class Query:
         self._maker = QueryDigit(4)
         self._dealer = QueryDigit(4)
         self._count =  QueryDigit(6)       
-        self._beats = False # keep cards that beat the best current card
-        self._loses = False # keep cards that the current card beats
-        self._best = False # keep the highest rank card preferably trump
-        self._worst = False # keep the lowest rank card preferably not trump
+        self._wins = False # only keep cards that beat the best current card
+        self._loses = False # only keep cards that the current card beats
+        self._best = False # only keep the highest rank card preferably trump
+        self._worst = False # only keep the lowest rank card preferably not trump
         self.name = name
         if phrase is not None: self.select(phrase)
 
@@ -225,8 +226,9 @@ class Query:
         all = self._hand.all(snap.hand)
 
         if not self._count.test(len(all)): return Query_Result([])
-        if self._beats == True: all = self.do_beats(all, snap)
-        if self._loses == True: all = self.do_loses(all, snap)
+        if self._wins == True: all = self.do_wins(all, snap)
+        if self._loses == True: 
+            all = self.do_loses(all, snap)
         if self._best == True: all = self.do_best(all, snap)
         if self._worst == True: all = self.do_worst(all, snap)
 
@@ -244,12 +246,13 @@ class Query:
 
         selected = Query_Result()
         for card in all:
-            if best_card.compare(card, lead_suit) >= 0:
-                selected.append(card)
+            winner = winning_card(lead_suit, best_card, card)
+            loser = losing_card(lead_suit, best_card, card)            
+            if loser == card: selected.append(loser)
 
         return selected
 
-    def do_beats(self, all, snap: Snapshot):
+    def do_wins(self, all, snap: Snapshot):
         if len(snap.tricks) == 0: return all
         if len(snap.tricks[-1]) == 0: return all        
 
@@ -258,8 +261,8 @@ class Query:
 
         selected = Query_Result()
         for card in all:
-            if best_card.compare(card, lead_suit) < 0:
-                selected.append(card)
+            winner = winning_card(lead_suit, best_card, card)
+            if winner == card: selected.append(winner)
 
         return selected
 
@@ -331,8 +334,8 @@ class Query:
         self._down_card.select(phrase) 
         return self
 
-    def beats(self, value = True):
-        self._beats = value
+    def wins(self, value = True):
+        self._wins = value
         return self
     
     def loses(self, value = True):

@@ -233,7 +233,7 @@ def test_beats(game):
     game.input('Player2', 'play', '10♥')
     snap = Snapshot(game, 'Player3')
 
-    q = Query().select('~').beats() # lead card
+    q = Query().select('~').wins() # lead card
     assert set(q.all(snap)) == set(['9♠', 'A♥', 'K♥'])
 
 def test_loses_to(game):
@@ -356,3 +356,46 @@ def test_down_card_is_LB_select_all(game):
     q = Query().select('~')
     
     assert set(q.all(snap)) == set(['J♦', '10♥', 'A♦', 'A♥', 'Q♥'])      
+
+def test_worst_card_with_loses_and_beats(game):
+    game.state = game.state_5
+    game.set_cards('Player1', ['10♣', 'Q♣', '9♣', '10♥', 'Q♠'])   
+    game.trump = "♠"
+    game.up_card = None
+    game.down_card = 'K♦'
+    game.order = [1, 2, 3, 0]
+
+    game.current_player_index = 0
+    game._tricks = []
+    game._tricks.append(Trick("♠", game.order, ["K♥","Q♥","A♥"]))
+    snap = Snapshot(game, 'Player1')
+    print(snap)
+    
+    q1 = Query("~", "beats").lead("123").wins().worst()
+    print(q1.all(snap), q1.playable(snap))
+    assert q1.all(snap)[0] == "Q♠"
+
+    q2 = Query("~", "loses").lead("123").loses().worst()
+    print(q2.all(snap), q2.playable(snap))
+    assert q2.all(snap)[0] == "9♣"
+
+#   Players: [{'name': 'Bot_00', 'cards': 4, 'tricks': 0, 'index': 3, 'played': A♥}, {'name': 'Bot_10', 'cards': 5, 'tricks': 0, 'index': 0, 'played': ''}, {'name': 'Bot_01', 'cards': 4, 'tricks': 0, 'index': 1, 'played': K♥}, {'name': 'Bot_11', 'cards': 4, 'tricks': 0, 'index': 2, 'played': Q♥}]
+#   Tricks: [["K♥","Q♥","A♥"]:♠]
+#   For Player: 0
+#   Active Player: 0
+#   Game State: 5
+#   Up Card: None
+#   Down Card: K♦
+#   Discard: None
+#   Trump: ♠
+#   Maker: 0
+#   Dealer: 0
+#   Hand: ['10♣', 'Q♣', '9♣', '10♥', 'Q♠']
+#   Order: [1, 2, 3, 0]
+#   Hands Played: 10
+#   Score: [5, 9]
+#   Last Action: play
+#   Last Player: 3
+#   State: 5
+#   Hash: b2d1547a
+#   Lead: 1    

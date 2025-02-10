@@ -8,7 +8,7 @@ class Trick(List[Card]):
     Represents a trick in Euchre, storing cards played in order and tracking the winner.
     """
 
-    def __init__(self, trump: str, order: List[int]):
+    def __init__(self, trump: str, order: List[int], init = []):
         """
         Initializes an empty trick.
 
@@ -18,6 +18,9 @@ class Trick(List[Card]):
         super().__init__()
         self._trump: str = trump  # The trump suit for this trick
         self._order = order
+        
+        for card in init:
+            self.append(Card(self, card))
 
     def copy(self) -> "Trick":
         """
