@@ -312,6 +312,9 @@ class Game(Euchre):
             "last_player": self.last_player,
             "last_action": self.last_action
         }
+    
+    def to_json(self, indent = 2):
+        return json.dumps(self, indent = indent, default=custom_json_serializer)
          
     @staticmethod
     def from_json(json_object):
