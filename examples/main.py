@@ -19,5 +19,5 @@ snap = Snapshot(game, "Player1")
 # print(snap)
 # ['A♦', '9♣', 'J♦', 'K♠', 'J♥']
 
-print(game.get_player(0).cards.hex())
+print(game.get_player(0).hand.hex())
 

@@ -396,3 +396,27 @@ def test_playable(game):
 
     q2 = Query("~", "loses").lead("123").playable().loses().worst()
     assert q2.all(snap)[0] == "10♥"
+
+def test_count_match(game):
+    game.state = game.state_5
+    game.set_cards('Player1', ['10♣', 'Q♣', '9♣', '10♥', 'Q♠'])   
+    game.trump = "♠"
+    game.up_card = None
+    game.down_card = 'K♦'
+    game.order = [1, 2, 3, 0]    
+    snap = Snapshot(game, 'Player1')
+
+    q = Query("♣").count("3")
+    assert q.all(snap) == ['10♣', 'Q♣', '9♣']
+
+def test_count_not_match(game):
+    game.state = game.state_5
+    game.set_cards('Player1', ['10♣', 'Q♣', '9♣', '10♥', 'Q♠'])   
+    game.trump = "♠"
+    game.up_card = None
+    game.down_card = 'K♦'
+    game.order = [1, 2, 3, 0]    
+    snap = Snapshot(game, 'Player1')
+
+    q = Query("♣").count("45")
+    assert q.all(snap) == []    

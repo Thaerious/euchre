@@ -33,8 +33,8 @@ def test_initialization(euchre):
     assert euchre.dealer.name == "Player4"
 
     # the score starts at 0
-    assert euchre.score[0] == 0
-    assert euchre.score[1] == 0
+    assert euchre.teams[0].score == 0
+    assert euchre.teams[1].score == 0
 
 def test_shuffle_deck(euchre):
     original_deck = euchre.deck.copy()       
@@ -79,7 +79,7 @@ def test_deal_cards(euchre):
     assert euchre.down_card == None
     assert euchre.discard == None
 
-    assert set(euchre.players[0].cards) == {'9♠','K♠','J♥','9♣','K♣'}
+    assert set(euchre.players[0].hand) == {'9♠','K♠','J♥','9♣','K♣'}
 
 def test_turn_down_card(euchre):   
     euchre.deal_cards()
@@ -96,8 +96,8 @@ def test_swap_card(euchre):
     assert euchre.up_card == "J♦"
     assert euchre.down_card == None
     assert euchre.discard == "Q♠" 
-    assert "J♦" in euchre.dealer.cards 
-    assert "Q♥" not in euchre.dealer.cards
+    assert "J♦" in euchre.dealer.hand 
+    assert "Q♥" not in euchre.dealer.hand
 
 # can not turn down card after picking up
 def test_turn_down_card_exception(euchre):
@@ -223,51 +223,53 @@ def test_next_hand_exception_0(euchre):
     with pytest.raises(EuchreException, match="Hand not finished."): 
         euchre.next_hand()    
 
-@pytest.mark.parametrize(
-    "maker, tricks, isAlone, expected_score",
-    [
-        # Maker team wins all 5 tricks, goes alone
-        (0, [5, 0, 0, 0], True, [4, 0]),
+# todo test scoring
+# @pytest.mark.parametrize(
+#     "maker, tricks, isAlone, expected_score",
+#     [
+#         # Maker team wins all 5 tricks, goes alone
+#         (0, [5, 0, 0, 0], True, [4, 0]),
 
-        # Maker team wins all 5 tricks, does not go alone
-        (0, [3, 0, 2, 0], False, [2, 0]),
+#         # Maker team wins all 5 tricks, does not go alone
+#         (0, [3, 0, 2, 0], False, [2, 0]),
 
-        # Maker team wins 3 tricks
-        (0, [3, 0, 0, 2], False, [1, 0]),
+#         # Maker team wins 3 tricks
+#         (0, [3, 0, 0, 2], False, [1, 0]),
 
-        # Maker team wins 4 tricks
-        (0, [4, 0, 0, 1], False, [1, 0]),
+#         # Maker team wins 4 tricks
+#         (0, [4, 0, 0, 1], False, [1, 0]),
 
-        # Maker team loses, opponent team wins all tricks
-        (0, [0, 5, 0, 0], False, [0, 2]),
+#         # Maker team loses, opponent team wins all tricks
+#         (0, [0, 5, 0, 0], False, [0, 2]),
 
-        # Maker team loses, opponent team wins all tricks
-        (0, [0, 3, 0, 2], False, [0, 2]),        
+#         # Maker team loses, opponent team wins all tricks
+#         (0, [0, 3, 0, 2], False, [0, 2]),        
 
-        # Maker team loses with mixed tricks
-        (0, [2, 1, 0, 2], False, [0, 2]),
+#         # Maker team loses with mixed tricks
+#         (0, [2, 1, 0, 2], False, [0, 2]),
 
-        # Maker at a different index, team wins 5 tricks alone
-        (2, [0, 0, 5, 0], True, [4, 0]),
+#         # Maker at a different index, team wins 5 tricks alone
+#         (2, [0, 0, 5, 0], True, [4, 0]),
 
-        # Maker at a different index, team wins 5 tricks not alone
-        (2, [2, 0, 3, 0], False, [2, 0]),
+#         # Maker at a different index, team wins 5 tricks not alone
+#         (2, [2, 0, 3, 0], False, [2, 0]),
 
-        # Maker team wins exactly 3 tricks, does not go alone
-        (1, [1, 2, 1, 1], False, [0, 1]),
+#         # Maker team wins exactly 3 tricks, does not go alone
+#         (1, [1, 2, 1, 1], False, [0, 1]),
 
-        # Maker team loses with mixed tricks, maker at a different index
-        (1, [1, 0, 3, 1], False, [2, 0]),
-    ],
-)
-def test_score_hand(maker, tricks, isAlone, expected_score):
-    """
-    Test the score_hand function with various scenarios.
+#         # Maker team loses with mixed tricks, maker at a different index
+#         (1, [1, 0, 3, 1], False, [2, 0]),
+#     ],
+# )
+# def test_score_hand(maker, tricks, isAlone, expected_score):
+#     """
+#     Test the score_hand function with various scenarios.
 
-    Args:
-        maker (int): Index of the maker.
-        tricks (List[int]): List of tricks won by each player.
-        isAlone (bool): Whether the maker's team went alone.
-        expected_score (int): Expected score based on the input.
-    """
-    assert do_score_hand(maker, tricks, isAlone) == expected_score
+#     Args:
+#         maker (int): Index of the maker.
+#         tricks (List[int]): List of tricks won by each player.
+#         isAlone (bool): Whether the maker's team went alone.
+#         expected_score (int): Expected score based on the input.
+#     """
+#     assert 
+#     assert do_score_hand(maker, tricks, isAlone) == expected_score

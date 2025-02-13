@@ -19,10 +19,31 @@ class Print_Query(Query_Base):
 
 class Bot_2(Bot_0):
     queries = {
-        "state_1":[],
-        "state_2":[],
-        "state_3":[],
-        "state_4":[],
+        "state_1":[
+            (Query("♥").up_card("♥").count("345"), "order"),
+            (Query("♦").up_card("♦").count("345"), "order"),
+            (Query("♣").up_card("♣").count("345"), "order"),
+            (Query("♠").up_card("♠").count("345"), "order"),
+            (Query("J♥ J♦ A♥").up_card("♥").count("23"), "order"),
+            (Query("J♦ J♥ A♦").up_card("♦").count("23"), "order"),
+            (Query("J♣ J♠ A♣").up_card("♣").count("23"), "order"),
+            (Query("J♠ J♣ A♠").up_card("♠").count("23"), "order"),            
+        ],
+        "state_2":[
+            # (Query("~♠").worst(), "up")
+        ],
+        "state_3":[
+            (Query("~♥").down_card("♥").count("345"), "make"),
+            (Query("~♦").down_card("♦").count("345"), "make"),
+            (Query("~♣").down_card("♣").count("345"), "make"),
+            (Query("~♠").down_card("♠").count("345"), "make"),
+        ],
+        "state_4":[
+            (Query("~♥").down_card("♥").count("5"), "make"),
+            (Query("~♦").down_card("♦").count("5"), "make"),
+            (Query("~♣").down_card("♣").count("5"), "make"),
+            (Query("~♠").down_card("♠").count("5"), "make"),
+        ],
         "state_5":[
             (Query("~", "beats").lead("123").wins().worst(), "play"),
             (Query("~", "loses").lead("123").loses().worst(), "play"),            

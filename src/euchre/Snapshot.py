@@ -13,10 +13,11 @@ class Snapshot:
         for player in game.players:
             self.players.append({
                 "name": player.name,
-                "cards": len(player.cards),
+                "cards": len(player.hand),
                 "tricks": player.tricks,
                 "index": player.index,
-                "played": ""
+                "played": "",
+                "score": player.team.score
             })
 
         if len(game.tricks) > 0:
@@ -36,10 +37,9 @@ class Snapshot:
         self.tricks = game.tricks 
         self.maker = game.maker.index if game.maker != None else None
         self.dealer = game.dealer.index
-        self.hand = for_player.cards
+        self.hand = for_player.hand
         self.order = game.order   
         self.hands_played = game.hands_played
-        self.score = game.score
         self.last_action = game.last_action
         self.lead = game.lead_player.index
         self.last_player = game.last_player
@@ -111,7 +111,6 @@ class Snapshot:
             "hand": self.hand,
             "order": self.order,
             "hands_played": self.hands_played,
-            "score": self.score,
             "last_action": self.last_action,
             "last_player": self.last_player,
             "hash": self.hash,    
@@ -144,7 +143,6 @@ class Snapshot:
             f"  Hand: {[str(card) for card in self.hand]}\n"
             f"  Order: {self.order}\n"
             f"  Hands Played: {self.hands_played}\n"
-            f"  Score: {self.score}\n"
             f"  Last Action: {self.last_action}\n"
             f"  Last Player: {self.last_player}\n"
             f"  State: {self.state}\n"

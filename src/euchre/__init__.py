@@ -2,7 +2,7 @@
 
 # Import classes and functions to expose them at the package level
 from .card.Card import *
-from .Player import Player
+from .Player import Player, Team
 from .Game import Game
 from .Snapshot import Snapshot
 from .Euchre import Euchre
@@ -13,5 +13,6 @@ __all__ = [
     'Player',
     'Game',
     'Snapshot',
-    'Euchre'
+    'Euchre',
+    'Team'
 ]

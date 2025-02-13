@@ -95,9 +95,31 @@ class Bot_0:
             
             result = eval(query[0]).get()
 
-            if result is not None:
-                self.stats[query[0]].activated += 1
-                return (query[1], result)  
+            try:
+                if result is not None:
+                    self.stats[query[0]].activated += 1
+                    return (query[1], result)  
+            except Exception :
+                print(f"Exception with result: '{result}'")
+                raise
+
+        raise Exception("Sanity check failed")
+
+    def do_state_suit(self, state, snap, eval):
+        self.state_counts[state] += 1
+
+        for query in self.queries[state]:
+            self.stats[query[0]].call_count += 1
+            
+            result = eval(query[0]).get()
+
+            try:
+                if result is not None:
+                    self.stats[query[0]].activated += 1
+                    return (query[1], result.suit)  
+            except Exception :
+                print(f"Exception with result: '{result}'")
+                raise
 
         raise Exception("Sanity check failed")
 
@@ -108,10 +130,10 @@ class Bot_0:
         return self.do_state("state_2", snap, lambda q: q.all(snap))
 
     def state_3(self, snap): # pass / make / alone
-        return self.do_state("state_3", snap, lambda q: q.all(snap))
+        return self.do_state_suit("state_3", snap, lambda q: q.all(snap))
 
     def state_4(self, snap): # Dealer make / alone
-        return self.do_state("state_4", snap, lambda q: q.all(snap))
+        return self.do_state_suit("state_4", snap, lambda q: q.all(snap))
 
     def state_5(self, snap):        
         return self.do_state("state_5", snap, lambda q: q.playable().all(snap))        

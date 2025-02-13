@@ -1,28 +1,71 @@
 from euchre.del_string import del_string
 from euchre.card import *
+from .custom_json_serializer import custom_json_serializer
+import json
+
+class Team:
+    def __init__(self, players):
+        self._players = players
+        self._score = 0
+
+    @property
+    def is_alone(self):
+        for player in self._players:
+            if player.alone: return True
+        return False       
+
+    @property
+    def tricks(self):
+        tricks = 0
+        for player in self._players:
+            tricks = tricks + player.tricks
+        return tricks
+
+    @property
+    def players(self):
+        return self._players.copy()
+
+    @property
+    def score(self):
+        return self._score
+
+    @score.setter
+    def score(self, value):
+        self._score = value
+
 
 class Player:
     def __init__(self, name, index):
         self.name = name        
         self.partner = None
         self.index = index
-        self.clear()             
+        self.team = None
+        self.clear()
+
+    def __json__(self):
+        return {
+            "name": self.name,
+            "tricks": self.tricks,
+            "played": self.played,
+            "hand": self.hand,
+            "alone": self.alone
+        }
 
     def clear(self):
-        self.cards = Hand()
+        self.hand = Hand()
         self.played = [] # cards self player has played in the current trick
         self.tricks = 0
         self.alone = False   
 
     def copy(self):
         newPlayer = Player(self.name)
-        for card in self.cards:
-            newPlayer.cards.append(card)
+        for card in self.hand:
+            newPlayer.hand.append(card)
 
         return newPlayer
 
     def __str__(self):     
-        sb = f"{self.name}[{del_string(self.cards)}][{del_string(self.played)}] {self.tricks}"
+        sb = f"{self.name}[{del_string(self.hand)}][{del_string(self.played)}] {self.tricks}"
         return sb
 
 class PlayerList(list):

@@ -20,7 +20,7 @@ class Trick(List[Card]):
         self._order = order
         
         for card in init:
-            self.append(Card(self, card))
+            self.append(Card(self, card))    
 
     def copy(self) -> "Trick":
         """
