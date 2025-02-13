@@ -222,14 +222,13 @@ class Query:
         if not self._dealer.test(snap.dealer): return Query_Result([])
 
         all = self._hand.all(snap.hand)
-
-        if not self._count.test(len(all)): return Query_Result([])
+        
         if self._playable == True: all = self.do_playable(all, snap)
         if self._wins == True: all = self.do_wins(all, snap)
-        if self._loses == True: 
-            all = self.do_loses(all, snap)
+        if self._loses == True: all = self.do_loses(all, snap)
         if self._best == True: all = self.do_best(all, snap)
         if self._worst == True: all = self.do_worst(all, snap)
+        if not self._count.test(len(all)): return Query_Result([])
 
         if trump is not None:
             return all.denormalize(_snap)
@@ -316,8 +315,9 @@ class Query:
         self._hand.select(phrase)
         return self
     
-    def _count(self, eval):
-        self._count.set_if(eval)
+    def count(self, phrase):
+        self._count.clear_all()
+        self._count.select(phrase)
         return self
 
     def lead(self, phrase):
