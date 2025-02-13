@@ -3,6 +3,8 @@ from euchre.Euchre import *
 from euchre.Player import Player
 import random
 from typing import *
+from .custom_json_serializer import custom_json_serializer
+import json
 
 class ActionException(EuchreException):
     """
@@ -302,3 +304,58 @@ class Game(Euchre):
         sb += f"state: {self.current_state}\n"
 
         return sb
+    
+    def __json__(self):
+        return super().__json__() | {
+            "hash": self.hash,
+            "state": self.current_state,
+            "last_player": self.last_player,
+            "last_action": self.last_action
+        }
+         
+    @staticmethod
+    def from_json(json_object):
+        player_names = [player["name"] for player in json_object["players"]]        
+        game = Game(player_names)
+        game.order = [int(i) for i in json_object["order"]]    
+        game.trump = json_object["trump"]
+
+        for p in json_object["players"]:
+            player = game.get_player(p['name'])
+            player.tricks = p['tricks']
+            player.alone = p['alone']
+            cards_from_json(game.deck, player.played, p['played'])
+            cards_from_json(game.deck, player.hand, p['hand'])
+
+        game.deck.clear()
+        for c in json_object["deck"]: game.deck.append(Card(game.deck, c))
+
+        for trick in json_object["tricks"]:
+            game._tricks.append(Trick(game.trump, game.order, trick))
+
+        game.current_player_index = int_or_none(json_object["current_player"])    
+        game.dealer_index = int_or_none(json_object["dealer"])
+        game.lead_player_index = int_or_none(json_object["lead"])
+        game.maker_index = int_or_none(json_object["maker"])
+        game.hand_count = int_or_none(json_object["hand_count"])
+        game._up_card = card_or_none(game.deck, json_object["up_card"])
+        game._down_card = card_or_none(game.deck, json_object["down_card"])
+        game._discard = card_or_none(game.deck, json_object["discard"])
+        game.last_player = json_object["last_player"]
+        game.last_action = json_object["last_action"]
+        game.state = getattr(game, f"state_{json_object["state"]}")
+
+        return game         
+    
+def int_or_none(source):
+    if source is None: return None
+    return int(source)
+
+def card_or_none(deck, source):
+    if source is None: return None
+    return Card(deck, source)
+
+def cards_from_json(deck, target, source):
+    for c in source: 
+        target.append(Card(deck, c))
+

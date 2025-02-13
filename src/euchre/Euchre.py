@@ -1,7 +1,9 @@
-from euchre.Player import PlayerList, Player
+from euchre.Player import PlayerList, Player, Team
 from euchre.card import *
-from euchre.rotate import rotateTo
+from euchre.rotate import rotate_to
 from typing import List, Optional, Union
+from .custom_json_serializer import custom_json_serializer
+import json
 
 NUM_PLAYERS = 4
 NUM_CARDS_PER_PLAYER = 5
@@ -40,8 +42,15 @@ class Euchre:
         self.lead_player_index = self._order[0]
         self.hand_count = 0
 
-        self.deck = Deck()      
-        self._score: List[int] = [0, 0] 
+        self._teams = []
+        self._teams.append(Team([self.players[0], self.players[2]]))
+        self._teams.append(Team([self.players[1], self.players[3]]))
+        self.players[0].team = self._teams[0]
+        self.players[1].team = self._teams[1]
+        self.players[2].team = self._teams[0]
+        self.players[3].team = self._teams[1]
+
+        self.deck = Deck()
         self.__reset()
         self._tricks: List[Trick] = []
 
@@ -71,8 +80,8 @@ class Euchre:
         return self.players[self.lead_player_index]
 
     @property
-    def score(self) -> List[int]:
-        return self._score.copy()
+    def teams(self) -> List[int]:
+        return self._teams.copy()
 
     @property
     def up_card(self) -> str:
@@ -115,18 +124,8 @@ class Euchre:
 
     @trump.setter
     def trump(self, value):
-        if not value in ["♠", "♥", "♣", "♦", None]: raise Exception("Sanity check failed")
+        if not value in ["♠", "♥", "♣", "♦", None]: raise Exception(f"Unexpected value: '{value}'")
         self.deck.trump = value
-
-    @property
-    def score(self) -> List[int]:
-        """
-        Retrieve the current score of the game.
-
-        Returns:
-            List[int]: A two-element list containing the score for each team.
-        """
-        return self._score.copy()
 
     @property 
     def has_trick(self) -> bool:
@@ -313,7 +312,7 @@ class Euchre:
         for _ in range(NUM_CARDS_PER_PLAYER):
             for player in self.players:
                 card = self.deck.pop(0)
-                player.cards.append(card)
+                player.hand.append(card)
         self._up_card = self.deck.pop(0)
 
     def go_alone(self) -> None:
@@ -379,12 +378,12 @@ class Euchre:
         if self.discard is not None:
             raise EuchreException("Discard must be None to swap.")
 
-        if card not in self.dealer.cards:
+        if card not in self.dealer.hand:
             raise EuchreException(f"Must swap card from hand: {card}")
 
         # Remove the given card, add the upCard to dealer's hand
-        self.dealer.cards.remove(card)
-        self.dealer.cards.append(self._up_card)
+        self.dealer.hand.remove(card)
+        self.dealer.hand.append(self._up_card)
         self.discard = card
         # self.maker_index = self.dealer_index
 
@@ -422,15 +421,15 @@ class Euchre:
 
         player = self.current_player
 
-        if card not in player.cards:
+        if card not in player.hand:
             raise EuchreException(f"Card '{card}' not in hand of '{player.name}'.")
         
-        if not card in playable(self.current_trick, player.cards):
+        if not card in playable(self.current_trick, player.hand):
             leadSuit = self._tricks[-1].lead_suit
             raise EuchreException(f"Card '{card}' must follow suit '{leadSuit}'.")
 
         # Remove card from player's hand and move to played
-        player.cards.remove(card)
+        player.hand.remove(card)
         player.played.append(card)
 
         # Add to the current trick
@@ -457,7 +456,7 @@ class Euchre:
         self.players[winner_pindex].tricks += 1
 
         # Move the winner to the front of the order
-        rotateTo(self._order, winner_pindex)
+        rotate_to(self._order, winner_pindex)
         self.current_player_index = winner_pindex
         self.lead_player_index = winner_pindex
 
@@ -473,12 +472,38 @@ class Euchre:
             return False
         return self.is_trick_finished
 
-    def score_hand(self):
-        is_alone = len(self._order) == 3
-        tricks = [p.tricks for p in self.players]
-        hand_score = do_score_hand(self.maker.index, tricks, is_alone)
-        self._score[0] = self._score[0] + hand_score[0]
-        self._score[1] = self._score[1] + hand_score[1]      
+    def score_hand(self) -> int:
+        """
+        Score a completed Euchre hand based on the tricks won by each side.
+
+        Args:
+            maker (int): Index of the player who made trump.
+            tricks (List[int]): Number of tricks won, indexed by each of the four players.
+            isAlone (bool): True if the maker's team played alone, otherwise False.
+
+        Returns:
+            int: 
+                4 if the maker's team took all 5 tricks alone,
+                2 if the maker's team took all 5 tricks (not alone),
+                1 if the maker's team took 3 or 4 tricks,
+                -2 if the opposing team took 3 or more tricks.
+        
+        Raises:
+            EuchreException: If the total number of tricks does not sum to 5.
+        """
+
+        maker_tricks = self.maker.team.tricks
+        
+        if maker_tricks == NUM_TRICKS_PER_HAND and self.maker.team.is_alone:
+            self.maker.team.score = self.maker.team.score + 4
+        elif maker_tricks == NUM_TRICKS_PER_HAND:
+            self.maker.team.score = self.maker.team.score + 2
+        elif maker_tricks >= REQUIRED_TRICKS_TO_WIN:
+            self.maker.team.score = self.maker.team.score + 1
+        else:
+            for team in self._teams:
+                if team != self.maker.team:
+                    team.score = team.score + 2
 
     def is_game_over(self) -> bool:
         """
@@ -490,13 +515,16 @@ class Euchre:
         Returns:
             bool: True if either team has reached or exceeded 10 points, otherwise False.
         """
-        return self.score[0] >= 10 or self.score[1] >= 10
+
+        for team in self._teams:
+            if team.score >= 10: return True
+        return False
 
     def set_cards(self, player, cards):
         player = self.get_player(player)
-        player.cards.clear()
+        player.hand.clear()
         for card_string in cards:
-            player.cards.append(self.deck.get_card(card_string))
+            player.hand.append(self.deck.get_card(card_string))
 
     def __str__(self) -> str:  # pragma: no cover
         """
@@ -518,7 +546,6 @@ class Euchre:
         sb = sb + f"trump: {self.trump}" + "\n"
         sb = sb + f"maker: {self.maker_index} -> {self.maker}" + "\n"
         sb = sb + f"lead: {self.lead_player_index} -> {self.players[self.lead_player_index]}" + "\n"
-        sb = sb + f"score: {self._score}" + "\n"
 
         sb = sb + f"tricks:\n"
         for trick in self.tricks:
@@ -526,43 +553,21 @@ class Euchre:
 
         return sb
 
-def do_score_hand(maker: int, tricks: List[int], isAlone: bool) -> int:
-    """
-    Score a completed Euchre hand based on the tricks won by each side.
+    def __json__(self):
+        return {
+            "players": self.players,
+            "tricks": self.tricks,
+            "deck": self.deck,
+            "trump": self.trump,
+            "order": self.order, 
+            "current_player": self.current_player_index,
+            "dealer": self.dealer_index,
+            "lead": self.lead_player_index,
+            "maker": self.maker_index,
+            "hand_count": self.hand_count,
+            "up_card": self.up_card,
+            "down_card": self.down_card,
+            "discard": self.discard,
+        }      
 
-    Args:
-        maker (int): Index of the player who made trump.
-        tricks (List[int]): Number of tricks won, indexed by each of the four players.
-        isAlone (bool): True if the maker's team played alone, otherwise False.
-
-    Returns:
-        int: 
-            4 if the maker's team took all 5 tricks alone,
-            2 if the maker's team took all 5 tricks (not alone),
-            1 if the maker's team took 3 or 4 tricks,
-            -2 if the opposing team took 3 or more tricks.
-    
-    Raises:
-        EuchreException: If the total number of tricks does not sum to 5.
-    """
-    if sum(tricks) != NUM_TRICKS_PER_HAND:
-        raise EuchreException(f"Tricks must sum to 5, found: {sum(tricks)}.")
-
-    result = [0, 0]
-
-    # Calculate the total tricks won by the maker's team
-    maker_tricks = tricks[maker] + tricks[(maker + 2) % NUM_PLAYERS]
-
-    if maker_tricks == NUM_TRICKS_PER_HAND and isAlone:
-        result[maker % 2] = 4
-    elif maker_tricks == NUM_TRICKS_PER_HAND:
-        result[maker % 2] = 2
-    elif maker_tricks >= REQUIRED_TRICKS_TO_WIN:
-        result[maker % 2] = 1
-    else:
-        result[(maker + 1) % 2] = 2
-
-    return result
-
-
-__all__ = ["Euchre", "EuchreException", "do_score_hand"]
+__all__ = ["Euchre", "EuchreException"]
