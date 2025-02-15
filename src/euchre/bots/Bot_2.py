@@ -33,10 +33,10 @@ class Bot_2(Bot_0):
             # (Query("~♠").worst(), "up")
         ],
         "state_3":[
-            (Query("~♥").down_card("♥").count("345"), "make"),
-            (Query("~♦").down_card("♦").count("345"), "make"),
-            (Query("~♣").down_card("♣").count("345"), "make"),
-            (Query("~♠").down_card("♠").count("345"), "make"),
+            (Query("~♥").down_card("♥").count("5"), "make"),
+            (Query("~♦").down_card("♦").count("5"), "make"),
+            (Query("~♣").down_card("♣").count("5"), "make"),
+            (Query("~♠").down_card("♠").count("5"), "make"),
         ],
         "state_4":[
             (Query("~♥").down_card("♥").count("5"), "make"),

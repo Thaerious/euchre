@@ -206,7 +206,7 @@ class Query:
         snap = _snap
         trump = snap.trump
 
-        snap = snap.normalize_order()
+        print(snap)
 
         if trump is not None:
             snap = snap.normalize_cards()
@@ -217,9 +217,12 @@ class Query:
         if not self._up_card.test(snap.up_card): return Query_Result([])
         if not self._down_card.test(snap.down_card): return Query_Result([])
 
-        if not self._lead.test(snap.lead): return Query_Result([])
-        if not self._maker.test(snap.maker): return Query_Result([])
-        if not self._dealer.test(snap.dealer): return Query_Result([])
+        if not self._lead.test((snap.for_index + snap.lead_index) % 4): 
+            return Query_Result([])        
+        if not self._maker.test((snap.for_index + snap.maker_index) % 4): 
+            return Query_Result([])
+        if not self._dealer.test((snap.for_index + snap.dealer_index) % 4): 
+            return Query_Result([])
 
         all = self._hand.all(snap.hand)
         

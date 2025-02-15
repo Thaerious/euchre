@@ -7,6 +7,20 @@ import random
 import time
 import sys
 
+def play_game(game):
+    while game.current_state != 0:
+        if game.current_state in [6, 7]:
+            game.input(None, "continue", None)
+        else:
+            bot = bots[game.current_player.name].bot
+            (action, data) = bot.decide(Snapshot(game, game.current_player.name))
+            game.input(game.current_player.name, action, data)
+
+    for player in game.players:
+        if player.team.score >= 10: bots[player.name].wins += 1
+
+    seed = seed + 1
+
 run_count = 100
 seed = random.randint(0, 100000)
 
@@ -50,24 +64,11 @@ for i in range(run_count):
     rotate_to(game.order, lead)
 
     game.input(None, "start")
-
-    # game.register_hook("before_input", lambda action, data:
-    #     print(game.players[0])
-    # )
-
-    #play the game
-    while game.current_state != 0:
-        if game.current_state in [6, 7]:
-            game.input(None, "continue", None)
-        else:
-            bot = bots[game.current_player.name].bot
-            (action, data) = bot.decide(Snapshot(game, game.current_player.name))
-            game.input(game.current_player.name, action, data)
-
-    for player in game.players:
-        if player.team.score >= 10: bots[player.name].wins += 1
-
-    seed = seed + 1
+    try:
+        play_game(game)
+    except Exception:
+        print(game.to_json(None))
+        raise
 
 end = time.time()
 

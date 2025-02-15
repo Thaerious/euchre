@@ -338,7 +338,7 @@ class Game(Euchre):
 
         game.current_player_index = int_or_none(json_object["current_player"])    
         game.dealer_index = int_or_none(json_object["dealer"])
-        game.lead_player_index = int_or_none(json_object["lead"])
+        game.lead_index = int_or_none(json_object["lead"])
         game.maker_index = int_or_none(json_object["maker"])
         game.hand_count = int_or_none(json_object["hand_count"])
         game._up_card = card_or_none(game.deck, json_object["up_card"])

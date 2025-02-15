@@ -1,68 +1,53 @@
 from .custom_json_serializer import custom_json_serializer
-import json
 from typing import Any, Dict
 from euchre.card.Hand import Hand
+from .Game import Game
+from .del_string import del_string
+import copy
 
-class Snapshot:
-    def __init__(self, game, player_name):
-        self.game = game
-        self.player_name = player_name
-        for_player = game.get_player(player_name)
+class Snap_Player:
+    def __init__(self, player):
+        self.__dict__.update(player.__dict__)
+        self.hand = len(player.hand)
 
+    def __json__(self):
+        return {
+            "name": self.name,
+            "tricks": self.tricks,
+            "played": self.played,
+            "hand": self.hand,
+            "alone": self.alone
+        }
+
+    def __str__(self):     
+        sb = f"{self.name}[{self.hand}][{del_string(self.played)}] {self.tricks}"
+        return sb
+    
+    def __repr__(self):     
+        return str(self)
+
+
+class Snapshot(Game):
+    def __init__(self, game: Game, for_player: str):       
+        self.__dict__ = copy.deepcopy(game.__dict__)
         self.players = []
-        for player in game.players:
-            self.players.append({
-                "name": player.name,
-                "cards": len(player.hand),
-                "tricks": player.tricks,
-                "index": player.index,
-                "played": "",
-                "score": player.team.score
-            })
-
-        if len(game.tricks) > 0:
-            trick = game.tricks[-1]
-            i = game.lead_player.index
-            
-            for card in trick:
-                self.players[i]["played"] = card
-                i = (i + 1) % 4
-
-        self.for_player = for_player.index
-        self.active = game.current_player.index
-        self.state = game.current_state
-        self.up_card = game.up_card
-        self.down_card = game.down_card        
-        self._trump = game.trump
-        self.tricks = game.tricks 
-        self.maker = game.maker.index if game.maker != None else None
-        self.dealer = game.dealer.index
-        self.hand = for_player.hand
-        self.order = game.order   
-        self.hands_played = game.hands_played
-        self.last_action = game.last_action
-        self.lead = game.lead_player.index
-        self.last_player = game.last_player
+        self.for_index = game.get_player(for_player).index
         
-        self.hash = game.hash
-        self.state = game.current_state
+        # Replace players with Snap_Player versions
+        self.players = [Snap_Player(player) for player in game.players]
 
-        if game.dealer == for_player:
-            self.discard = game.discard
-        else:
-            self.discard = None      
+        self.hand = copy.deepcopy(game.get_player(for_player).hand)
 
-    @property
-    def trump(self):
-        return self._trump
+        # Hide discard if not for dealer
+        if game.dealer and game.dealer.name != for_player:
+            self.discard = None
 
-    # return a new normalized snapshot
     def normalize_cards(self):
-        norm = Snapshot(self.game, self.player_name)
+        norm = copy.deepcopy(self)
         norm.hand = self.hand.normalize(norm)
         norm._trump = "♠"
 
-        norm.tricks = []
+        norm._tricks = []
         for trick in self.tricks:
             norm.tricks.append(trick.normalize())
 
@@ -71,81 +56,39 @@ class Snapshot:
 
         return norm
 
+    # change player index references so that 'for_player' is index 0
     def normalize_order(self):
-        norm = Snapshot(self.game, self.player_name)
-        norm.for_player = 0
-        norm.lead = (self.lead - self.for_player) % 4
-        norm.dealer = (self.dealer - self.for_player) % 4        
-        norm.active = (self.active - self.for_player) % 4
+        norm = copy.deepcopy(self)
+        norm.for_index = 0
+        norm.lead_index = (self.lead_index - self.for_index) % 4
+        norm.dealer_index = (self.dealer_index - self.for_index) % 4        
+        norm.current_player_index = (self.current_player_index - self.for_index) % 4
 
         if self.last_player is not None:
-            norm.last_player = (self.last_player - self.for_player) % 4
+            norm.last_player = (self.last_player - self.for_index) % 4
 
         if self.maker is not None:
-            norm.maker = (self.maker - self.for_player) % 4
+            norm._maker = (self.maker.index - self.for_index) % 4
 
-        norm.order = []
+        new_order = []
         for i in self.order:
-            norm.order.append((i - self.for_player) % 4)
+            new_order.append((i - self.for_index) % 4)
+        norm.order = new_order
 
         for player in norm.players:
-            player["index"] = (player["index"] - self.for_player) % 4
+            player.index = (player.index - self.for_index) % 4
 
         return norm
 
-    def to_dict(self) -> Dict[str, Any]:
+    def __str__(self) -> str:  # pragma: no cover
         """
-        Converts the Snapshot object to a dictionary suitable for JSON serialization.
-        """
-        return {
-            "players": self.players,
-            "tricks": self.tricks,
-            "for_player": self.for_player,
-            "active_player": self.active,
-            "state": self.state,
-            "up_card": self.up_card,
-            "down_card": self.down_card,
-            "trump": self.trump,
-            "maker": self.maker,
-            "dealer": self.dealer,
-            "hand": self.hand,
-            "order": self.order,
-            "hands_played": self.hands_played,
-            "last_action": self.last_action,
-            "last_player": self.last_player,
-            "hash": self.hash,    
-            "lead": self.lead      
-        }
+        String representation of the Snapshot object for debugging purposes.
 
-    def to_json(self) -> str:
+        Returns:
+            str: Debug information for the Snapshot.
         """
-        Converts the Snapshot object to a JSON string.
-        """
+        sb = super().__str__()
+        sb += f"for player: {self.for_index} -> {self.players[self.for_index]}\n"
+        sb += f"hand: {self.hand}\n"
 
-        return json.dumps(self.to_dict(), indent=2, default=custom_json_serializer)
-
-    def __str__(self) -> str:
-        """
-        Returns a human-readable string representation of the Snapshot object.
-        """
-        return (
-            f"  Players: {self.players}\n"
-            f"  Tricks: {self.tricks}\n"
-            f"  For Player: {self.for_player}\n"
-            f"  Active Player: {self.active}\n"
-            f"  Game State: {self.state}\n"
-            f"  Up Card: {self.up_card}\n"
-            f"  Down Card: {self.down_card if self.down_card else 'None'}\n"            
-            f"  Discard: {self.discard if self.down_card else 'None'}\n"
-            f"  Trump: {self.trump}\n"
-            f"  Maker: {self.maker}\n"
-            f"  Dealer: {self.dealer}\n"
-            f"  Hand: {[str(card) for card in self.hand]}\n"
-            f"  Order: {self.order}\n"
-            f"  Hands Played: {self.hands_played}\n"
-            f"  Last Action: {self.last_action}\n"
-            f"  Last Player: {self.last_player}\n"
-            f"  State: {self.state}\n"
-            f"  Hash: {self.hash}\n"
-            f"  Lead: {self.lead}\n"
-        )            
+        return sb

@@ -3,7 +3,6 @@ from euchre.card import *
 from euchre.rotate import rotate_to
 from typing import List, Optional, Union
 from .custom_json_serializer import custom_json_serializer
-import json
 
 NUM_PLAYERS = 4
 NUM_CARDS_PER_PLAYER = 5
@@ -39,7 +38,7 @@ class Euchre:
         self._order: List[int] = [0, 1, 2, 3]
         self.current_player_index = self._order[0]
         self.dealer_index = self._order[3]
-        self.lead_player_index = self._order[0]
+        self.lead_index = self._order[0]
         self.hand_count = 0
 
         self._teams = []
@@ -63,7 +62,7 @@ class Euchre:
         self._order = value.copy()
         self.current_player_index = self._order[0]
         self.dealer_index = self._order[3]
-        self.lead_player_index = self._order[0]
+        self.lead_index = self._order[0]
 
     def __reset(self) -> None:
         """
@@ -77,7 +76,7 @@ class Euchre:
 
     @property
     def lead_player(self) -> Player:
-        return self.players[self.lead_player_index]
+        return self.players[self.lead_index]
 
     @property
     def teams(self) -> List[int]:
@@ -100,7 +99,10 @@ class Euchre:
 
     @down_card.setter
     def down_card(self, value):
-        self._down_card = Card(self.deck, value)
+        if value is None: 
+            self._down_card = None
+        else:        
+            self._down_card = Card(self.deck, value)
 
     @property 
     def hands_played(self) -> int:
@@ -207,7 +209,7 @@ class Euchre:
         # current player is first after dealer
         # can not use old current, as it is set by trick winner see #score_trick
         self.current_player_index = (self.dealer_index + 1) % NUM_PLAYERS
-        self.lead_player_index = self.current_player_index
+        self.lead_index = self.current_player_index
 
         # Recompute the order, where the previous dealer is now the f
         for i in range(NUM_PLAYERS):
@@ -303,7 +305,7 @@ class Euchre:
         self.current_player_index = self._order[0]         
 
     def reset_lead_player(self):
-        self.lead_player_index = self.current_player_index
+        self.lead_index = self.current_player_index
 
     def deal_cards(self) -> None:
         """
@@ -458,7 +460,7 @@ class Euchre:
         # Move the winner to the front of the order
         rotate_to(self._order, winner_pindex)
         self.current_player_index = winner_pindex
-        self.lead_player_index = winner_pindex
+        self.lead_index = winner_pindex
 
     @property
     def is_hand_finished(self) -> bool:
@@ -545,7 +547,7 @@ class Euchre:
         sb = sb + f"discard: {self.discard}" + "\n"
         sb = sb + f"trump: {self.trump}" + "\n"
         sb = sb + f"maker: {self.maker_index} -> {self.maker}" + "\n"
-        sb = sb + f"lead: {self.lead_player_index} -> {self.players[self.lead_player_index]}" + "\n"
+        sb = sb + f"lead: {self.lead_index} -> {self.players[self.lead_index]}" + "\n"
 
         sb = sb + f"tricks:\n"
         for trick in self.tricks:
@@ -562,7 +564,7 @@ class Euchre:
             "order": self.order, 
             "current_player": self.current_player_index,
             "dealer": self.dealer_index,
-            "lead": self.lead_player_index,
+            "lead": self.lead_index,
             "maker": self.maker_index,
             "hand_count": self.hand_count,
             "up_card": self.up_card,
