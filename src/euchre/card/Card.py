@@ -54,14 +54,15 @@ class Card:
     def rank(self):
         return self._rank    
 
-    def normalize(self, source):
+    def normalize(self, source = None):
         """ Return a new normalized card """
+        if source is None: source = self._source
         if self.trump is None: return Card(source, self.suit, self.rank)
 
         trump_index = Card.suits.index(self.trump)
         suit_index = Card.suits.index(self.suit)
         norm_index = (suit_index - trump_index) % 4
-        norm_suit = Card.suits[norm_index]      
+        norm_suit = Card.suits[norm_index]
           
         return Card(source, norm_suit, self.rank)
 

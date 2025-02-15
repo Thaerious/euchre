@@ -511,7 +511,7 @@ class Euchre:
         """
         Determine if the game is over based on the current score.
 
-        Args:
+        Args:`
             score (List[int]): A two-element list representing the team scores.
 
         Returns:

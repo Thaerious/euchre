@@ -101,17 +101,17 @@ class QueryDeck(QueryBase):
     def clear_all(self):
         super().clear_all()
         self.flag_left_bower = False
-
-    def normalize(self):
-        self.clear(CARD_TO_INT["J♣"])
-
-        if self.flag_left_bower:
-            self.set(CARD_TO_INT["J♣"])
     
-    def test(self, card):
-        if card is None: return True
-        index = CARD_TO_INT[card]
-        return self.values[index] == STATES['set']   
+    def test(self, card: Card):
+        if card is None: return True                
+        norm_card = card.normalize()
+        norm_index = CARD_TO_INT[norm_card]
+
+        if norm_card == "J♣":
+            if card.trump == None: return self.values[norm_index] == STATES['set'] 
+            else: return self.flag_left_bower
+
+        return self.values[norm_index] == STATES['set']   
 
     def select(self, phrase):
         for split in phrase.split():
@@ -202,28 +202,21 @@ class Query:
         return self   
 
     # if up and down card tests pass, return all matching hand cards
-    def all(self, _snap: Snapshot):
-        snap = _snap
-        trump = snap.trump
-
-        print(snap)
-
-        if trump is not None:
-            snap = snap.normalize_cards()
-            self._up_card.normalize()
-            self._down_card.normalize()
-            self._hand.normalize()
-
+    def all(self, snap: Snapshot):
         if not self._up_card.test(snap.up_card): return Query_Result([])
         if not self._down_card.test(snap.down_card): return Query_Result([])
 
-        if not self._lead.test((snap.for_index + snap.lead_index) % 4): 
-            return Query_Result([])        
-        if not self._maker.test((snap.for_index + snap.maker_index) % 4): 
-            return Query_Result([])
-        if not self._dealer.test((snap.for_index + snap.dealer_index) % 4): 
-            return Query_Result([])
+        norm_lead = normalize_value(snap.for_index, snap.lead_index)
+        norm_maker = normalize_value(snap.for_index, snap.maker_index)
+        norm_dealer = normalize_value(snap.for_index, snap.dealer_index)
 
+        if not self._lead.test(norm_lead): return Query_Result([])        
+        if not self._maker.test(norm_maker): return Query_Result([])
+        if not self._dealer.test(norm_dealer): return Query_Result([])
+
+        print("\n")
+        print(self._hand)
+        print(self._hand.flag_left_bower)
         all = self._hand.all(snap.hand)
         
         if self._playable == True: all = self.do_playable(all, snap)
@@ -231,12 +224,9 @@ class Query:
         if self._loses == True: all = self.do_loses(all, snap)
         if self._best == True: all = self.do_best(all, snap)
         if self._worst == True: all = self.do_worst(all, snap)
-        if not self._count.test(len(all)): return Query_Result([])
+        if not self._count.test(len(all)): return Query_Result([])   
 
-        if trump is not None:
-            return all.denormalize(_snap)
-        else:
-            return all        
+        return all
 
     def do_playable(self, all: Query_Result, snap: Snapshot):   
         if len(snap.tricks) == 0: return all        
@@ -376,4 +366,6 @@ def invert_phrase(phrase):
 
     return "".join(inverted)
 
-    
+def normalize_value(for_index, value, mod = 4):    
+    if value is None: return None
+    return (for_index + value) % 4

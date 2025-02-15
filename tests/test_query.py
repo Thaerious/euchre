@@ -17,7 +17,7 @@ def game():
     game.up_card = "10♠"
     return game
 
-def test_raw(game):
+def test_empty(game):
     snap = Snapshot(game, 'Player1')
     q = Query().all(snap)
     assert q == []
@@ -369,7 +369,6 @@ def test_worst_card_with_loses_and_beats(game):
     game._tricks = []
     game._tricks.append(Trick("♠", game.order, ["K♥","Q♥","A♥"]))
     snap = Snapshot(game, 'Player1')
-    print(snap)
     
     q1 = Query("~", "beats").lead("123").wins().worst()
     assert q1.all(snap)[0] == "Q♠"
@@ -389,7 +388,6 @@ def test_playable(game):
     game._tricks = []
     game._tricks.append(Trick("♠", game.order, ["K♥","Q♥","A♥"]))
     snap = Snapshot(game, 'Player1')
-    print(snap)
     
     q1 = Query("~", "beats").lead("123").playable().wins().worst()
     assert len(q1.all(snap)) == 0
