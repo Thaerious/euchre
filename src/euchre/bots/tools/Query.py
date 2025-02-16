@@ -221,12 +221,12 @@ class Query:
 
     def empty_result(self, snap):
         all = Query_Result([]) 
-        self.trigger_hook("after", snap = snap, all = all)
+        self.trigger_hook("after", query = self, snap = snap, all = all)
         return all 
 
     # if up and down card tests pass, return all matching hand cards
     def all(self, snap: Snapshot):
-        self.trigger_hook("before", snap = snap)
+        self.trigger_hook("before", query = self, snap = snap)
 
         if not self._up_card.test(snap.up_card): return self.empty_result(snap)
         if not self._down_card.test(snap.down_card): return self.empty_result(snap)
@@ -248,7 +248,7 @@ class Query:
         if self._worst == True: all = self.do_worst(all, snap)
         if not self._count.test(len(all)): return self.empty_result(snap)
 
-        self.trigger_hook("after", snap = snap, all = all)
+        self.trigger_hook("after", query = self, snap = snap, all = all)
         return all
 
     def do_playable(self, all: Query_Result, snap: Snapshot):   
