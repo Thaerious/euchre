@@ -182,15 +182,33 @@ class Query:
         self._maker = QueryDigit(4)
         self._dealer = QueryDigit(4)
         self._count =  QueryDigit(6)       
-        self._wins = False # only keep cards that beat the best current card
-        self._loses = False # only keep cards that the current card beats
-        self._best = False # only keep the highest rank card preferably trump
-        self._worst = False # only keep the lowest rank card preferably not trump
+        self._wins = False     # only keep cards that beat the best current card
+        self._loses = False    # only keep cards that the current card beats
+        self._best = False     # only keep the highest rank card preferably trump
+        self._worst = False    # only keep the lowest rank card preferably not trump
         self._playable = False # process only cards that are playable
+
         self.name = name
         if phrase is not None: self.select(phrase)
+        self._hooks = {} 
+
+    def register_hook(self, event: str, func):
+        """Register a function to a hook event."""
+        if event not in self._hooks:
+            self._hooks[event] = []
+        self._hooks[event].append(func)
+        return self
+
+    def trigger_hook(self, event: str, *args, **kwargs):
+        """Trigger all hooks associated with an event."""
+        if event in self._hooks:
+            for func in self._hooks[event]:
+                func(*args, **kwargs)
 
     def __str__(self):
+        return f"[{self.name}]"
+
+    def __repr__(self):
         return f"[{self.name}]"
 
     def best(self):
@@ -201,22 +219,26 @@ class Query:
         self.return_selector = RETURN_SELECTOR['worst']
         return self   
 
+    def empty_result(self, snap):
+        all = Query_Result([]) 
+        self.trigger_hook("after", snap = snap, all = all)
+        return all 
+
     # if up and down card tests pass, return all matching hand cards
     def all(self, snap: Snapshot):
-        if not self._up_card.test(snap.up_card): return Query_Result([])
-        if not self._down_card.test(snap.down_card): return Query_Result([])
+        self.trigger_hook("before", snap = snap)
+
+        if not self._up_card.test(snap.up_card): return self.empty_result(snap)
+        if not self._down_card.test(snap.down_card): return self.empty_result(snap)
 
         norm_lead = normalize_value(snap.for_index, snap.lead_index)
         norm_maker = normalize_value(snap.for_index, snap.maker_index)
         norm_dealer = normalize_value(snap.for_index, snap.dealer_index)
 
-        if not self._lead.test(norm_lead): return Query_Result([])        
-        if not self._maker.test(norm_maker): return Query_Result([])
-        if not self._dealer.test(norm_dealer): return Query_Result([])
+        if not self._lead.test(norm_lead): return self.empty_result(snap)       
+        if not self._maker.test(norm_maker): return self.empty_result(snap)
+        if not self._dealer.test(norm_dealer): return self.empty_result(snap)
 
-        print("\n")
-        print(self._hand)
-        print(self._hand.flag_left_bower)
         all = self._hand.all(snap.hand)
         
         if self._playable == True: all = self.do_playable(all, snap)
@@ -224,8 +246,9 @@ class Query:
         if self._loses == True: all = self.do_loses(all, snap)
         if self._best == True: all = self.do_best(all, snap)
         if self._worst == True: all = self.do_worst(all, snap)
-        if not self._count.test(len(all)): return Query_Result([])   
+        if not self._count.test(len(all)): return self.empty_result(snap)
 
+        self.trigger_hook("after", snap = snap, all = all)
         return all
 
     def do_playable(self, all: Query_Result, snap: Snapshot):   

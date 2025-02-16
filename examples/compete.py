@@ -11,15 +11,17 @@ def play_game(game):
     while game.current_state != 0:
         if game.current_state in [6, 7]:
             game.input(None, "continue", None)
-        else:
-            bot = bots[game.current_player.name].bot
-            (action, data) = bot.decide(Snapshot(game, game.current_player.name))
-            game.input(game.current_player.name, action, data)
+        else: 
+            try:
+                bot = bots[game.current_player.name].bot
+                (action, data) = bot.decide(Snapshot(game, game.current_player.name))
+                game.input(game.current_player.name, action, data)
+            except:
+                print(f"Last Query: {bot.last_query}")
+                raise
 
     for player in game.players:
         if player.team.score >= 10: bots[player.name].wins += 1
-
-    seed = seed + 1
 
 run_count = 100
 seed = random.randint(0, 100000)
@@ -66,6 +68,7 @@ for i in range(run_count):
     game.input(None, "start")
     try:
         play_game(game)
+        seed = seed + 1
     except Exception:
         print(game.to_json(None))
         raise

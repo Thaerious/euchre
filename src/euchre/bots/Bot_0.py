@@ -8,19 +8,28 @@ import random
 # ["♠", "♥", "♣", "♦"]
 
 class Default_Suit(Query_Base):
-    name = "default"
+    name = "default_suit"
 
     def all(self, snap: Snapshot):
         options = []
-        for card in snap.hand:
-            if not card.suit in options: 
-                options.append(card.suit)
+        suits = Card.suits
+        suits.remove(snap.down_card.suit)
 
-        if snap.down_card.suit in options:
-            options.remove(snap.down_card.suit)
-        
-        #todo what happens if they only have the turned down suit?
+        for card in snap.hand:
+            if card.suit in suits: 
+                options.append(card)
+
         return Query_Result([random.choice(options)])        
+
+class Random_Suit(Query_Base):
+    name = "random_suit"
+
+    def all(self, snap: Snapshot):
+        options = []
+        suits = Card.suits
+        suits.remove(snap.down_card.suit)
+        random_suit = [random.choice(options)]
+        return Card(snap.deck, f"A{random_suit}")
 
 class Stat:
     call_count = 0 # the number of times this query was invoked
@@ -44,6 +53,7 @@ class Bot_0:
 
     def __init__(self, queries = None):
         self.trick_count = 0
+        self.last_query = None
 
         self.state_counts = {
             "state_1": 0,
@@ -76,6 +86,7 @@ class Bot_0:
         self.queries["state_2"].append((Query('~', 'default'), "down"))
         self.queries["state_3"].append((Query('~', 'default'), "pass"))
         self.queries["state_4"].append((Default_Suit(), "make"))
+        self.queries["state_4"].append((Random_Suit(), "make"))
         self.queries["state_5"].append((Query('~', 'default'), "play"))
 
         for state in self.queries:
@@ -83,14 +94,31 @@ class Bot_0:
                 self.stats[query[0]] = Stat()
 
     def decide(self, snap: Snapshot):
+        self.last_query = None
         method_name = f"state_{snap.state}"
         method = getattr(self, method_name)
         return method(snap)
 
-    def do_state(self, state, snap, eval):
+    def state_1(self, snap): # pass / order / alone  
+        return self.do_state("state_1", lambda q: q.all(snap))
+
+    def state_2(self, snap): # dealer up / down
+        return self.do_state("state_2", lambda q: q.all(snap))
+
+    def state_3(self, snap): # pass / make / alone
+        return self.do_state_suit("state_3", lambda q: q.all(snap))
+
+    def state_4(self, snap): # Dealer make / alone
+        return self.do_state_suit("state_4", lambda q: q.all(snap))
+
+    def state_5(self, snap):        
+        return self.do_state("state_5", lambda q: q.playable().all(snap))        
+
+    def do_state(self, state, eval):
         self.state_counts[state] += 1
 
         for query in self.queries[state]:
+            self.last_query = query
             self.stats[query[0]].call_count += 1
             
             result = eval(query[0]).get()
@@ -105,10 +133,11 @@ class Bot_0:
 
         raise Exception("Sanity check failed")
 
-    def do_state_suit(self, state, snap, eval):
+    def do_state_suit(self, state, eval):
         self.state_counts[state] += 1
 
         for query in self.queries[state]:
+            self.last_query = query
             self.stats[query[0]].call_count += 1
             
             result = eval(query[0]).get()
@@ -116,24 +145,10 @@ class Bot_0:
             try:
                 if result is not None:
                     self.stats[query[0]].activated += 1
-                    return (query[1], result.suit)  
+                    return (query[1], result.suit)
             except Exception :
-                print(f"Exception with result: '{result}'")
+                print(f"Error with query: '{query}'")
+                print(f"Exception with query result: '{result}'")
                 raise
 
         raise Exception("Sanity check failed")
-
-    def state_1(self, snap): # pass / order / alone  
-        return self.do_state("state_1", snap, lambda q: q.all(snap))
-
-    def state_2(self, snap): # dealer up / down
-        return self.do_state("state_2", snap, lambda q: q.all(snap))
-
-    def state_3(self, snap): # pass / make / alone
-        return self.do_state_suit("state_3", snap, lambda q: q.all(snap))
-
-    def state_4(self, snap): # Dealer make / alone
-        return self.do_state_suit("state_4", snap, lambda q: q.all(snap))
-
-    def state_5(self, snap):        
-        return self.do_state("state_5", snap, lambda q: q.playable().all(snap))        
