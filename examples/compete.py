@@ -14,10 +14,12 @@ def play_game(game):
         else: 
             try:
                 bot = bots[game.current_player.name].bot
-                (action, data) = bot.decide(Snapshot(game, game.current_player.name))
+                snap = Snapshot(game, game.current_player.name)
+                (action, data) = bot.decide(snap)
                 game.input(game.current_player.name, action, data)
             except:
                 print(f"Last Query: {bot.last_query}")
+                print(snap)
                 raise
 
     for player in game.players:
@@ -66,12 +68,8 @@ for i in range(run_count):
     rotate_to(game.order, lead)
 
     game.input(None, "start")
-    try:
-        play_game(game)
-        seed = seed + 1
-    except Exception:
-        print(game.to_json(None))
-        raise
+    play_game(game)
+    seed = seed + 1
 
 end = time.time()
 

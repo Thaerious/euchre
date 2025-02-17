@@ -32,7 +32,6 @@ class Snapshot(Game):
         self.__dict__ = copy.deepcopy(game.__dict__)
         self.players = []
         self.for_index = game.get_player(for_player).index
-        self.state = self.state.__name__[6:]
 
         # Replace players with Snap_Player versions
         self.players = [Snap_Player(player) for player in game.players]

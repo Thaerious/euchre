@@ -9,48 +9,50 @@ import random
 
 # ["♠", "♥", "♣", "♦"]
 
-class Print_Query(Query_Base):
-    name = "print"
+def report_query(query, snap, all):
+    print(query, snap.up_card, f"[{snap.hand}]", all)
 
-    def all(self, snap: Snapshot):
-        snap = snap.normalize_order()
-        print(snap)
-        return Query_Result([]) 
+#.register_hook("after", report_query)
 
 class Bot_2(Bot_0):
     queries = {
         "state_1":[
-            (Query("♥").up_card("♥").count("345"), "order"),
-            (Query("♦").up_card("♦").count("345"), "order"),
-            (Query("♣").up_card("♣").count("345"), "order"),
-            (Query("♠").up_card("♠").count("345"), "order"),
-            (Query("J♥ J♦ A♥").up_card("♥").count("23"), "order"),
-            (Query("J♦ J♥ A♦").up_card("♦").count("23"), "order"),
-            (Query("J♣ J♠ A♣").up_card("♣").count("23"), "order"),
-            (Query("J♠ J♣ A♠").up_card("♠").count("23"), "order"),            
+            (Query("♥", name="RB♥").up_card("J♥").dealer("02").count("2345").do("order")),
+            (Query("♦", name="RB♦").up_card("J♦").dealer("02").count("2345").do("order")),
+            (Query("♣", name="RB♣").up_card("J♣").dealer("02").count("2345").do("order")),
+            (Query("♠", name="RB♠").up_card("J♠").dealer("02").count("2345").do("order")),
+            (Query("♥").up_card("♥").count("345").do("order")),
+            (Query("♦").up_card("♦").count("345").do("order")),
+            (Query("♣").up_card("♣").count("345").do("order")),
+            (Query("♠").up_card("♠").count("345").do("order")),
+            (Query("J♥ J♦ A♥").up_card("♥").count("23").do("order")),
+            (Query("J♦ J♥ A♦").up_card("♦").count("23").do("order")),
+            (Query("J♣ J♠ A♣").up_card("♣").count("23").do("order")),
+            (Query("J♠ J♣ A♠").up_card("♠").count("23").do("order")),            
         ],
         "state_2":[
-            # (Query("~♠").worst(), "up")
+            (Query("910JQK♥").count("1").worst().do("up")),
+            (Query("~♠ 910JQK").count("12345").worst().do("up"))
         ],
         "state_3":[
-            (Query("~♥").down_card("♥").count("5"), "make"),
-            (Query("~♦").down_card("♦").count("5"), "make"),
-            (Query("~♣").down_card("♣").count("5"), "make"),
-            (Query("~♠").down_card("♠").count("5"), "make"),
+            (Query("~♥").down_card("♥").count("5").do("make")),
+            (Query("~♦").down_card("♦").count("5").do("make")),
+            (Query("~♣").down_card("♣").count("5").do("make")),
+            (Query("~♠").down_card("♠").count("5").do("make")),
         ],
         "state_4":[
-            (Query("~♥").down_card("♥").count("5"), "make"),
-            (Query("~♦").down_card("♦").count("5"), "make"),
-            (Query("~♣").down_card("♣").count("5"), "make"),
-            (Query("~♠").down_card("♠").count("5"), "make"),
+            (Query("~♥").down_card("♥").count("345").do("make")),
+            (Query("~♦").down_card("♦").count("345").do("make")),
+            (Query("~♣").down_card("♣").count("345").do("make")),
+            (Query("~♠").down_card("♠").count("345").do("make")),
         ],
         "state_5":[
-            (Query("~", "beats").lead("123").wins().worst(), "play"),
-            (Query("~", "loses").lead("123").loses().worst(), "play"),            
-            (Query("♥").lead("0").best(), "play"),
-            (Query("♦").lead("0").best(), "play"),
-            (Query("♣").lead("0").best(), "play"),
-            (Query("♠").lead("0").best(), "play"),
+            (Query("~", "beats").lead("123").wins().worst().do("play")),
+            (Query("~", "loses").lead("123").loses().worst().do("play")),            
+            (Query("♥").lead("0").best().do("play")),
+            (Query("♦").lead("0").best().do("play")),
+            (Query("♣").lead("0").best().do("play")),
+            (Query("♠").lead("0").best().do("play")),
         ],
     }     
 

@@ -11,8 +11,6 @@ def denormalize(list, trump):
         "♦": SUITS[(i + 3) % 4]
     }
 
-    print(map)
-
     for item in list:
         string = str(item)
         rank = string[:-1]

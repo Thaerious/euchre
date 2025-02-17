@@ -4,6 +4,7 @@ from euchre import *
 from euchre.del_string import del_string
 from .Query_Result import Query_Result
 from euchre.card.Card import *
+from .Query_Base import Query_Base
 
 RANKS = {'9':0, '10':1, 'J':2, 'Q':3, 'K':4, 'A':5, 'L': -1}
 SUITS = {"♠":0, "♥":1, "♣":2, "♦":3}
@@ -50,7 +51,7 @@ RETURN_SELECTOR = {
     "worst": 2
 }  
 
-class QueryBase:
+class Query_Part:
     def __init__(self, size, default = STATES['set']):
         self.values = array.array('B', [default] * size)
 
@@ -85,10 +86,10 @@ class QueryBase:
     def __repr__(self):
         return del_string(self.values, ", ", "'")    
 
-class QueryDeck(QueryBase):
+class Query_Deck(Query_Part):
     def __init__(self, default = STATES['set']):
         self.default = STATES['set']
-        QueryBase.__init__(self, len(INT_TO_CARD), default)
+        Query_Part.__init__(self, len(INT_TO_CARD), default)
         if default == STATES['set']: 
             self.flag_left_bower = True
         else:
@@ -160,9 +161,9 @@ class QueryDeck(QueryBase):
             sb = sb + f"{card}:{self.values[i]} "
         return sb
 
-class QueryDigit(QueryBase):
+class Query_Digit(Query_Part):
     def __init__(self, size):
-        QueryBase.__init__(self, size)
+        Query_Part.__init__(self, size)
 
     def select(self, phrase):
         self.clear_all()
@@ -173,20 +174,23 @@ class QueryDigit(QueryBase):
     def __str__(self):
         return f"[{del_string(self.values)}]"
 
-class Query:
+class Query(Query_Base):
     def __init__(self, phrase = None, name = None):
-        self._hand = QueryDeck(STATES["unset"])
-        self._up_card = QueryDeck(STATES["set"])
-        self._down_card = QueryDeck(STATES["set"])
-        self._lead = QueryDigit(4)
-        self._maker = QueryDigit(4)
-        self._dealer = QueryDigit(4)
-        self._count =  QueryDigit(6)       
+        Query_Base.__init__(self)
+
+        self._hand = Query_Deck(STATES["unset"])
+        self._up_card = Query_Deck(STATES["set"])
+        self._down_card = Query_Deck(STATES["set"])
+        self._lead = Query_Digit(4)
+        self._maker = Query_Digit(4)
+        self._dealer = Query_Digit(4)
+        self._count =  Query_Digit(6)       
         self._wins = False     # only keep cards that beat the best current card
         self._loses = False    # only keep cards that the current card beats
         self._best = False     # only keep the highest rank card preferably trump
         self._worst = False    # only keep the lowest rank card preferably not trump
         self._playable = False # process only cards that are playable
+        self._and = False      
 
         self.name = name
         if phrase is not None: self.select(phrase)
@@ -329,8 +333,8 @@ class Query:
             self.name = phrase
 
         self._hand.select(phrase)
-        return self
-    
+        return self  
+
     def count(self, phrase):
         self._count.clear_all()
         self._count.select(phrase)
