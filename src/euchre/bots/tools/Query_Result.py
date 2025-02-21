@@ -3,9 +3,12 @@ from euchre.card.Card import Card
 SUITS = ["♠", "♥", "♣", "♦"]
 
 class Query_Result(list):
+    def __init__(self, query):
+        self.query = query
+
     def denormalize(self, source):
         trump = source.trump
-        denorm = Query_Result()
+        denorm = Query_Result(self.query)
         i = SUITS.index(trump)
 
         map = {

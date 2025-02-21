@@ -146,7 +146,7 @@ class Query_Deck(Query_Part):
 
     # return all matching cards
     def all(self, cards):
-        selected = Query_Result()
+        selected = Query_Result(self)
         for card in cards:
             if self.test(card):
                 selected.append(card)
@@ -172,11 +172,13 @@ class Query_Digit(Query_Part):
             self.set(int(part))        
 
     def __str__(self):
-        return f"[{del_string(self.values)}]"
+        return f"{del_string(self.values)}"
 
 class Query(Query_Base):
     def __init__(self, phrase = None, name = None):
-        Query_Base.__init__(self)
+        if name is None: name = phrase
+        if name is None: name = self.__hash__()
+        Query_Base.__init__(self, name)
 
         self._hand = Query_Deck(STATES["unset"])
         self._up_card = Query_Deck(STATES["set"])
@@ -192,7 +194,6 @@ class Query(Query_Base):
         self._playable = False # process only cards that are playable
         self._and = False      
 
-        self.name = name
         if phrase is not None: self.select(phrase)
         self._hooks = {} 
 
@@ -210,10 +211,10 @@ class Query(Query_Base):
                 func(*args, **kwargs)
 
     def __str__(self):
-        return f"[{self.name}]"
+        return f"'{self.name}'"
 
     def __repr__(self):
-        return f"[{self.name}]"
+        return f"'{self.name}'"
 
     def best(self):
         self.return_selector = RETURN_SELECTOR['best']
@@ -260,7 +261,7 @@ class Query(Query_Base):
         if len(snap.tricks[-1]) == 0: return all
         if not snap.hand.has_suit(snap.tricks[-1].lead_suit): return all
 
-        playable = Query_Result()
+        playable = Query_Result(self)
         for card in all:
             if card.suit_effective() == snap.tricks[-1].lead_suit:
                 playable.append(card)
@@ -274,7 +275,7 @@ class Query(Query_Base):
         lead_suit = snap.tricks[-1].lead_suit
         best_card = snap.tricks[-1][0]
 
-        selected = Query_Result()
+        selected = Query_Result(self)
         for card in all:
             winner = winning_card(lead_suit, best_card, card)
             loser = losing_card(lead_suit, best_card, card)            
@@ -289,7 +290,7 @@ class Query(Query_Base):
         lead_suit = snap.tricks[-1].lead_suit
         best_card = snap.tricks[-1][0]
 
-        selected = Query_Result()
+        selected = Query_Result(self)
         for card in all:
             winner = winning_card(lead_suit, best_card, card)
             if winner == card: selected.append(winner)
@@ -297,14 +298,14 @@ class Query(Query_Base):
         return selected
 
     def do_best(self, all, snap: Snapshot):
-        if len(all) == 0: return Query_Result()
+        if len(all) == 0: return Query_Result(self)
         if len(snap.tricks) == 0: return all
         if len(snap.tricks[-1]) == 0: return all
 
         lead_suit = snap.tricks[-1].lead_suit
         best_card = all[0]
 
-        selected = Query_Result()
+        selected = Query_Result(self)
         for card in all:
             if best_card.compare(card, lead_suit) < 0:
                 best_card = card
@@ -313,14 +314,14 @@ class Query(Query_Base):
         return selected
 
     def do_worst(self, all, snap: Snapshot):
-        if len(all) == 0: return Query_Result()        
+        if len(all) == 0: return Query_Result(self)        
         if len(snap.tricks) == 0: return all
         if len(snap.tricks[-1]) == 0: return all        
 
         lead_suit = snap.tricks[-1].lead_suit
         worst_card = all[0]
 
-        selected = Query_Result()
+        selected = Query_Result(self)
         for card in all:
             if worst_card.compare(card, lead_suit) > 0:
                 worst_card = card
@@ -329,9 +330,6 @@ class Query(Query_Base):
         return selected
     
     def select(self, phrase): 
-        if self.name is None: 
-            self.name = phrase
-
         self._hand.select(phrase)
         return self  
 

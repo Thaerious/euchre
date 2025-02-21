@@ -1,6 +1,7 @@
 from euchre.card import *
 from euchre import Snapshot
 from .tools.Query import Query
+from .tools.Query_Exception import Query_Exception
 from .tools.Query_Base import Query_Base
 from .tools.Query_Result import Query_Result
 import random
@@ -8,7 +9,8 @@ import random
 # ["♠", "♥", "♣", "♦"]
 
 class Default_Suit(Query_Base):
-    name = "default_suit"
+    def __init__(self, name="default suit"):
+        super().__init__(name)
 
     def all(self, snap: Snapshot):
         options = []
@@ -19,17 +21,22 @@ class Default_Suit(Query_Base):
             if card.suit in suits: 
                 options.append(card)
 
-        return Query_Result([random.choice(options)])
+        qr = Query_Result(self)
+        qr.extend([random.choice(options)])
+        return qr    
 
 class Random_Suit(Query_Base):
-    name = "random_suit"
+    def __init__(self, name="random suit"):
+        super().__init__(name)
 
     def all(self, snap: Snapshot):
-        options = []
         suits = Card.suits
         suits.remove(snap.down_card.suit)
-        random_suit = [random.choice(options)]
-        return Card(snap.deck, f"A{random_suit}")
+        random_suit = random.choice(suits)
+        qr = Query_Result(self)
+        qr.extend([Card(snap.deck, random_suit, "A")])
+        return qr
+        
 
 class Bot_0:
     def print_stats(self):
@@ -41,7 +48,7 @@ class Bot_0:
                 if self.state_counts[state] != 0:
                     percent_activated = query.stats.activated / self.state_counts[state] * 100
 
-                print(f" - {query} {percent_activated:.1f}")
+                print(f" - {query}: {percent_activated:.1f}")
 
     def __init__(self, queries: list[Query] = None):
         self.trick_count = 0
@@ -66,19 +73,18 @@ class Bot_0:
         if queries is not None:
             self.append(queries)
 
-        self.queries["state_1"].append(Query('~', 'default').do("pass"))
-        self.queries["state_2"].append(Query('~', 'default').do("down"))
-        self.queries["state_3"].append(Query('~', 'default').do("pass"))
+        self.queries["state_1"].append(Query('~', 'default state 1').do("pass"))
+        self.queries["state_2"].append(Query('~', 'default state 2').do("down"))
+        self.queries["state_3"].append(Query('~', 'default state 3 ').do("pass"))
         self.queries["state_4"].append(Default_Suit().do("make"))
         self.queries["state_4"].append(Random_Suit().do("make"))
-        self.queries["state_5"].append(Query('~', 'default').playable().do("play"))
+        self.queries["state_5"].append(Query('~', 'default state 5').playable().do("play"))
 
     def append(self, queries: list[Query] = None):
         for i in range(1, 5):
             s = f"state_{i}"
             if s in queries:
                 q = queries[s].copy()
-                q.reverse()
                 self.queries[s].extend(q)
 
         for query in self.queries["state_5"]:
@@ -103,20 +109,27 @@ class Bot_0:
         stack = self.queries[state].copy()
 
         while len(stack) > 0:
-            query = stack.pop()
-            self.last_query = query
-            query.stats.call_count += 1
-            result = query.all(snap)
+            try:
+                query = stack.pop(0)
+                self.last_query = query
+                query.stats.call_count += 1
+                result = query.all(snap)
+                if not isinstance(result, Query_Result): 
+                    raise TypeError(f"Expected Query_Result found {type(result).__name__}")
 
-            if len(result) == 0:
-                while query.action == "and":
-                    query = stack.pop()
+                if len(result) == 0:
+                    while query.action == "and":
+                        query = stack.pop(0)
 
-            if len(result) > 0:
-                query.stats.activated += 1
-                if query.action == "and":
-                    continue
-                else:
-                    return (query.action, result)
+                if len(result) > 0:
+                    query.stats.activated += 1
+                    if query.action == "and":
+                        continue
+                    else:
+                        return (query.action, result)
+                    
+            except Exception as e:
+                raise Query_Exception(query, e) from e
+                    
 
-        raise Exception("Sanity check failed, last query must return a result.")
+        raise Exception("Sanity check failed, last query must return a result.")  

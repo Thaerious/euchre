@@ -36,8 +36,8 @@ if len(sys.argv) > 2:
 
 random.seed(seed)
 
-bot_a = Bot_1()
-bot_b = Bot_2()
+bot_a = Bot_2()
+bot_b = Bot_3()
 
 class Bot_Record():
     def __init__(self, bot):
@@ -73,8 +73,9 @@ for i in range(run_count):
 
 end = time.time()
 
+print(f"Bot A: {type(bot_a).__name__}")
 bot_a.print_stats()
-print("")
+print(f"\nBot B: {type(bot_b).__name__}")
 bot_b.print_stats()
 
 print(f"\nElapsed time: {end - start} seconds")

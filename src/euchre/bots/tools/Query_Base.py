@@ -9,8 +9,8 @@ class Stats:
         return f" - {(self.activated / self.call_count * 100):.1f}%"
 
 class Query_Base:
-    def __init__(self):
-        self.name = "N/A"
+    def __init__(self, name):
+        self.name = name
         self._stats = Stats()
         self._action = ""
 
