@@ -193,6 +193,8 @@ class Query(Query_Base):
         self._worst = False    # only keep the lowest rank card preferably not trump
         self._playable = False # process only cards that are playable
         self._and = False      
+        self._root = self
+        self._next = None
 
         if phrase is not None: self.select(phrase)
         self._hooks = {} 
@@ -209,6 +211,12 @@ class Query(Query_Base):
         if event in self._hooks:
             for func in self._hooks[event]:
                 func(*args, **kwargs)
+
+    def link(self, phrase = "~"):
+        if self._next is not None: raise Exception("A query can only be linked once.")
+        new_query = Query(phrase)
+        new_query._root = self._root
+        self._next = new_query
 
     def __str__(self):
         return f"'{self.name}'"
@@ -229,8 +237,11 @@ class Query(Query_Base):
         self.trigger_hook("after", query = self, snap = snap, all = all)
         return all 
 
-    # if up and down card tests pass, return all matching hand cards
     def all(self, snap: Snapshot):
+        return self._root._all(snap)
+
+    # if up and down card tests pass, return all matching hand cards
+    def _all(self, snap: Snapshot):
         self.trigger_hook("before", query = self, snap = snap)
 
         if not self._up_card.test(snap.up_card): return self.empty_result(snap)
@@ -254,7 +265,13 @@ class Query(Query_Base):
         if not self._count.test(len(all)): return self.empty_result(snap)
 
         self.trigger_hook("after", query = self, snap = snap, all = all)
-        return all
+        
+        if len(all) == 0: 
+            return all
+        elif self._next is not None: 
+            return self._next._all(snap)
+        else:
+            return all
 
     def do_playable(self, all: Query_Result, snap: Snapshot):   
         if len(snap.tricks) == 0: return all        
