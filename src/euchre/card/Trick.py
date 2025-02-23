@@ -2,8 +2,9 @@ from typing import Dict, List, Optional, Union
 from euchre.card.Card import Card
 from typeguard import typechecked
 from euchre.del_string import del_string
+from .Has_Trump import Has_Trump
 
-class Trick(List[Card]):
+class Trick(List[Card], Has_Trump):
     """
     Represents a trick in Euchre, storing cards played in order and tracking the winner.
     """

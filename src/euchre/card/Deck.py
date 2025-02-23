@@ -1,7 +1,8 @@
 import random
 from euchre.card.Card import Card
+from .Has_Trump import Has_Trump
 
-class Deck(list):
+class Deck(list, Has_Trump):
     """
     Represents a Euchre deck, extending `CardList` to manage a full set of cards.
     """
@@ -10,17 +11,11 @@ class Deck(list):
         """
         Initialize a full Euchre deck (24 cards: 9, 10, J, Q, K, A of each suit).
         """
+        Has_Trump.__init__(self)
         self.random = random.Random()
-        if seed is not None: self.random.seed(seed)
+        if seed is not None: self.random.seed(seed)        
+
         self.reset()
-
-    @property
-    def trump(self):
-        return self._trump
-
-    @trump.setter
-    def trump(self, trump):
-        self._trump = trump
 
     def get_card(self, suit, value: str | None = None):
         return Card(self, suit, value)
@@ -30,7 +25,7 @@ class Deck(list):
         Initialize a full Euchre deck (24 cards: 9, 10, J, Q, K, A of each suit).
         """                
         self.clear()
-        self._trump = None
+        self.trump = None
 
         for suit in Card.suits:
             for value in Card.ranks:

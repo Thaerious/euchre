@@ -104,7 +104,7 @@ class Query_Deck(Query_Part):
         self.flag_left_bower = False
     
     def test(self, card: Card):
-        if card is None: return True                
+        if card is None: return True
         norm_card = card.normalize()
         norm_index = CARD_TO_INT[norm_card]
 

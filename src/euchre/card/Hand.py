@@ -1,6 +1,7 @@
 from typing import List, Union
 from euchre.card.Card import Card
 from euchre.del_string import del_string
+from .Has_Trump import Has_Trump
 
 class Hand(list):
     """

@@ -6,6 +6,7 @@ lib/
 history.txt
 commit_message.txt
 .coverage
+output.prof
 
 # Distribution / packaging
 .Python
