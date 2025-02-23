@@ -217,12 +217,7 @@ class Query(Query_Base):
         new_query = Query(phrase)
         new_query._root = self._root
         self._next = new_query
-
-    def __str__(self):
-        return f"'{self.name}'"
-
-    def __repr__(self):
-        return f"'{self.name}'"
+        return new_query
 
     def best(self):
         self.return_selector = RETURN_SELECTOR['best']
@@ -238,6 +233,7 @@ class Query(Query_Base):
         return all 
 
     def all(self, snap: Snapshot):
+        self._stats.call_count = self._stats.call_count + 1
         return self._root._all(snap)
 
     # if up and down card tests pass, return all matching hand cards
@@ -266,11 +262,13 @@ class Query(Query_Base):
 
         self.trigger_hook("after", query = self, snap = snap, all = all)
         
-        if len(all) == 0: 
+        if len(all) == 0:
             return all
         elif self._next is not None: 
+            self._stats.activated = self._stats.activated + 1
             return self._next._all(snap)
         else:
+            self._stats.activated = self._stats.activated + 1
             return all
 
     def do_playable(self, all: Query_Result, snap: Snapshot):   

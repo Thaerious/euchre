@@ -11,6 +11,9 @@ def report_query(query, snap, all):
 #.register_hook("after", report_query)
 
 class Bot_3(Bot_0):
+    def __init__(self):
+        super().__init__(Bot_3.queries)
+
     queries = {
         "state_1":[
             (Query("♥", name="RB♥").up_card("J♥").dealer("02").count("2345").do("order")),
@@ -27,12 +30,9 @@ class Bot_3(Bot_0):
             (Query("J♠ J♣ A♠").up_card("♠").count("23").do("order")),            
         ],
         "state_2":[
-            (Query("A♥").do("and")),
-            (Query("♥").count("2").do("up").worst()),
-            (Query("A♦").do("and")),
-            (Query("♦").count("2").do("up").worst()),  
-            (Query("A♣").do("and")),
-            (Query("♣").count("2").do("up").worst()),                       
+            (Query("A♥").link("♥").count("2").do("up").worst()),
+            (Query("A♦").link("♦").count("2").do("up").worst()), 
+            (Query("A♣").link("♣").count("2").do("up").worst()),               
             (Query("910JQK♥").count("1").worst().do("up")),
             (Query("~♠ 910JQK").count("12345").worst().do("up"))
         ],
@@ -57,6 +57,3 @@ class Bot_3(Bot_0):
             (Query("♠").lead("0").best().do("play")),
         ],
     }     
-
-    def __init__(self):
-        super().__init__(Bot_3.queries)
