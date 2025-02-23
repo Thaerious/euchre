@@ -1,4 +1,5 @@
 from euchre.card.Deck import Deck
+from euchre.card.Card import Card
 import pytest
 
 @pytest.fixture
@@ -202,3 +203,51 @@ def test_effective_suit_override_trump_set(deck):
     deck.trump = "♦"
     card1 = deck.get_card('J♣')
     assert card1.suit_effective('♠') == '♠'        
+
+@pytest.mark.parametrize(
+    "suit, trump, expected_suit",
+        [
+        ("♠", "♠", "♠"),  # Same suit as trump remains unchanged
+        ("♥", "♠", "♥"),
+        ("♣", "♠", "♣"),
+        ("♦", "♠", "♦"),
+
+        ("♠", "♥", "♦"),  # When trump is ♥, ♠ → ♦
+        ("♥", "♥", "♠"),  # Trump suit itself normalizes to ♠
+        ("♣", "♥", "♥"),
+        ("♦", "♥", "♣"),
+
+        ("♠", "♣", "♣"),  # When trump is ♣
+        ("♥", "♣", "♦"),
+        ("♣", "♣", "♠"),
+        ("♦", "♣", "♥"),
+
+        ("♠", "♦", "♥"),  # When trump is ♦
+        ("♥", "♦", "♣"),
+        ("♣", "♦", "♦"),
+        ("♦", "♦", "♠"),
+    ]
+)
+def test_normalize(suit, trump, expected_suit):
+    """Test that normalize correctly converts suits based on trump."""
+    deck = Deck()
+    deck.trump = trump
+    card = Card(deck, suit, "10")
+    normalized = card.normalize()
+
+    print(f"{suit} {trump} {expected_suit}")
+
+    assert normalized.suit == expected_suit, f"Expected {expected_suit}, got {normalized.suit}"
+    assert normalized.rank == "10"  # Rank should remain unchanged
+    assert normalized._source == deck  # Source should be preserved
+
+# def test_normalize_no_trump():
+#     """Test normalization when no trump is set (should remain unchanged)."""
+#     deck = Deck()
+#     deck.trump = trump
+#     card = Card(deck, suit, "10")
+#     normalized = card.normalize()
+    
+#     assert normalized.suit == "♠"
+#     assert normalized.rank == "10"
+#     assert normalized._source == deck

@@ -41,7 +41,6 @@ class Game(Euchre):
         self.do_shuffle = True
         self._hooks = {} 
         self.hash = ""
-        self.update_hash()        
 
     def register_hook(self, event: str, func):
         """Register a function to a hook event."""
@@ -54,13 +53,6 @@ class Game(Euchre):
         if event in self._hooks:
             for func in self._hooks[event]:
                 func(*args, **kwargs)
-
-    def update_hash(self) -> None:
-        """
-        Updates the deterministic hash identifier for the game state.
-        """
-        json_str = json.dumps(self, sort_keys=True, default=custom_json_serializer)
-        self.hash = hashlib.sha256(json_str.encode()).hexdigest()
 
     @property
     def current_state(self) -> int:
@@ -87,7 +79,6 @@ class Game(Euchre):
         self.trigger_hook("before_input", action = action, data = data)
         prev_state = self.current_state
 
-        self.update_hash() 
         self.last_action = action
 
         if self.current_state == 0:

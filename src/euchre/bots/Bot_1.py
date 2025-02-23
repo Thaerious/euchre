@@ -11,7 +11,6 @@ class Print_Query(Query_Base):
     name = "print"
 
     def all(self, snap: Snapshot):
-        snap = snap.normalize_order()
         print(snap)
         return Query_Result([]) 
 

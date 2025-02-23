@@ -6,6 +6,8 @@ from euchre.rotate import rotate_to, rotate
 import random
 import time
 import sys
+import cProfile
+import pstats
 
 class Bot_Record():
     def __init__(self, bot):
@@ -13,12 +15,12 @@ class Bot_Record():
         self.wins = 0
 
 class Compete():
-    def __init__(self, seed):
+    def __init__(self, seed, bots):
         self.run_count = 0
         self.seed = seed
 
-        self.bot_a = Bot_2()
-        self.bot_b = Bot_3()
+        self.bot_a = bots[0]()
+        self.bot_b = bots[1]()
 
         self.bots = {    
             "Bot_10": Bot_Record(self.bot_a),
@@ -89,8 +91,10 @@ def main():
     if len(sys.argv) > 2:
         seed = int(sys.argv[2])        
 
-    compete = Compete(seed)   
+    compete = Compete(seed, [Bot_2, Bot_3])   
     compete.run(count)
     compete.report()
 
-main()    
+cProfile.run('main()', 'output.prof')
+stats = pstats.Stats('output.prof')
+stats.strip_dirs().sort_stats('time').print_stats(10)  # Show top 10

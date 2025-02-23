@@ -54,17 +54,18 @@ class Card:
     def rank(self):
         return self._rank    
 
-    def normalize(self, source = None):
-        """ Return a new normalized card """
-        if source is None: source = self._source
-        if self.trump is None: return Card(source, self.suit, self.rank)
+    _normalization_matrix = {
+        "♠": {"♠": "♠", "♥": "♥", "♣": "♣", "♦": "♦"},
+        "♥": {"♠": "♦", "♥": "♠", "♣": "♥", "♦": "♣"},
+        "♣": {"♠": "♣", "♥": "♦", "♣": "♠", "♦": "♥"},
+        "♦": {"♠": "♥", "♥": "♣", "♣": "♦", "♦": "♠"}
+    }
 
-        trump_index = Card.suits.index(self.trump)
-        suit_index = Card.suits.index(self.suit)
-        norm_index = (suit_index - trump_index) % 4
-        norm_suit = Card.suits[norm_index]
-          
-        return Card(source, norm_suit, self.rank)
+    def normalize(self):
+        """ Return a new normalized card """
+        if self.trump is None: return self
+        norm_suit = Card._normalization_matrix[self.trump][self.suit]
+        return Card(self._source, norm_suit, self.rank)
 
     def __str__(self) -> str:
         """Return a string representation of the card."""
