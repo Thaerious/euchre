@@ -1,5 +1,4 @@
 from euchre.card import *
-from euchre import Snapshot
 from .tools.Query import Query
 from .Bot_0 import Bot_0
 
@@ -30,9 +29,9 @@ class Bot_3(Bot_0):
             (Query("J♠ J♣ A♠").up_card("♠").count("23").do("order")),            
         ],
         "state_2":[
-            (Query("A♥").link("♥").count("2").do("up").worst()),
-            (Query("A♦").link("♦").count("2").do("up").worst()), 
-            (Query("A♣").link("♣").count("2").do("up").worst()),               
+            # (Query("A♥").link("♥").count("2").do("up").worst()),
+            # (Query("A♦").link("♦").count("2").do("up").worst()), 
+            # (Query("A♣").link("♣").count("2").do("up").worst()),               
             (Query("910JQK♥").count("1").worst().do("up")),
             (Query("~♠ 910JQK").count("12345").worst().do("up"))
         ],

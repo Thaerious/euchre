@@ -7,81 +7,90 @@ import random
 import time
 import sys
 
-def play_game(game):
-    while game.current_state != 0:
-        if game.current_state in [6, 7]:
-            game.input(None, "continue", None)
-        else: 
-            try:
-                bot = bots[game.current_player.name].bot
-                snap = Snapshot(game, game.current_player.name)
-                (action, data) = bot.decide(snap)
-                game.input(game.current_player.name, action, data)
-            except:
-                print(f"Last Query: {bot.last_query}")
-                print(snap)
-                raise
-
-    for player in game.players:
-        if player.team.score >= 10: bots[player.name].wins += 1
-
-run_count = 100
-seed = random.randint(0, 100000)
-
-if len(sys.argv) > 1:
-    run_count = int(sys.argv[1])
-
-if len(sys.argv) > 2:
-    seed = int(sys.argv[2])
-
-random.seed(seed)
-
-bot_a = Bot_2()
-bot_b = Bot_3()
-
 class Bot_Record():
     def __init__(self, bot):
         self.bot = bot
         self.wins = 0
 
-bots = {    
-    "Bot_10": Bot_Record(bot_a),
-    "Bot_20": Bot_Record(bot_b),
-    "Bot_11": Bot_Record(bot_a),
-    "Bot_21": Bot_Record(bot_b),
-}
+class Compete():
+    def __init__(self, seed):
+        self.run_count = 0
+        self.seed = seed
 
-names = list(bots.keys())
-start = time.time()
+        self.bot_a = Bot_2()
+        self.bot_b = Bot_3()
 
-for i in range(run_count):
-    random.seed(seed)
+        self.bots = {    
+            "Bot_10": Bot_Record(self.bot_a),
+            "Bot_20": Bot_Record(self.bot_b),
+            "Bot_11": Bot_Record(self.bot_a),
+            "Bot_21": Bot_Record(self.bot_b),
+        }
 
-    for i in range(0, random.randint(0, 3)):
-        rotate(names)
+    def run(self, count):
+        self.start = time.time()
 
-    #setup game
-    game = Game(names)
+        for i in range(count):
+            self.step(self.seed + i, 0)
+            self.step(self.seed + i, 2)
 
-    #randomize initial dealer
-    lead = random.randint(0, 3)
-    rotate_to(game.order, lead)
+        self.end = time.time()
 
-    game.input(None, "start")
-    play_game(game)
-    seed = seed + 1
+    def step(self, seed, rotate_count):
+        self.run_count = self.run_count + 1
+        names = list(self.bots.keys())
 
-end = time.time()
+        for i in range(0, rotate_count):
+            rotate(names)
+        
+        game = Game(names, seed)
+        game.input(None, "start")
+        self.play_game(game)   
 
-print(f"Bot A: {type(bot_a).__name__}")
-bot_a.print_stats()
-print(f"\nBot B: {type(bot_b).__name__}")
-bot_b.print_stats()
+    def play_game(self, game):
+        while game.current_state != 0:
+            if game.current_state in [6, 7]:
+                game.input(None, "continue", None)
+            else: 
+                try:
+                    bot = self.bots[game.current_player.name].bot
+                    snap = Snapshot(game, game.current_player.name)
+                    (action, data) = bot.decide(snap)
+                    game.input(game.current_player.name, action, data)
+                except:
+                    print(f"Last Query: {bot.last_query}")
+                    print(snap)
+                    raise
 
-print(f"\nElapsed time: {end - start} seconds")
-print(f"Average time: {(end - start) / run_count} seconds\n")
+        for player in game.players:
+            if player.team.score >= 10: self.bots[player.name].wins += 1
 
-for key in bots.keys():
-    record = bots[key]
-    # print(f"{key} {record.wins}")
-    print(f"{key} {(record.wins / run_count):.2f}")
+    def report(self):
+        print(f"Bot A: {type(self.bot_a).__name__}")
+        self.bot_a.print_stats()
+        print(f"\nBot B: {type(self.bot_b).__name__}")
+        self.bot_b.print_stats()
+
+        print(f"\nElapsed time: {self.end - self.start} seconds")
+        print(f"Average time: {(self.end - self.start) / self.run_count} seconds\n")
+
+        for key in self.bots.keys():
+            record = self.bots[key]
+            # print(f"{key} {record.wins}")
+            print(f"{key} {(record.wins / self.run_count):.2f}")        
+
+def main():
+    count = 10
+    seed = random.randint(0, 100000)
+
+    if len(sys.argv) > 1:
+        count = int(sys.argv[1])
+
+    if len(sys.argv) > 2:
+        seed = int(sys.argv[2])        
+
+    compete = Compete(seed)   
+    compete.run(count)
+    compete.report()
+
+main()    

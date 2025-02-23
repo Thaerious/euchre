@@ -6,17 +6,13 @@ class Deck(list):
     Represents a Euchre deck, extending `CardList` to manage a full set of cards.
     """
 
-    def __init__(self):
+    def __init__(self, seed = None):
         """
         Initialize a full Euchre deck (24 cards: 9, 10, J, Q, K, A of each suit).
         """
-        deck = []
-        self._trump = None
-
-        for suit in Card.suits:
-            for value in Card.ranks:
-                deck.append(Card(self, suit, value))
-        super().__init__(deck)  # Pass the full list to the parent class
+        self.random = random.Random()
+        if seed is not None: self.random.seed(seed)
+        self.reset()
 
     @property
     def trump(self):
@@ -29,6 +25,17 @@ class Deck(list):
     def get_card(self, suit, value: str | None = None):
         return Card(self, suit, value)
 
+    def reset(self):
+        """
+        Initialize a full Euchre deck (24 cards: 9, 10, J, Q, K, A of each suit).
+        """                
+        self.clear()
+        self._trump = None
+
+        for suit in Card.suits:
+            for value in Card.ranks:
+                self.append(Card(self, suit, value))
+
     def shuffle(self) -> "Deck":
         """
         Shuffle the deck in place.
@@ -36,5 +43,6 @@ class Deck(list):
         Returns:
             Deck: The shuffled deck (self).
         """
-        random.shuffle(self)
+        self.reset()
+        self.random.shuffle(self)
         return self

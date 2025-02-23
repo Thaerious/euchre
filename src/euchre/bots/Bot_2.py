@@ -1,11 +1,6 @@
 from euchre.card import *
-from euchre import Snapshot
 from .tools.Query import Query
 from .Bot_0 import Bot_0
-from .tools.Query_Base import Query_Base
-from .tools.Query_Result import Query_Result
-
-import random
 
 # ["♠", "♥", "♣", "♦"]
 

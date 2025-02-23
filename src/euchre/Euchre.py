@@ -27,7 +27,7 @@ class Euchre:
     The core class representing a single game of Euchre.
     """
 
-    def __init__(self, names: List[str]) -> None:
+    def __init__(self, names: List[str], seed = None) -> None:
         """
         Initialize a new Euchre game instance.
 
@@ -49,7 +49,7 @@ class Euchre:
         self.players[2].team = self._teams[0]
         self.players[3].team = self._teams[1]
 
-        self.deck = Deck()
+        self.deck = Deck(seed)
         self.__reset()
         self._tricks: List[Trick] = []
 
@@ -186,7 +186,6 @@ class Euchre:
             player.clear()
 
         # requires a new deck because cards are removed from the deck during dealing
-        self.deck = Deck()
         self.deck.shuffle()
 
     def next_hand(self) -> None:

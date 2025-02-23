@@ -1,7 +1,7 @@
 from euchre.card import *
 from euchre.Euchre import *
 from euchre.Player import Player
-import random
+import hashlib
 from typing import *
 from .custom_json_serializer import custom_json_serializer
 import json
@@ -27,20 +27,21 @@ class Game(Euchre):
         last_player (Optional[Player]): Last player who performed an action.
     """
 
-    def __init__(self, names: list[str]):
+    def __init__(self, names: list[str], seed = None):
         """
         Initialize the Game object with player names.
 
         Args:
             names (list of str): List of player names.
         """
-        super().__init__(names)
+        super().__init__(names, seed)
         self.state: Callable[[str, Any], None] = self.state_0
-        self.update_hash()
         self.last_action: Optional[str] = None
         self.last_player: Optional[int] = None
         self.do_shuffle = True
         self._hooks = {} 
+        self.hash = ""
+        self.update_hash()        
 
     def register_hook(self, event: str, func):
         """Register a function to a hook event."""
@@ -56,9 +57,10 @@ class Game(Euchre):
 
     def update_hash(self) -> None:
         """
-        Updates the unique hash identifier for the game state.
+        Updates the deterministic hash identifier for the game state.
         """
-        self.hash = ''.join(random.choices('0123456789abcdef', k=8))
+        json_str = json.dumps(self, sort_keys=True, default=custom_json_serializer)
+        self.hash = hashlib.sha256(json_str.encode()).hexdigest()
 
     @property
     def current_state(self) -> int:
