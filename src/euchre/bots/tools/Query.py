@@ -5,6 +5,7 @@ from euchre.del_string import del_string
 from .Query_Result import Query_Result
 from euchre.card.Card import *
 from .Query_Base import Query_Base
+from euchre.card.compare_cards import best_card, worst_card
 
 RANKS = {'9':0, '10':1, 'J':2, 'Q':3, 'K':4, 'A':5, 'L': -1}
 SUITS = {"♠":0, "♥":1, "♣":2, "♦":3}
@@ -214,9 +215,11 @@ class Query(Query_Base):
             for func in self._hooks[event]:
                 func(*args, **kwargs)
 
+        return self
+
     def link(self, phrase = "~"):
         if self._next is not None: raise Exception("A query can only be linked once.")
-        new_query = Query(phrase)
+        new_query = Query(phrase, self.name)
         new_query._root = self._root
         self._next = new_query
         return new_query
@@ -322,14 +325,11 @@ class Query(Query_Base):
         if len(snap.tricks) != 0 and len(snap.tricks[-1]) != 0: 
             lead_suit = snap.tricks[-1].lead_suit
 
-        best_card = all[0]
+        best = all[0]
+        for card in all: best = best_card(best, card, lead_suit)
 
         selected = Query_Result(self)
-        for card in all:
-            if best_card.compare(card, lead_suit) < 0:
-                best_card = card
-
-        selected.append(best_card)
+        selected.append(best)
         return selected
 
     def do_worst(self, all, snap: Snapshot):
@@ -339,14 +339,11 @@ class Query(Query_Base):
         if len(snap.tricks) != 0 and len(snap.tricks[-1]) != 0: 
             lead_suit = snap.tricks[-1].lead_suit
 
-        worst_card = all[0]
+        worst = all[0]        
+        for card in all: worst = worst_card(worst, card, lead_suit)
 
         selected = Query_Result(self)
-        for card in all:
-            if worst_card.compare(card, lead_suit) > 0:
-                worst_card = card
-
-        selected.append(worst_card)
+        selected.append(worst)
         return selected
     
     def select(self, phrase): 

@@ -32,13 +32,19 @@ lookup_table[None]['♣'] = {'A♣': 24, 'K♣': 23, 'Q♣': 22, 'J♣': 21, '10
 lookup_table[None]['♦'] = {'A♦': 24, 'K♦': 23, 'Q♦': 22, 'J♦': 21, '10♦': 20, '9♦': 19, 'A♠': 18, 'A♥': 18, 'A♣': 18, 'K♠': 17, 'K♥': 17, 'K♣': 17, 'Q♠': 16, 'Q♥': 16, 'Q♣': 16, 'J♠': 15, 'J♥': 15, 'J♣': 15, '10♠': 14, '10♥': 14, '10♣': 14, '9♠': 13, '9♥': 13, '9♣': 13, }
 lookup_table[None][None] = {'A♠': 24, 'A♥': 24, 'A♣': 24, 'A♦': 24, 'K♠': 23, 'K♥': 23, 'K♣': 23, 'K♦': 23, 'Q♠': 22, 'Q♥': 22, 'Q♣': 22, 'Q♦': 22, 'J♠': 21, 'J♥': 21, 'J♣': 21, 'J♦': 21, '10♠': 20, '10♥': 20, '10♣': 20, '10♦': 20, '9♠': 19, '9♥': 19, '9♣': 19, '9♦': 19, }
 
-def compare_cards_i(left, right, lead: str = None) -> int:    
+def compare_cards(left, right, lead: str = None) -> int:    
     lhs = lookup_table[left.trump][lead][left]
     rhs = lookup_table[left.trump][lead][right]
     return lhs - rhs
 
-def compare_cards(left, right, lead: str = None) -> int:    
-    compare = compare_cards_i(left, right)
+def best_card(left, right, lead: str = None) -> int:    
+    compare = compare_cards(left, right)
     if compare > 0: return left
     if compare < 0: return right
     return left
+
+def worst_card(left, right, lead: str = None) -> int:    
+    compare = compare_cards(left, right)
+    if compare > 0: return right
+    if compare < 0: return left
+    return right

@@ -1,6 +1,6 @@
 from euchre.card.Deck import Deck
 from euchre.card.Card import Card
-from euchre.card.compare_cards import compare_cards
+from euchre.card.compare_cards import best_card
 import pytest
 
 # ["♠", "♥", "♣", "♦"]
@@ -42,5 +42,5 @@ def test_compare_cards(lead_suit, trump, card1_str, card2_str, expected):
     card2 = Card(deck, card2_str)
     if trump is not None: deck.trump = trump    
 
-    actual = compare_cards(card1, card2, lead_suit)  
+    actual = best_card(card1, card2, lead_suit)  
     assert actual == Card(deck, expected)

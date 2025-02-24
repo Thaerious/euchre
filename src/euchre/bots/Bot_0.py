@@ -66,7 +66,7 @@ class Bot_0:
 
     def score(self, value: int) -> None:
         for state in self.queries:
-            for query in self.queries[state]:                
+            for query in self.queries[state]:   
                 query.stats.score(value)
 
     def append(self, queries: Dict[str, List[Query]]) -> None:        

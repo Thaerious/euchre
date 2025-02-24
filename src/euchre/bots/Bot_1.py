@@ -21,12 +21,12 @@ class Bot_1(Bot_0):
         "state_3":[],
         "state_4":[],
         "state_5":[
-            (Query("~", "beats").lead("123").wins().worst().do("play")),
-            (Query("~", "loses").lead("123").loses().worst().do("play")),            
-            (Query("♥").lead("0").best().do("play")),
-            (Query("♦").lead("0").best().do("play")),
-            (Query("♣").lead("0").best().do("play")),
-            (Query("♠").lead("0").best().do("play")),
+            Query("~", "beats").lead("123").wins().worst().do("play"),
+            Query("~", "loses").lead("123").loses().worst().do("play"),            
+            Query("♥").lead("0").best().do("play"),
+            Query("♦").lead("0").best().do("play"),
+            Query("♣").lead("0").best().do("play"),
+            Query("♠").lead("0").best().do("play"),
         ],
     }     
 
