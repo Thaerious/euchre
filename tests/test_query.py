@@ -173,6 +173,20 @@ def test_linked_query_negative(game):
     assert q.stats._call_count == 1
     assert q.stats._activated == 0
 
+
+def test_special_case(game):
+    game.set_cards('Player1', ['A♣','K♥','10♥','9♣','Q♠'])
+    game.trump = '♥'
+    game.up_card = 'J♥'
+    snap = Snapshot(game, 'Player1')
+
+    # hearts is clubs normalized      
+    q = Query("A♥", "A♥-Debug").link("♥").count("2").worst()
+    qr = q.all(snap)
+    print(q)
+    print(qr)
+    assert set(qr) == set(['9♣'])
+
 # Additional test functions follow a similar pattern
 
 # These test cases ensure that selecting lead, maker, up card, down card,

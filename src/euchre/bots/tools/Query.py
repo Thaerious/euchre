@@ -209,7 +209,7 @@ class Query(Query_Base):
         print(self._hooks, self.__hash__())
         return self
 
-    def trigger_hook(self, event: str, *args, **kwargs):
+    def _trigger_hook(self, event: str, *args, **kwargs):
         """Trigger all hooks associated with an event."""
         if event in self._hooks:
             for func in self._hooks[event]:
@@ -234,7 +234,7 @@ class Query(Query_Base):
 
     def empty_result(self, snap):
         all = Query_Result([]) 
-        self.trigger_hook("after_all", query = self, snap = snap, all = all)
+        self._trigger_hook("after_all", query = self, snap = snap, all = all)
         return all 
 
     def all(self, snap: Snapshot):
@@ -243,7 +243,7 @@ class Query(Query_Base):
 
     # if up and down card tests pass, return all matching hand cards
     def _all(self, snap: Snapshot):
-        self.trigger_hook("before_all", query = self, snap = snap)
+        self._trigger_hook("before_all", query = self, snap = snap)
 
         if not self._up_card.test(snap.up_card): return self.empty_result(snap)
         if not self._down_card.test(snap.down_card): return self.empty_result(snap)
@@ -258,15 +258,14 @@ class Query(Query_Base):
 
         all = self._hand.all(snap.hand)
         
+        if not self._count.test(len(all)): return self.empty_result(snap)
         if self._playable == True: all = self.do_playable(all, snap)
         if self._wins == True: all = self.do_wins(all, snap)
         if self._loses == True: all = self.do_loses(all, snap)
         if self._best == True: all = self.do_best(all, snap)
-        if self._worst == True: all = self.do_worst(all, snap)
+        if self._worst == True: all = self.do_worst(all, snap) 
 
-        if not self._count.test(len(all)): return self.empty_result(snap)
-
-        self.trigger_hook("after_all", query = self, snap = snap, all = all)
+        self._trigger_hook("after_all", query = self, snap = snap, all = all)
         
         if len(all) == 0:
             return all

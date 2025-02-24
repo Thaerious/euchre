@@ -27,9 +27,9 @@ class Bot_3(Bot_0):
             Query("J♠ J♣ A♠").up_card("♠").count("23").do("order"),            
         ],
         "state_2":[
-            Query("A♥").trigger_hook("before_all", report_query).link("♥").count("234").worst().do("up").trigger_hook("before_all", report_query),
-            Query("A♦").link("♦").count("2").worst().do("up"),
-            Query("A♣").link("♣").count("2").worst().do("up"),           
+            Query("A♣-Debug").register_hook("before_all", report_query).link("♣").count("234").worst().do("up"),         
+            Query("A♥-Debug").register_hook("before_all", report_query).link("♥").count("234").worst().do("up"),                     
+            Query("A♦-Debug").register_hook("before_all", report_query).link("♦").count("234").worst().do("up"),                     
             Query("~♠ 910JQK", "toss off suit").worst().do("up"),            
         ],
         "state_3":[
