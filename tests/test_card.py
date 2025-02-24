@@ -89,7 +89,7 @@ def test_compare_same_card(deck):
     card1 = deck.get_card('J♠')  # Right Bower (Trump Jack)
     assert card1.compare(card1, lead='♠') == 1  # Right Bower wins
 
-# ✅ Right Bower (J of Trump) always wins
+# Right Bower (J of Trump) always wins
 def test_compare_right_bower_vs_non_trump(deck):
     deck.trump = "♠"
     card1 = deck.get_card('J♠')  # Right Bower (Trump Jack)
@@ -102,7 +102,7 @@ def test_compare_non_trump_vs_right_bower(deck):
     card2 = deck.get_card('J♠')  # Right Bower (Trump Jack)
     assert card1.compare(card2, lead='♠') == -1  # Right Bower wins
 
-# ✅ Left Bower (J of same-color suit as trump) beats everything except Right Bower
+# Left Bower (J of same-color suit as trump) beats everything except Right Bower
 def test_compare_left_bower_vs_non_trump(deck):
     deck.trump = "♠"
     card1 = deck.get_card('J♣')  # Left Bower
@@ -127,7 +127,7 @@ def test_compare_right_bower_vs_left_bower(deck):
     card2 = deck.get_card('J♣')  # Left Bower
     assert card1.compare(card2, lead='♠') == 1  # Right Bower wins
 
-# ✅ Any trump card beats any non-trump card
+# Any trump card beats any non-trump card
 def test_compare_trump_vs_non_trump(deck):
     deck.trump = "♦"
     card1 = deck.get_card('9♦')  # Trump suit
@@ -152,7 +152,7 @@ def test_compare_low_trump_vs_high_trump(deck):
     card2 = deck.get_card('A♦')  # High trump
     assert card1.compare(card2, lead='♠') == -1  # Higher trump wins
 
-# ✅ Lead suit wins over a non-lead, non-trump card
+# Lead suit wins over a non-lead, non-trump card
 def test_compare_lead_vs_non_lead(deck):
     deck.trump = "♥"
     card1 = deck.get_card('10♠')  # Lead suit
@@ -165,7 +165,7 @@ def test_compare_non_lead_vs_lead(deck):
     card2 = deck.get_card('10♠')  # Lead suit
     assert card1.compare(card2, lead='♠') == -1  # Lead wins
 
-# ✅ If both cards follow lead, highest wins
+# If both cards follow lead, highest wins
 def test_compare_both_follow_lead(deck):
     deck.trump = "♦"
     card1 = deck.get_card('K♠')  # Lead suit
@@ -178,7 +178,7 @@ def test_compare_both_follow_lead_low_vs_high(deck):
     card2 = deck.get_card('K♠')  # Lead suit
     assert card1.compare(card2, lead='♠') == -1  # Higher card wins
 
-# ✅ If neither follows suit and neither is trump, it's a tie (0)
+# If neither follows suit and neither is trump, it's a tie (0)
 def test_compare_both_off_suit_neither_trump(deck):
     deck.trump = "♦"
     card1 = deck.get_card('Q♥')  # Off-suit, not lead or trump
@@ -190,6 +190,12 @@ def test_compare_both_off_suit_neither_trump_different_order(deck):
     card1 = deck.get_card('10♣')  # Off-suit, not lead or trump
     card2 = deck.get_card('Q♥')  # Off-suit, not lead or trump
     assert card1.compare(card2, lead='♠') == 0  # Neither follows lead or is trump → Tie
+
+def test_compare_no_lead_no_trump(deck):
+    deck.trump = None
+    card1 = deck.get_card('10♣')  # Off-suit, not lead or trump
+    card2 = deck.get_card('Q♥')  # Off-suit, not lead or trump
+    assert card1.compare(card2, lead=None) == -1  # Neither follows lead or is trump → Tie
 
 def test_effective_suit_trump_not_set_j(deck):
     card1 = deck.get_card('J♣')

@@ -31,8 +31,8 @@ def test_query_simple(game):
     })
 
     (action, data) = bot.decide(snap)
-    assert q.stats.call_count == 1
-    assert q.stats.activated == 1
+    assert q.stats._call_count == 1
+    assert q.stats._activated == 1
 
 def test_query_and_both_true(game):
     snap = Snapshot(game, 'Player1')
@@ -49,9 +49,9 @@ def test_query_and_both_true(game):
     bot.append(queries)
 
     (action, data) = bot.decide(snap)
-    assert queries["state_1"][0].stats.activated == 1
-    assert queries["state_1"][1].stats.activated == 1
-    assert queries["state_1"][2].stats.activated == 0     
+    assert queries["state_1"][0].stats._activated == 1
+    assert queries["state_1"][1].stats._activated == 1
+    assert queries["state_1"][2].stats._activated == 0     
 
 def test_query_and_premise_false_consequent_true(game):
     snap = Snapshot(game, 'Player1')
@@ -68,9 +68,9 @@ def test_query_and_premise_false_consequent_true(game):
     bot.append(queries)
 
     (action, data) = bot.decide(snap)
-    assert queries["state_1"][0].stats.activated == 0
-    assert queries["state_1"][1].stats.activated == 0    
-    assert queries["state_1"][2].stats.activated == 1   
+    assert queries["state_1"][0].stats._activated == 0
+    assert queries["state_1"][1].stats._activated == 0    
+    assert queries["state_1"][2].stats._activated == 1   
 
 def test_query_and_premise_true_consequent_false(game):
     snap = Snapshot(game, 'Player1')
@@ -87,9 +87,9 @@ def test_query_and_premise_true_consequent_false(game):
     bot.append(queries)
 
     (action, data) = bot.decide(snap)
-    assert queries["state_1"][0].stats.activated == 1
-    assert queries["state_1"][1].stats.activated == 0      
-    assert queries["state_1"][2].stats.activated == 1  
+    assert queries["state_1"][0].stats._activated == 1
+    assert queries["state_1"][1].stats._activated == 0      
+    assert queries["state_1"][2].stats._activated == 1  
 
 def test_count_if_true(game):
     snap = Snapshot(game, 'Player4') # ['A♣', 'K♣', 'A♠', '10♦', '9♥']
@@ -106,9 +106,9 @@ def test_count_if_true(game):
     bot.append(queries)
 
     (action, data) = bot.decide(snap)
-    assert queries["state_1"][0].stats.activated == 1
-    assert queries["state_1"][1].stats.activated == 1      
-    assert queries["state_1"][2].stats.activated == 0 
+    assert queries["state_1"][0].stats._activated == 1
+    assert queries["state_1"][1].stats._activated == 1      
+    assert queries["state_1"][2].stats._activated == 0 
 
 def test_count_if_false(game):
     snap = Snapshot(game, 'Player4') # ['A♣', 'K♣', 'A♠', '10♦', '9♥']
@@ -125,9 +125,9 @@ def test_count_if_false(game):
     bot.append(queries)
 
     (action, data) = bot.decide(snap)
-    assert queries["state_1"][0].stats.activated == 0
-    assert queries["state_1"][1].stats.activated == 0      
-    assert queries["state_1"][2].stats.activated == 1     
+    assert queries["state_1"][0].stats._activated == 0
+    assert queries["state_1"][1].stats._activated == 0      
+    assert queries["state_1"][2].stats._activated == 1     
 
 def test_chain_and_true(game):
     snap = Snapshot(game, 'Player4') # ['A♣', 'K♣', 'A♠', '10♦', '9♥']
@@ -145,10 +145,10 @@ def test_chain_and_true(game):
     bot.append(queries)
 
     (action, data) = bot.decide(snap)
-    assert queries["state_1"][0].stats.activated == 1
-    assert queries["state_1"][1].stats.activated == 1      
-    assert queries["state_1"][2].stats.activated == 1  
-    assert queries["state_1"][3].stats.activated == 0   
+    assert queries["state_1"][0].stats._activated == 1
+    assert queries["state_1"][1].stats._activated == 1      
+    assert queries["state_1"][2].stats._activated == 1  
+    assert queries["state_1"][3].stats._activated == 0   
 
 def test_chain_and_false_1(game):
     snap = Snapshot(game, 'Player4') # ['A♣', 'K♣', 'A♠', '10♦', '9♥']
@@ -166,7 +166,7 @@ def test_chain_and_false_1(game):
     bot.append(queries)
 
     (action, data) = bot.decide(snap)
-    assert queries["state_1"][0].stats.activated == 0
-    assert queries["state_1"][1].stats.activated == 0      
-    assert queries["state_1"][2].stats.activated == 0  
-    assert queries["state_1"][3].stats.activated == 1       
+    assert queries["state_1"][0].stats._activated == 0
+    assert queries["state_1"][1].stats._activated == 0      
+    assert queries["state_1"][2].stats._activated == 0  
+    assert queries["state_1"][3].stats._activated == 1       

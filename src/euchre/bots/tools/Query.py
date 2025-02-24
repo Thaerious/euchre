@@ -204,6 +204,8 @@ class Query(Query_Base):
         if event not in self._hooks:
             self._hooks[event] = []
         self._hooks[event].append(func)
+
+        print(self._hooks, self.__hash__())
         return self
 
     def trigger_hook(self, event: str, *args, **kwargs):
@@ -229,16 +231,16 @@ class Query(Query_Base):
 
     def empty_result(self, snap):
         all = Query_Result([]) 
-        self.trigger_hook("after", query = self, snap = snap, all = all)
+        self.trigger_hook("after_all", query = self, snap = snap, all = all)
         return all 
 
     def all(self, snap: Snapshot):
-        self._stats.call_count = self._stats.call_count + 1
+        self._stats.called()
         return self._root._all(snap)
 
     # if up and down card tests pass, return all matching hand cards
     def _all(self, snap: Snapshot):
-        self.trigger_hook("before", query = self, snap = snap)
+        self.trigger_hook("before_all", query = self, snap = snap)
 
         if not self._up_card.test(snap.up_card): return self.empty_result(snap)
         if not self._down_card.test(snap.down_card): return self.empty_result(snap)
@@ -258,17 +260,18 @@ class Query(Query_Base):
         if self._loses == True: all = self.do_loses(all, snap)
         if self._best == True: all = self.do_best(all, snap)
         if self._worst == True: all = self.do_worst(all, snap)
+
         if not self._count.test(len(all)): return self.empty_result(snap)
 
-        self.trigger_hook("after", query = self, snap = snap, all = all)
+        self.trigger_hook("after_all", query = self, snap = snap, all = all)
         
         if len(all) == 0:
             return all
         elif self._next is not None: 
-            self._stats.activated = self._stats.activated + 1
+            self._stats.activate()
             return self._next._all(snap)
         else:
-            self._stats.activated = self._stats.activated + 1
+            self._stats.activate()
             return all
 
     def do_playable(self, all: Query_Result, snap: Snapshot):   
@@ -313,11 +316,12 @@ class Query(Query_Base):
         return selected
 
     def do_best(self, all, snap: Snapshot):
-        if len(all) == 0: return Query_Result(self)
-        if len(snap.tricks) == 0: return all
-        if len(snap.tricks[-1]) == 0: return all
+        lead_suit = None
 
-        lead_suit = snap.tricks[-1].lead_suit
+        if len(all) == 0: return self.empty_result(snap)   
+        if len(snap.tricks) != 0 and len(snap.tricks[-1]) != 0: 
+            lead_suit = snap.tricks[-1].lead_suit
+
         best_card = all[0]
 
         selected = Query_Result(self)
@@ -329,11 +333,12 @@ class Query(Query_Base):
         return selected
 
     def do_worst(self, all, snap: Snapshot):
-        if len(all) == 0: return Query_Result(self)        
-        if len(snap.tricks) == 0: return all
-        if len(snap.tricks[-1]) == 0: return all        
+        lead_suit = None
 
-        lead_suit = snap.tricks[-1].lead_suit
+        if len(all) == 0: return self.empty_result(snap)   
+        if len(snap.tricks) != 0 and len(snap.tricks[-1]) != 0: 
+            lead_suit = snap.tricks[-1].lead_suit
+
         worst_card = all[0]
 
         selected = Query_Result(self)

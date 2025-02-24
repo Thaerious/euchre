@@ -125,7 +125,7 @@ def test_stats_call_count(game):
 
     q = Query().select('~').dealer('2')
     qr = q.all(snap)    
-    assert q.stats.call_count == 1
+    assert q.stats._call_count == 1
 
 # activated count not incremented when query returns an empty set
 def test_stats_call_count(game):
@@ -136,7 +136,7 @@ def test_stats_call_count(game):
     q = Query().select('~').dealer('2')
     qr = q.all(snap)    
     assert set(qr) == set([])
-    assert q.stats.activated == 0
+    assert q.stats._activated == 0
 
 # activated count is incremented when query returns an non-empty set
 def test_stats_call_count(game):
@@ -147,7 +147,7 @@ def test_stats_call_count(game):
     q = Query().select('~')
     qr = q.all(snap)    
     assert set(qr) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
-    assert q.stats.activated == 1
+    assert q.stats._activated == 1
 
 def test_linked_query_positive(game):
     game.set_cards('Player1', ['A♥', '10♣', 'Q♥', 'Q♠', 'J♥'])
@@ -158,8 +158,8 @@ def test_linked_query_positive(game):
     q = Query("A♥").link("♥")
     qr = q.all(snap)
     assert set(qr) == set(['A♥', 'Q♥', 'J♥'])
-    assert q.stats.call_count == 1
-    assert q.stats.activated == 1
+    assert q.stats._call_count == 1
+    assert q.stats._activated == 1
 
 def test_linked_query_negative(game):
     game.set_cards('Player1', ['K♥', '10♣', 'Q♥', 'Q♠', 'J♥'])
@@ -170,8 +170,8 @@ def test_linked_query_negative(game):
     q = Query("A♥").link("♥")
     qr = q.all(snap)
     assert set(qr) == set([])
-    assert q.stats.call_count == 1
-    assert q.stats.activated == 0
+    assert q.stats._call_count == 1
+    assert q.stats._activated == 0
 
 # Additional test functions follow a similar pattern
 

@@ -34,7 +34,7 @@ class Compete():
 
         for i in range(count):
             self.step(self.seed + i, 0)
-            self.step(self.seed + i, 2)
+            self.step(self.seed + i, 1)
 
         self.end = time.time()
 
@@ -51,6 +51,10 @@ class Compete():
 
     def play_game(self, game):
         while game.current_state != 0:
+            if game.current_state == 7:
+                score = game.calc_hand()
+                self.record_hand(score)
+                
             if game.current_state in [6, 7]:
                 game.input(None, "continue", None)
             else: 
@@ -66,6 +70,11 @@ class Compete():
 
         for player in game.players:
             if player.team.score >= 10: self.bots[player.name].wins += 1
+
+    def record_hand(self, hand_score):
+        for team in hand_score.keys():
+            for player in team.players:
+                self.bots[player.name].bot.score(hand_score[team])
 
     def report(self):
         print(f"Bot A: {type(self.bot_a).__name__}")
@@ -95,6 +104,10 @@ def main():
     compete.run(count)
     compete.report()
 
-cProfile.run('main()', 'output.prof')
-stats = pstats.Stats('output.prof')
-stats.strip_dirs().sort_stats('time').print_stats(10)  # Show top 10
+main()
+
+# cProfile.run('main()', 'output.prof')
+# stats = pstats.Stats('output.prof')
+# # stats.strip_dirs().sort_stats('time').print_stats()
+
+# stats.strip_dirs().print_callers('trump')

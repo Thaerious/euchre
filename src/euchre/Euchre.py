@@ -459,7 +459,7 @@ class Euchre:
         # Move the winner to the front of the order
         rotate_to(self._order, winner_pindex)
         self.current_player_index = winner_pindex
-        self.lead_index = winner_pindex
+        self.lead_index = winner_pindex   
 
     @property
     def is_hand_finished(self) -> bool:
@@ -505,6 +505,42 @@ class Euchre:
             for team in self._teams:
                 if team != self.maker.team:
                     team.score = team.score + 2
+
+    def calc_hand(self) -> int:
+            """
+            Score a completed Euchre hand based on the tricks won by each side.
+
+            Args:
+                maker (int): Index of the player who made trump.
+                tricks (List[int]): Number of tricks won, indexed by each of the four players.
+                isAlone (bool): True if the maker's team played alone, otherwise False.
+
+            Returns:
+                int: 
+                    4 if the maker's team took all 5 tricks alone,
+                    2 if the maker's team took all 5 tricks (not alone),
+                    1 if the maker's team took 3 or 4 tricks,
+                    -2 if the opposing team took 3 or more tricks.
+            
+            Raises:
+                EuchreException: If the total number of tricks does not sum to 5.
+            """
+
+            maker_tricks = self.maker.team.tricks
+            scores = {team: 0 for team in self._teams}
+            
+            if maker_tricks == NUM_TRICKS_PER_HAND and self.maker.team.is_alone:
+                scores[self.maker.team] = 4
+            elif maker_tricks == NUM_TRICKS_PER_HAND:
+                scores[self.maker.team] = 2
+            elif maker_tricks >= REQUIRED_TRICKS_TO_WIN:
+                scores[self.maker.team] = 1
+            else:
+                for team in self._teams:
+                    if team != self.maker.team:
+                        scores[team] = 2
+
+            return scores
 
     def is_game_over(self) -> bool:
         """

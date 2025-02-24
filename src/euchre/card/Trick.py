@@ -3,6 +3,7 @@ from euchre.card.Card import Card
 from typeguard import typechecked
 from euchre.del_string import del_string
 from .Has_Trump import Has_Trump
+from .compare_cards import compare_cards
 
 class Trick(List[Card], Has_Trump):
     """
@@ -86,16 +87,9 @@ class Trick(List[Card], Has_Trump):
         best_card = self[0]
 
         for card in self[1:]:  # Start checking from the second card
-            if best_card.compare(card, self.lead_suit) < 0:
-                best_card = card
+            best_card = compare_cards(best_card, card, self.lead_suit)
 
         return best_card
-
-    # true if card would be the winner of this trick
-    # todo test
-    def compare_card(self, card):
-        best_card = self.best_card
-        return best_card.compare(card, self.lead_suit) < 0
 
     @property
     def winner(self) -> Optional[int]:

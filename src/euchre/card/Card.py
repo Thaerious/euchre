@@ -1,5 +1,6 @@
 from euchre.class_getter import class_getter
 from typing import Optional
+from .compare_cards import compare_cards
 
 class Card:
     """Represents a single card in Euchre, with suit and rank."""
@@ -111,62 +112,7 @@ class Card:
 
         if self.is_left_bower(trump):
             return trump  # Left Bower is considered part of the trump suit
-        return self._suit
-
-    def compare(self, that: "Card", lead: str = None) -> int:
-        """
-        Compare two cards and determine the winner.
-
-        Assumes `self` was played first.
-
-        Args:
-            that (Card): The second card to compare against.
-            lead (str): The suit that was led in the trick.
-
-        Returns:
-            int: 
-                - `1` if `self` wins.
-                - `-1` if `that` wins.
-                - `0` if it's a tie (neither follows lead or is trump).
-        """
-        if lead == None:
-            lead = self.suit
-
-        # If both cards are the same, `self` wins (played first)
-        if self == that:
-            return 1
-        # Right Bower (Jack of trump) always wins
-        if self.is_right_bower():
-            return 1
-        if that.is_right_bower():
-            return -1
-
-        # Left Bower (Jack of same-color suit as trump) wins against non-bowers
-        if self.is_left_bower():
-            return 1
-        if that.is_left_bower():
-            return -1
-
-        # Trump suit always wins over non-trump
-        if self._suit == self.trump and that._suit != self.trump:
-            return 1
-        if self._suit != self.trump and that._suit == self.trump:
-            return -1
-
-        # If both are the same suit (trump or lead), compare by rank
-        if self._suit == that._suit:
-            selfIndex = Card.ranks.index(self._rank)
-            thatIndex = Card.ranks.index(that._rank)
-            return 1 if selfIndex > thatIndex else -1
-
-        # If one follows lead and the other does not, lead suit wins
-        if self._suit == lead and that._suit != lead:
-            return 1
-        if that._suit == lead and self._suit != lead:
-            return -1
-
-        # If neither follows lead or is trump, it's a tie
-        return 0
+        return self._suit   
 
     def is_right_bower(self, trump = None) -> bool:
         """

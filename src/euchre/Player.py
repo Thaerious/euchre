@@ -1,12 +1,18 @@
 from euchre.del_string import del_string
 from euchre.card import *
 from .custom_json_serializer import custom_json_serializer
-import json
+from euchre.del_string import del_string
 
 class Team:
     def __init__(self, players):
         self._players = players
         self._score = 0
+
+    def __str__(self):
+        return del_string([p.name for p in self._players])
+
+    def __repr__(self):
+        return del_string([p.name for p in self._players])
 
     @property
     def is_alone(self):

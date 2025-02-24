@@ -1,6 +1,7 @@
 from euchre.card import *
 from .tools.Query import Query
 from .Bot_0 import Bot_0
+from typing import List, Dict, Optional, Tuple
 
 # ["♠", "♥", "♣", "♦"]
 
@@ -16,14 +17,14 @@ class Bot_2(Bot_0):
             (Query("♦", name="RB♦").up_card("J♦").dealer("02").count("2345").do("order")),
             (Query("♣", name="RB♣").up_card("J♣").dealer("02").count("2345").do("order")),
             (Query("♠", name="RB♠").up_card("J♠").dealer("02").count("2345").do("order")),
-            (Query("♥").up_card("♥").count("345").do("order")),
-            (Query("♦").up_card("♦").count("345").do("order")),
-            (Query("♣").up_card("♣").count("345").do("order")),
-            (Query("♠").up_card("♠").count("345").do("order")),
+            (Query("♥", name="♥>2").up_card("♥").count("345").do("order")),
+            (Query("♦", name="♦>2").up_card("♦").count("345").do("order")),
+            (Query("♣", name="♣>2").up_card("♣").count("345").do("order")),
+            (Query("♠", name="♠>2").up_card("♠").count("345").do("order")),
             (Query("J♥ J♦ A♥").up_card("♥").count("23").do("order")),
             (Query("J♦ J♥ A♦").up_card("♦").count("23").do("order")),
             (Query("J♣ J♠ A♣").up_card("♣").count("23").do("order")),
-            (Query("J♠ J♣ A♠").up_card("♠").count("23").do("order")),            
+            (Query("J♠ J♣ A♠").up_card("♠").count("23").do("order")),             
         ],
         "state_2":[
             (Query("910JQK♥").count("1").worst().do("up")),
@@ -44,12 +45,12 @@ class Bot_2(Bot_0):
         "state_5":[
             (Query("~", "beats").lead("123").wins().worst().do("play")),
             (Query("~", "loses").lead("123").loses().worst().do("play")),            
-            (Query("♥").lead("0").best().do("play")),
-            (Query("♦").lead("0").best().do("play")),
-            (Query("♣").lead("0").best().do("play")),
-            (Query("♠").lead("0").best().do("play")),
+            (Query("♥", name="play ♥").lead("0").best().do("play")),
+            (Query("♦", name="play ♦").lead("0").best().do("play")),
+            (Query("♣", name="play ♣").lead("0").best().do("play")),
+            (Query("♠", name="play ♠").lead("0").best().do("play")),
         ],
     }     
 
-    def __init__(self):
+    def __init__(self, queries: Optional[Dict[str, List[Query]]] = {}):
         super().__init__(Bot_2.queries)
