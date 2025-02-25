@@ -245,6 +245,7 @@ class Query(Query_Base):
     def _all(self, snap: Snapshot):
         self._trigger_hook("before_all", query = self, snap = snap)
 
+        # tests that return an empty result despite the query
         if not self._up_card.test(snap.up_card): return self.empty_result(snap)
         if not self._down_card.test(snap.down_card): return self.empty_result(snap)
 
@@ -256,9 +257,13 @@ class Query(Query_Base):
         if not self._maker.test(norm_maker): return self.empty_result(snap)
         if not self._dealer.test(norm_dealer): return self.empty_result(snap)
 
-        all = self._hand.all(snap.hand)
-        
-        if not self._count.test(len(all)): return self.empty_result(snap)
+        # test the query
+        all = self._hand.all(snap.hand)        
+
+        # tests that return an empty result using the query
+        if not self._count.test(len(all)): return self.empty_result(snap)       
+
+        # tests that change the contents of the query
         if self._playable == True: all = self.do_playable(all, snap)
         if self._wins == True: all = self.do_wins(all, snap)
         if self._loses == True: all = self.do_loses(all, snap)
@@ -270,9 +275,11 @@ class Query(Query_Base):
         if len(all) == 0:
             return all
         elif self._next is not None: 
+            self._trigger_hook("on_match", query = self, snap = snap, all = all)
             self._stats.activate()
             return self._next._all(snap)
         else:
+            self._trigger_hook("on_match", query = self, snap = snap, all = all)
             self._stats.activate()
             return all
 
