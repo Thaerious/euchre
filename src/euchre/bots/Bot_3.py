@@ -6,7 +6,7 @@ from .Bot_2 import Bot_2
 # ["♠", "♥", "♣", "♦"]
 
 def report_query(query, snap, all = []):
-    print(query, snap.up_card, f"[{snap.hand}]", all)
+    print(f"{query}, {snap.down_card}, [{snap.hand}]:{snap.trump}, {all}")
 
 #.register_hook("after", report_query)
 
@@ -26,11 +26,9 @@ class Bot_3(Bot_0):
             Query("J♣ J♠ A♣").up_card("♣").count("23").do("order"),
             Query("J♠ J♣ A♠").up_card("♠").count("23").do("order"),            
         ],
-        "state_2":[
-            Query("A♣-Debug").register_hook("before_all", report_query).link("♣").count("234").worst().do("up"),         
-            Query("A♥-Debug").register_hook("before_all", report_query).link("♥").count("234").worst().do("up"),                     
-            Query("A♦-Debug").register_hook("before_all", report_query).link("♦").count("234").worst().do("up"),                     
-            Query("~♠ 910JQK", "toss off suit").worst().do("up"),            
+        "state_2":[                 
+            Query("910JQK♥").count("1").worst().do("up"),
+            Query("~♠ 910JQK").count("12345").worst().do("up"),                   
         ],
         "state_3":[
             Query("~♥").down_card("♥").count("5").do("make"),
@@ -39,10 +37,26 @@ class Bot_3(Bot_0):
             Query("~♠").down_card("♠").count("5").do("make"),
         ],
         "state_4":[
-            Query("~♥").down_card("♥").count("345").do("make"),
-            Query("~♦").down_card("♦").count("345").do("make"),
-            Query("~♣").down_card("♣").count("345").do("make"),
-            Query("~♠").down_card("♠").count("345").do("make"),
+            Query("J♥ J♦ A♦").down_card("♥").count("2").do("make", "♦"),
+            Query("J♦ J♥ A♥").down_card("♦").count("2").do("make", "♥"),
+            Query("J♠ J♣ A♠").down_card("♣").count("2").do("make", "♠"),
+            Query("J♣ J♠ A♣").down_card("♠").count("2").do("make", "♣"),
+
+            Query("♦").down_card("♥").count("345").do("make"),
+            Query("♣").down_card("♥").count("345").do("make"),
+            Query("♠").down_card("♥").count("345").do("make"),
+
+            Query("♥").down_card("♦").count("345").do("make"),
+            Query("♣").down_card("♦").count("345").do("make"),
+            Query("♠").down_card("♦").count("345").do("make"),
+
+            Query("♥").down_card("♣").count("345").do("make"),
+            Query("♦").down_card("♣").count("345").do("make"),
+            Query("♠").down_card("♣").count("345").do("make"),
+
+            Query("♥").down_card("♠").count("345").do("make"),
+            Query("♦").down_card("♠").count("345").do("make"),
+            Query("♣").down_card("♠").count("345").do("make"),
         ],
         "state_5":[
             Query("~", "beats").lead("123").wins().worst().do("play"),

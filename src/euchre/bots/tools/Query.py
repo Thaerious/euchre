@@ -232,10 +232,9 @@ class Query(Query_Base):
         self.return_selector = RETURN_SELECTOR['worst']
         return self   
 
-    def empty_result(self, snap):
-        all = Query_Result([]) 
-        self._trigger_hook("after_all", query = self, snap = snap, all = all)
-        return all 
+    def action_skip(self, snap):
+        self._trigger_hook("after_all", query = self, snap = snap, all = Query_Result([]))
+        return ("skip" , None)
 
     def all(self, snap: Snapshot):
         self._stats.called()
@@ -246,42 +245,44 @@ class Query(Query_Base):
         self._trigger_hook("before_all", query = self, snap = snap)
 
         # tests that return an empty result despite the query
-        if not self._up_card.test(snap.up_card): return self.empty_result(snap)
-        if not self._down_card.test(snap.down_card): return self.empty_result(snap)
+        if not self._up_card.test(snap.up_card): return self.action_skip(snap)
+        if not self._down_card.test(snap.down_card): return self.action_skip(snap)
 
         norm_lead = normalize_value(snap.for_index, snap.lead_index)
         norm_maker = normalize_value(snap.for_index, snap.maker_index)
         norm_dealer = normalize_value(snap.for_index, snap.dealer_index)
 
-        if not self._lead.test(norm_lead): return self.empty_result(snap)       
-        if not self._maker.test(norm_maker): return self.empty_result(snap)
-        if not self._dealer.test(norm_dealer): return self.empty_result(snap)
+        if not self._lead.test(norm_lead): return self.action_skip(snap)       
+        if not self._maker.test(norm_maker): return self.action_skip(snap)
+        if not self._dealer.test(norm_dealer): return self.action_skip(snap)
 
         # test the query
-        all = self._hand.all(snap.hand)        
+        selected = self._hand.all(snap.hand)        
 
         # tests that return an empty result using the query
-        if not self._count.test(len(all)): return self.empty_result(snap)       
+        if not self._count.test(len(selected)): return self.action_skip(snap)       
 
         # tests that change the contents of the query
-        if self._playable == True: all = self.do_playable(all, snap)
-        if self._wins == True: all = self.do_wins(all, snap)
-        if self._loses == True: all = self.do_loses(all, snap)
-        if self._best == True: all = self.do_best(all, snap)
-        if self._worst == True: all = self.do_worst(all, snap) 
+        if self._playable == True: selected = self.do_playable(selected, snap)
+        if self._wins == True: selected = self.do_wins(selected, snap)
+        if self._loses == True: selected = self.do_loses(selected, snap)
+        if self._best == True: selected = self.do_best(selected, snap)
+        if self._worst == True: selected = self.do_worst(selected, snap) 
 
-        self._trigger_hook("after_all", query = self, snap = snap, all = all)
-        
-        if len(all) == 0:
-            return all
+        self._trigger_hook("after_all", query = self, snap = snap, all = selected)
+
+        if len(selected) == 0:
+            return self.action_skip(snap) 
         elif self._next is not None: 
-            self._trigger_hook("on_match", query = self, snap = snap, all = all)
+            self._trigger_hook("on_match", query = self, snap = snap, all = selected)
             self._stats.activate()
             return self._next._all(snap)
         else:
-            self._trigger_hook("on_match", query = self, snap = snap, all = all)
+            self._trigger_hook("on_match", query = self, snap = snap, all = selected)
             self._stats.activate()
-            return all
+            data = self.data
+            if data is None: data = selected[0]
+            return (self.action, data)
 
     def do_playable(self, all: Query_Result, snap: Snapshot):   
         if len(snap.tricks) == 0: return all        
@@ -327,7 +328,7 @@ class Query(Query_Base):
     def do_best(self, all, snap: Snapshot):
         lead_suit = None
 
-        if len(all) == 0: return self.empty_result(snap)   
+        if len(all) == 0: return Query_Result([])  
         if len(snap.tricks) != 0 and len(snap.tricks[-1]) != 0: 
             lead_suit = snap.tricks[-1].lead_suit
 
@@ -341,7 +342,7 @@ class Query(Query_Base):
     def do_worst(self, all, snap: Snapshot):
         lead_suit = None
 
-        if len(all) == 0: return self.empty_result(snap)   
+        if len(all) == 0: return Query_Result([])   
         if len(snap.tricks) != 0 and len(snap.tricks[-1]) != 0: 
             lead_suit = snap.tricks[-1].lead_suit
 

@@ -49,7 +49,7 @@ class Compete():
         game.input(None, "start")
         self.play_game(game)   
 
-    def play_game(self, game):
+    def play_game(self, game: Game):
         while game.current_state != 0:
             if game.current_state == 7:
                 score = game.calc_hand()
@@ -59,7 +59,7 @@ class Compete():
                 game.input(None, "continue", None)
             else: 
                 try:
-                    bot = self.bots[game.current_player.name].bot
+                    bot: Bot_0 = self.bots[game.current_player.name].bot
                     snap = Snapshot(game, game.current_player.name)
                     (action, data) = bot.decide(snap)
                     game.input(game.current_player.name, action, data)
@@ -88,7 +88,7 @@ class Compete():
         for key in self.bots.keys():
             record = self.bots[key]
             # print(f"{key} {record.wins}")
-            print(f"{key} {(record.wins / self.run_count):.2f}")        
+            print(f"{key} {(record.wins / self.run_count * 100):.2f}")        
 
 def main():
     count = 10

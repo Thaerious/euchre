@@ -174,9 +174,22 @@ def test_linked_query_negative(game):
     assert q.stats._activated == 0
 
 
-def test_special_case(game):
+# select the lowest heart, if there are two hearts, and one is the Ace
+def test_link_00(game):
     game.set_cards('Player1', ['A♣','K♥','10♥','9♣','Q♠'])
     game.trump = '♥'
+    game.up_card = 'J♥'
+    snap = Snapshot(game, 'Player1')
+
+    # hearts is clubs normalized      
+    q = Query("A♥", "A♥-Debug").link("♥").count("2").worst()
+    qr = q.all(snap)
+    assert set(qr) == set(['9♣'])
+
+# select the lowest club, if there are two clubs, and one is the Ace, w/o trump
+def test_link_01(game):
+    game.set_cards('Player1', ['A♣','K♥','10♥','9♣','Q♠'])
+    game.trump = None
     game.up_card = 'J♥'
     snap = Snapshot(game, 'Player1')
 

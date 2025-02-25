@@ -43,6 +43,7 @@ class Query_Base:
         self.name = name
         self._stats = Stats()
         self._action = ""
+        self._data = None
 
     @property
     def stats(self):
@@ -51,10 +52,15 @@ class Query_Base:
     @property
     def action(self):
         return self._action
+    
+    @property
+    def data(self):
+        return self._data    
 
-    def do(self, value):  
-        if not isinstance(value, str): raise TypeError(f"Expected str, found {type(value)}")
-        self._action = value
+    def do(self, action, data = None):  
+        if not isinstance(action, str): raise TypeError(f"Expected str, found {type(action)}")
+        self._action = action
+        self._data = data
         return self
 
     def __str__(self):
