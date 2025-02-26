@@ -1,5 +1,6 @@
 from euchre import *
 from euchre.bots import *
+from euchre.bots.Bot_1_5 import Bot_1_5
 from euchre.card import *
 from euchre.class_getter import *
 from euchre.rotate import rotate_to, rotate
@@ -100,7 +101,7 @@ def main():
     if len(sys.argv) > 2:
         seed = int(sys.argv[2])        
 
-    compete = Compete(seed, [Bot_2, Bot_3])   
+    compete = Compete(seed, [Bot_1, Bot_1_5])   
     compete.run(count)
     compete.report()
 

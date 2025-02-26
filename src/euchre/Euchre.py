@@ -164,13 +164,14 @@ class Euchre:
         return self._tricks.copy()
 
     @property
-    def current_trick(self) -> List[Trick]:
+    def current_trick(self) -> Trick:
         """
         Get the current (latest) trick.
 
         Returns:
-            List[Trick]: A copy of the current hand's tricks.
+            Trick: A copy of the latest trick.
         """
+        if len(self.tricks) == 0: return None
         return self._tricks[-1]
 
     def shuffle_deck(self) -> None:

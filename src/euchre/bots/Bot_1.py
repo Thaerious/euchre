@@ -3,32 +3,32 @@ from euchre import Snapshot
 from .tools.Query import Query
 from .Bot_0 import Bot_0
 from .tools.Query_Base import Query_Base
-from .tools.Query_Result import Query_Result
+from .tools.Query_Collection import Query_Collection
 
 # ["♠", "♥", "♣", "♦"]
 
 class Print_Query(Query_Base):
     name = "print"
 
-    def all(self, snap: Snapshot):
+    def decide(self, snap: Snapshot):
         print(snap)
-        return Query_Result([]) 
+        return Query_Collection([]) 
 
 class Bot_1(Bot_0):
-    queries = {
-        "state_1":[],
-        "state_2":[],
-        "state_3":[],
-        "state_4":[],
-        "state_5":[
-            Query("~", "beats").lead("123").wins().worst().do("play"),
-            Query("~", "loses").lead("123").loses().worst().do("play"),            
-            Query("♥").lead("0").best().do("play"),
-            Query("♦").lead("0").best().do("play"),
-            Query("♣").lead("0").best().do("play"),
-            Query("♠").lead("0").best().do("play"),
-        ],
-    }     
+    def setup(self):
+        super().setup()
 
-    def __init__(self):
-        super().__init__(Bot_1.queries)
+        self.prepend({
+            "state_1":[],
+            "state_2":[],
+            "state_3":[],
+            "state_4":[],
+            "state_5":[
+                Query("~", "beats").lead("123").wins().worst().do("play"),
+                Query("~", "loses").lead("123").loses().worst().do("play"),            
+                Query("♥").lead("0").best().do("play"),
+                Query("♦").lead("0").best().do("play"),
+                Query("♣").lead("0").best().do("play"),
+                Query("♠").lead("0").best().do("play"),
+            ],
+        })

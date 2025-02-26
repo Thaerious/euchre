@@ -22,4 +22,4 @@ snap = Snapshot(game, "Player1")
 
 q = Query().select("♥")
 print(q._hand)
-print(q.all(snap))
+print(q.decide(snap))

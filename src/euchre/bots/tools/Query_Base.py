@@ -1,11 +1,12 @@
 from euchre.Snapshot import Snapshot
 
 class Stats:
-    _call_count = 0 # the number of times this query was invoked
-    _activated = 0 # the number of times a non-empty result was returned
+    _call_count = 0          # the number of times this query was invoked
+    _activated = 0           # the number of times a non-empty result was returned
+    _wins = 0                # the number of times a positive score was recorded when activated
     _flag_activation = False # set when activated, clear when scored
-    _score = 0 # add winning scores, subtract losing scores
-    _state_count = 0 # the number of times the state this query belongs to was invoked
+    _score = 0               # add winning scores, subtract losing scores
+    _state_count = 0         # the number of times the state this query belongs to was invoked
 
     @property
     def state_count(self):
@@ -16,15 +17,17 @@ class Stats:
         self._state_count = value
 
     def called(self):
-        self._call_count = self._call_count + 1
+        self._call_count += 1
 
     def activate(self):
-        self._activated = self._activated + 1
+        self._activated += 1
         self._flag_activation = True
 
     def score(self, value):
         if self._flag_activation: 
             self._score = self._score + value
+            if value > 0: self._wins += 1
+
         self._flag_activation = False            
 
     def __str__(self):
@@ -36,7 +39,11 @@ class Stats:
         if self._activated != 0:
             points_per_activation = self._score / self._activated
 
-        return f"{self._activated} {pct_activated:.1f} {self._score} {points_per_activation:.2f}"
+        pct_wins = 0.0
+        if self._activated != 0:
+            pct_wins = self._wins / self._activated * 100
+
+        return f"{pct_activated:.1f} {self._activated} {self._wins} {pct_wins:.1f}"
 
 class Query_Base:
     def __init__(self, name):
@@ -69,8 +76,8 @@ class Query_Base:
     def __repr__(self):
         return f"{self.name}"    
     
-    def all(self, _snap: Snapshot):
+    def decide(self, _snap: Snapshot):
         raise NotImplemented
     
     def playable(self, snap):
-        return self.all(snap).playable(snap)
+        return self.decide(snap).playable(snap)

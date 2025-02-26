@@ -2,38 +2,40 @@ from typing import List, Dict, Optional, Tuple
 from euchre.card import Card
 from euchre import Snapshot
 from .tools.Query import Query
+from .tools.Query_Result import Query_Result
 from .tools.Query_Exception import Query_Exception
 from .tools.Query_Base import Query_Base
-from .tools.Query_Result import Query_Result
-import random
+from .tools.Query_Collection import Query_Collection
 
 # ["♠", "♥", "♣", "♦"]
 
 class Default_Suit(Query_Base):
-    def __init__(self, name: str = "default suit") -> None:
+    def __init__(self, name: str = "default 4") -> None:
         super().__init__(name)
 
-    def all(self, snap: Snapshot):
+    def decide(self, snap: Snapshot):
         down_suit = snap.down_card.suit
         down_suit_index = Card.suits.index(down_suit)
         next_suit_index = (down_suit_index + 1) % 4
-        return ("make", Card.suits[next_suit_index])
+        return Query_Result("make", Card.suits[next_suit_index], Query_Collection(snap.hand))
 
 class Bot_0:
-    def __init__(self, queries: Optional[Dict[str, List[Query]]] = {}) -> None:
-        self.last_query: Optional[Query] = None
-
+    def __init__(self) -> None:
+        self.last_query = None
         self.state_counts: Dict[str, int] = {f"state_{i}": 0 for i in range(1, 6)}
-        # Initialize queries for each state as an empty list.
-        self.queries: Dict[str, List[Query]] = {f"state_{i}": [] for i in range(1, 6)}
-        self.append(queries)
 
-        # Build default queries for each state.
-        self.queries["state_1"].append(Query('~', 'default state 1').do("pass"))
-        self.queries["state_2"].append(Query('~', 'default state 2').do("down"))
-        self.queries["state_3"].append(Query('~', 'default state 3 ').do("pass"))
-        self.queries["state_4"].append(Default_Suit())
-        self.queries["state_5"].append(Query('~', 'default state 5').playable().do("play"))
+        # Initialize queries for each state as an empty list.
+        self.queries: Dict[str, List[Query]] = {f"state_{i}": [] for i in range(1, 6)} 
+        self.setup()       
+
+    def setup(self):
+        self.prepend({
+            "state_1":[Query('~', 'default 1').do("pass")],
+            "state_2":[Query('~', 'default 2').do("down")],
+            "state_3":[Query('~', 'default 3').do("pass")],
+            "state_4":[Default_Suit()],
+            "state_5":[Query('~', 'default 5').playable().do("play")],
+        })
 
     def print_stats(self) -> None:
         for state in self.queries:
@@ -52,8 +54,8 @@ class Bot_0:
         for i in range(1, 6):
             s: str = f"state_{i}"
             if s in queries:
-                q: List[Query] = queries[s].copy()
-                self.queries[s].extend(q)                
+                q = queries[s]
+                self.queries[s].extend(q)
 
         for query in self.queries["state_5"]:
             query.playable()
@@ -62,8 +64,8 @@ class Bot_0:
         for i in range(1, 6):
             s: str = f"state_{i}"
             if s in queries:
-                q: List[Query] = queries[s].copy()
-                self.queries[s][:0] = q                
+                q = queries[s].copy()
+                self.queries[s][:0] = q
 
         for query in self.queries["state_5"]:
             query.playable()            
@@ -83,12 +85,13 @@ class Bot_0:
         return (action, data)
 
     # query each result for the state, return the first one that doesn't result in "skip"
-    def decide_state(self, state: str, snap: Snapshot) -> Tuple[str, Query_Result]:
+    def decide_state(self, state: str, snap: Snapshot) -> Tuple[str, Query_Collection]:
         self.state_counts[state] += 1
 
         for query in self.queries[state]:
             self.last_query = query            
-            (action, data) = query.all(snap)
-            if action != "skip": return (action, data)
+            query_result = query.decide(snap)
+            print(query_result)
+            if query_result.action != "skip": return (query_result.action, query_result.data)
 
         raise Exception(f"Sanity check failed, last query ({self.last_query.name}) must return a valid result ({action}).")
