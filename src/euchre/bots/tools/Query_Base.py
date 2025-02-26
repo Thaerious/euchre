@@ -49,7 +49,7 @@ class Query_Base:
     def __init__(self, name):
         self.name = name
         self._stats = Stats()
-        self._action = ""
+        self._action = "no_action"
         self._data = None
 
     @property

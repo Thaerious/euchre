@@ -19,49 +19,55 @@ def game():
     return game
 
 # Tests if an empty Query returns an empty list
-def test_empty(game):
+def test_default(game):
     snap = Snapshot(game, 'Player1')
-    q = Query().decide(snap)
-    assert q.all == []
+    qr = Query().decide(snap)
+    assert qr.all == ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥']
+
+# Tests if an empty Query returns an empty list
+def test_all(game):
+    snap = Snapshot(game, 'Player1')
+    qr = Query('~').decide(snap)
+    assert qr.all == ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥']
 
 # Tests if selecting all cards from a hand retrieves the correct set of cards
 def test_select_all(game):
     snap = Snapshot(game, 'Player1')
-    q = Query()    
-    q = q.select('~').decide(snap)
-    assert set(q.all) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
+    qr = Query().select('~').decide(snap)
+    assert set(qr.all) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
 
 # Tests if selecting all cards works when trump is set
 def test_select_all_trump_set(game):
     game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')
-    assert Query().select('~').decide(snap).all == ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥']
+    assert Query().decide(snap).all == ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥']
 
 # Tests selection behavior when trump is not set
-def test_select_no_trump_is_not_normalized(game):        
+def test_normalization_no_trump(game):        
     snap = Snapshot(game, 'Player1')
 
-    # Spades and clubs should return an empty list when trump is not set
-    assert Query().select('J♠ J♣').decide(snap).all == []
+    # Spades and clubs should return an empty list when trump is not set, 
+    # because there are no spades or clubs in hand
+    assert Query('J♠ J♣').decide(snap).all == []
 
     # Hearts should return only heart-suited cards
-    assert set(Query().select('♥').decide(snap).all) == set(['Q♥', 'J♥'])
+    assert set(Query('♥').decide(snap).all) == set(['Q♥', 'J♥'])
 
 # Tests selection behavior when trump is set
-def test_select_with_trump_is_normalized(game):   
+def test_normalization_with_trump(game):   
     game.set_cards('Player1', ['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')     
 
     # Ensures that left bower (J♠) is correctly interpreted as J♦
-    assert Query().select('J♠ J♣').decide(snap).all == ['J♦'] 
+    assert Query('J♠ J♣').decide(snap).all == ['J♦'] 
 
     # Tests that selecting L (left bower) returns correct results
-    assert Query().select('L♠').decide(snap).all == ['J♥']  
+    assert Query('L♠').decide(snap).all == ['J♥']  
 
     # Left bower should only work when selecting the correct suit
-    assert Query().select('L♣').decide(snap).all == []
+    assert Query('L♣').decide(snap).all == []
 
 # Tests selecting all cards except a certain suit when trump is not set
 def test_select_not_trump_not_set(game):
@@ -70,7 +76,7 @@ def test_select_not_trump_not_set(game):
     snap = Snapshot(game, 'Player1')     
 
     # Selects all except clubs
-    assert Query().select('~♣').decide(snap).all == ['J♦', 'Q♥', 'Q♠', 'J♥']  
+    assert Query('~♣').decide(snap).all == ['J♦', 'Q♥', 'Q♠', 'J♥']  
 
 # Tests selecting all cards except a certain suit when trump is set
 def test_select_not_trump_set(game):
@@ -79,7 +85,7 @@ def test_select_not_trump_set(game):
     snap = Snapshot(game, 'Player1')  
 
     # Selects all except clubs (J♥ is still included since it's the left bower)
-    assert Query().select('~♣').decide(snap).all == ['J♦', '10♣', 'Q♠', 'J♥']  
+    assert Query('~♣').decide(snap).all == ['J♦', '10♣', 'Q♠', 'J♥']  
 
 # Tests selecting the right bower when trump is set
 def test_select_right_bower_trump_set(game):
@@ -88,7 +94,7 @@ def test_select_right_bower_trump_set(game):
     snap = Snapshot(game, 'Player1')  
 
     # Right bower (J♠) should return J♦
-    assert Query().select('J♠').decide(snap).all == ['J♦']
+    assert Query('J♠').decide(snap).all == ['J♦']
 
 # Tests multi-selection query behavior
 def test_multi_select(game):
@@ -96,7 +102,7 @@ def test_multi_select(game):
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')  
 
-    q = Query().select('J♠ Q').decide(snap)
+    q = Query('J♠ Q').decide(snap)
     assert q.all == ['J♦', 'Q♥', 'Q♠']
 
 # Tests that dealer selection works correctly
@@ -105,7 +111,7 @@ def test_dealer_true(game):
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').dealer('3').decide(snap)
+    q = Query().dealer('3').decide(snap)
     assert set(q.all) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
 
 # Tests that a non-dealer does not get selected
@@ -114,7 +120,7 @@ def test_dealer_false(game):
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').dealer('2').decide(snap)
+    q = Query().dealer('2').decide(snap)
     assert set(q.all) == set([])
 
 # call count incremented by one whenver the query is invoked
@@ -123,7 +129,7 @@ def test_stats_call_count(game):
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').dealer('2')
+    q = Query().dealer('2')
     qr = q.decide(snap)    
     assert q.stats._call_count == 1
 
@@ -133,7 +139,7 @@ def test_stats_call_count(game):
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~').dealer('2')
+    q = Query().dealer('2')
     qr = q.decide(snap)    
     assert set(qr) == set([])
     assert q.stats._activated == 0
@@ -144,7 +150,7 @@ def test_stats_call_count(game):
     game.trump = '♦'
     snap = Snapshot(game, 'Player1')
 
-    q = Query().select('~')
+    q = Query()
     qr = q.decide(snap)    
     assert set(qr.all) == set(['J♦', '10♣', 'Q♥', 'Q♠', 'J♥'])
     assert q.stats._activated == 1

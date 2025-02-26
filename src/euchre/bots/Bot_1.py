@@ -12,7 +12,7 @@ class Print_Query(Query_Base):
 
     def decide(self, snap: Snapshot):
         print(snap)
-        return Query_Collection([]) 
+        return Query_Collection() 
 
 class Bot_1(Bot_0):
     def setup(self):

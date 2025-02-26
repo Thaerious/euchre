@@ -148,7 +148,7 @@ class Query_Deck(Query_Part):
 
     # return all matching cards
     def all(self, cards):
-        selected = Query_Collection(self)
+        selected = Query_Collection()
         for card in cards:
             if self.test(card):
                 selected.append(card)
@@ -296,7 +296,7 @@ class Query(Query_Base):
         if len(snap.tricks[-1]) == 0: return all
         if not snap.hand.has_suit(snap.tricks[-1].lead_suit): return all
 
-        playable = Query_Collection(self)
+        playable = Query_Collection()
         for card in all:
             if card.suit_effective() == snap.tricks[-1].lead_suit:
                 playable.append(card)
@@ -310,7 +310,7 @@ class Query(Query_Base):
         lead_suit = snap.tricks[-1].lead_suit
         best_card = snap.tricks[-1][0]
 
-        selected = Query_Collection(self)
+        selected = Query_Collection()
         for card in all:
             winner = winning_card(lead_suit, best_card, card)
             loser = losing_card(lead_suit, best_card, card)            
@@ -325,7 +325,7 @@ class Query(Query_Base):
         lead_suit = snap.tricks[-1].lead_suit
         best_card = snap.tricks[-1][0]
 
-        selected = Query_Collection(self)
+        selected = Query_Collection()
         for card in all:
             winner = winning_card(lead_suit, best_card, card)
             if winner == card: selected.append(winner)
@@ -335,32 +335,33 @@ class Query(Query_Base):
     def do_best(self, all, snap: Snapshot):
         lead_suit = None
 
-        if len(all) == 0: return Query_Collection([])  
+        if len(all) == 0: return Query_Collection()  
         if len(snap.tricks) != 0 and len(snap.tricks[-1]) != 0: 
             lead_suit = snap.tricks[-1].lead_suit
 
         best = all[0]
         for card in all: best = best_card(best, card, lead_suit)
 
-        selected = Query_Collection(self)
+        selected = Query_Collection()
         selected.append(best)
         return selected
 
     def do_worst(self, all, snap: Snapshot):
         lead_suit = None
 
-        if len(all) == 0: return Query_Collection([])   
+        if len(all) == 0: return Query_Collection()   
         if len(snap.tricks) != 0 and len(snap.tricks[-1]) != 0: 
             lead_suit = snap.tricks[-1].lead_suit
 
         worst = all[0]        
         for card in all: worst = worst_card(worst, card, lead_suit)
 
-        selected = Query_Collection(self)
+        selected = Query_Collection()
         selected.append(worst)
         return selected
     
     def select(self, phrase): 
+        self._hand = Query_Deck(STATES["unset"])
         self._hand.select(phrase)
         return self  
 
