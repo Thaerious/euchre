@@ -4,6 +4,7 @@ from typeguard import typechecked
 from euchre.del_string import del_string
 from .Has_Trump import Has_Trump
 from .compare_cards import best_card
+from colorama import Fore, Style
 
 class Trick(List[Card], Has_Trump):
     """
@@ -116,7 +117,25 @@ class Trick(List[Card], Has_Trump):
         Returns:
             str: A formatted string showing each player's played card.
         """
-        return f"[{del_string(self, ",", '"')}]:{self.trump}"
+
+        sb = "["
+
+        for i in range(0, len(self)):
+            card = self[i]
+            if card == self.best_card:
+                sb += Fore.LIGHTYELLOW_EX + str(card) + Style.RESET_ALL
+            else:
+                sb += str(card)
+                
+            if i != len(self) - 1: sb += ", "
+        
+        sb += f"]:{self.trump}"
+        return sb
+
+    def highlight_if_win(self, card):
+        print(card, self.best_card, card == self.best_card)
+        if card != self.best_card: return str(card)
+        return Style.BRIGHT + str(card) + Style.RESET_ALL
 
 
     def __repr__(self) -> str:

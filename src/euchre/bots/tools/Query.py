@@ -327,7 +327,7 @@ class Query(Query_Base, Has_Hooks):
         if len(snap.tricks[-1]) == 0: return all        
 
         lead_suit = snap.tricks[-1].lead_suit
-        best_card = snap.tricks[-1][0]
+        best_card = snap.tricks[-1].best_card
 
         selected = Query_Collection()
         for card in all:

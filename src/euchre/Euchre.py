@@ -49,6 +49,7 @@ class Euchre:
         self.players[2].team = self._teams[0]
         self.players[3].team = self._teams[1]
 
+        self.seed = seed
         self.deck = Deck(seed)
         self.__reset()
         self._tricks: List[Trick] = []

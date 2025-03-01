@@ -1,6 +1,6 @@
 from euchre.Snapshot import Snapshot
 
-class Stats:
+class Query_Stats:
     _call_count = 0          # the number of times this query was invoked
     _activated = 0           # the number of times a non-empty result was returned
     _wins = 0                # the number of times a positive score was recorded when activated
@@ -48,7 +48,7 @@ class Stats:
 class Query_Base:
     def __init__(self, name):
         self.name = name
-        self._stats = Stats()
+        self._stats = Query_Stats()
         self._action = "no_action"
         self._data = None
 
@@ -62,7 +62,7 @@ class Query_Base:
     
     @property
     def data(self):
-        return self._data    
+        return self._data
 
     def do(self, action, data = None):  
         if not isinstance(action, str): raise TypeError(f"Expected str, found {type(action)}")
