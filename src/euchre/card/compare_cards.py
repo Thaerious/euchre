@@ -1,3 +1,5 @@
+from .Card import Card
+
 lookup_table = {
     "♠" : {"♠":{}, "♥":{}, "♣":{}, "♦":{}, None:{}},
     "♥" : {"♠":{}, "♥":{}, "♣":{}, "♦":{}, None:{}},
@@ -6,6 +8,7 @@ lookup_table = {
     None : {"♠":{}, "♥":{}, "♣":{}, "♦":{}, None:{}}
 }
 
+# [trump][lead]
 lookup_table['♠']['♠'] = {'J♠': 24, 'J♣': 23, 'A♠': 22, 'K♠': 21, 'Q♠': 20, '10♠': 19, '9♠': 18, 'A♥': 17, 'A♣': 17, 'A♦': 17, 'K♥': 16, 'K♣': 16, 'K♦': 16, 'Q♥': 15, 'Q♣': 15, 'Q♦': 15, 'J♥': 14, 'J♦': 14, '10♥': 13, '10♣': 13, '10♦': 13, '9♥': 12, '9♣': 12, '9♦': 12, }
 lookup_table['♠']['♥'] = {'J♠': 24, 'J♣': 23, 'A♠': 22, 'K♠': 21, 'Q♠': 20, '10♠': 19, '9♠': 18, 'A♥': 17, 'K♥': 16, 'Q♥': 15, 'J♥': 14, '10♥': 13, '9♥': 12, 'A♣': 11, 'A♦': 11, 'K♣': 10, 'K♦': 10, 'Q♣': 9, 'Q♦': 9, 'J♦': 8, '10♣': 7, '10♦': 7, '9♣': 6, '9♦': 6, }
 lookup_table['♠']['♣'] = {'J♠': 24, 'J♣': 23, 'A♠': 22, 'K♠': 21, 'Q♠': 20, '10♠': 19, '9♠': 18, 'A♣': 17, 'K♣': 16, 'Q♣': 15, '10♣': 14, '9♣': 13, 'A♥': 12, 'A♦': 12, 'K♥': 11, 'K♦': 11, 'Q♥': 10, 'Q♦': 10, 'J♥': 9, 'J♦': 9, '10♥': 8, '10♦': 8, '9♥': 7, '9♦': 7, }
@@ -32,19 +35,54 @@ lookup_table[None]['♣'] = {'A♣': 24, 'K♣': 23, 'Q♣': 22, 'J♣': 21, '10
 lookup_table[None]['♦'] = {'A♦': 24, 'K♦': 23, 'Q♦': 22, 'J♦': 21, '10♦': 20, '9♦': 19, 'A♠': 18, 'A♥': 18, 'A♣': 18, 'K♠': 17, 'K♥': 17, 'K♣': 17, 'Q♠': 16, 'Q♥': 16, 'Q♣': 16, 'J♠': 15, 'J♥': 15, 'J♣': 15, '10♠': 14, '10♥': 14, '10♣': 14, '9♠': 13, '9♥': 13, '9♣': 13, }
 lookup_table[None][None] = {'A♠': 24, 'A♥': 24, 'A♣': 24, 'A♦': 24, 'K♠': 23, 'K♥': 23, 'K♣': 23, 'K♦': 23, 'Q♠': 22, 'Q♥': 22, 'Q♣': 22, 'Q♦': 22, 'J♠': 21, 'J♥': 21, 'J♣': 21, 'J♦': 21, '10♠': 20, '10♥': 20, '10♣': 20, '10♦': 20, '9♠': 19, '9♥': 19, '9♣': 19, '9♦': 19, }
 
-def compare_cards(left, right, lead: str = None) -> int:    
+def compare_cards(left: Card, right: Card, lead: str = None) -> int: 
+    """
+    Compare two cards based on their value in the lookup table.
+    
+    Args:
+        left: The first card object.
+        right: The second card object.
+        lead (str, optional): The leading suit. Defaults to None.
+    
+    Returns:
+        int: A positive number if left is greater than right, 
+             a negative number if right is greater than left, 
+             and 0 if they are equal.
+    """       
     lhs = lookup_table[left.trump][lead][left]
     rhs = lookup_table[left.trump][lead][right]
     return lhs - rhs
 
-def best_card(left, right, lead: str = None) -> int:    
-    compare = compare_cards(left, right)
+def best_card(left: Card, right: Card, lead: str = None) -> int:    
+    """
+    Determine the best card between two cards.
+    
+    Args:
+        left: The first card object.
+        right: The second card object.
+        lead (str, optional): The leading suit. Defaults to None.
+    
+    Returns:
+        The better of the two cards based on the lookup table.
+    """
+    compare = compare_cards(left, right, lead)
     if compare > 0: return left
     if compare < 0: return right
     return left
 
-def worst_card(left, right, lead: str = None) -> int:    
-    compare = compare_cards(left, right)
+def worst_card(left: Card, right: Card, lead: str = None) -> int:    
+    """
+    Determine the worst card between two cards.
+    
+    Args:
+        left: The first card object.
+        right: The second card object.
+        lead (str, optional): The leading suit. Defaults to None.
+    
+    Returns:
+        The worse of the two cards based on the lookup table.
+    """    
+    compare = compare_cards(left, right, lead)
     if compare > 0: return right
     if compare < 0: return left
     return right
