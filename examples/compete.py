@@ -1,6 +1,5 @@
 from euchre import *
 from euchre.bots import *
-from euchre.bots.Bot_1_5 import Bot_1_5
 from euchre.card import *
 from euchre.class_getter import *
 from euchre.rotate import rotate_to, rotate
@@ -9,6 +8,7 @@ import time
 import sys
 import cProfile
 import pstats
+from collections import defaultdict
 
 class Bot_Record():
     def __init__(self, bot):
@@ -30,6 +30,8 @@ class Compete():
             "Bot_21": Bot_Record(self.bot_b),
         }
 
+        self.wins = defaultdict(lambda: {"Bot_1": 0, "Bot_2": 0})
+
     def run(self, count):
         self.start = time.time()
 
@@ -50,6 +52,11 @@ class Compete():
         game.input(None, "start")
         self.play_game(game)   
 
+        if game.get_player("Bot_10").team.score >= 10: 
+            self.wins[seed]["Bot_1"] += 1
+        else:
+            self.wins[seed]["Bot_2"] += 1
+
     def play_game(self, game: Game):
         while game.current_state != 0:
             if game.current_state == 7:
@@ -69,9 +76,6 @@ class Compete():
                     print(snap)
                     raise
 
-        for player in game.players:
-            if player.team.score >= 10: self.bots[player.name].wins += 1
-
     def record_hand(self, hand_score):
         for team in hand_score.keys():
             for player in team.players:
@@ -86,10 +90,20 @@ class Compete():
         print(f"\nElapsed time: {self.end - self.start} seconds")
         print(f"Average time: {(self.end - self.start) / self.run_count} seconds\n")
 
-        for key in self.bots.keys():
-            record = self.bots[key]
-            # print(f"{key} {record.wins}")
-            print(f"{key} {(record.wins / self.run_count * 100):.2f}")        
+        WW = 0
+        LW = 0
+        WL = 0   
+
+        for seed in self.wins:
+            result = self.wins[seed]
+            # print(f"{seed}: {result}")
+            if result["Bot_1"] == 1 and result["Bot_2"] == 1: WW += 1
+            elif result["Bot_1"] == 2 and result["Bot_2"] == 0: WL += 1
+            elif result["Bot_1"] == 0 and result["Bot_2"] == 2: LW += 1
+            else: raise Exception("Sanity Check Failed")
+
+        print("Tie\tBot_1\tBot_2")
+        print(f"{WW}\t{WL}\t{LW}")
 
 def main():
     count = 10
@@ -101,7 +115,7 @@ def main():
     if len(sys.argv) > 2:
         seed = int(sys.argv[2])        
 
-    compete = Compete(seed, [Bot_1, Bot_1_5])   
+    compete = Compete(seed, [Bot_1, Bot_2])   
     compete.run(count)
     compete.report()
 
