@@ -20,7 +20,7 @@ class Snap_Player:
         }
 
     def __str__(self):     
-        sb = f"{self.name}[{self.hand}][{del_string(self.played)}] {self.tricks}"
+        sb = f"({self.name}, {self.hand} cards, [{del_string(self.played)}], T{self.tricks})"
         return sb
     
     def __repr__(self):     

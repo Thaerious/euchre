@@ -2,35 +2,32 @@ from euchre.card import *
 from euchre import Snapshot
 from .tools.Query import Query
 from .Bot_0 import Bot_0
+from .Bot_1 import Bot_1
 from .tools.Query_Base import Query_Base
 from .tools.Query_Collection import Query_Collection
+from .tools.Query import normalize_value
 
 # ["♠", "♥", "♣", "♦"]
 
-def report_query(query, snap: Snapshot, all = []):
-    # print(f"{query}, {snap.tricks[-1]}:{snap.tricks[-1].best_card}, [{snap.hand}]:{snap.trump}, {all}")
-    print(f"{query}, {snap.lead_index}:{snap.for_index}, [{snap.hand}]:{snap.trump}, {all}")
+def report_query(query, snap: Snapshot, result):
+        print(snap.current_player.name, snap.seed, snap.hand_count)
 
-class Bot_1_5(Bot_0):
+class Bot_1_5(Bot_1):
     def setup(self):
         super().setup()
 
         self.prepend({
-            "state_1":[],
-            "state_2":[],
+            "state_1":[
+                Query("J♥ J♦ A♥").up_card("♥").count("3").do("order").hook("on_match", report_query),
+                Query("J♦ J♥ A♦").up_card("♦").count("3").do("order"),
+                Query("J♣ J♠ A♣").up_card("♣").count("3").do("order"),
+                Query("J♠ J♣ A♠").up_card("♠").count("3").do("order"),
+            ],
+            "state_2":[
+                Query("910JQK♥").count("1").worst().do("up"),
+                Query("~♠ 910JQK").count("12345").worst().do("up"),                  
+            ],
             "state_3":[],
             "state_4":[],
-            "state_5":[
-                Query("~", "O-W").lead("123").winner("13").wins().best().do("play").register_hook("on_match", report_query),
-                Query("~", "O-W").winner("13").wins().worst().do("play"),
-                Query("~", "P-W").winner("2").link("910JQK♥").count("1").do("play"),
-                Query("~", "P-W").winner("2").link("910JQK♦").count("1").do("play"),
-                Query("~", "P-W").winner("2").link("910JQK♣").count("1").do("play"),
-                Query("~", "P-W").winner("2").worst().do("play"),
-                Query("~", "L").lead("123").loses().worst().do("play"),
-                Query("♥").lead("0").best().do("play"),
-                Query("♦").lead("0").best().do("play"),
-                Query("♣").lead("0").best().do("play"),
-                Query("♠").lead("0").best().do("play"),
-            ],
+            "state_5":[],
         })

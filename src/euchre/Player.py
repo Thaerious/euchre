@@ -71,7 +71,7 @@ class Player:
         return newPlayer
 
     def __str__(self):     
-        sb = f"{self.name}[{del_string(self.hand)}][{del_string(self.played)}] {self.tricks}"
+        sb = f"({self.name}, {del_string(self.hand)}, [{del_string(self.played)}], T{self.tricks})"
         return sb
 
 class PlayerList(list):

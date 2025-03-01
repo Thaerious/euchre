@@ -248,11 +248,7 @@ class Game(Euchre):
             return
 
         self.score_hand()
-        if self.is_game_over():
-            self.state = self.state_0
-        else:
-            self.state = self.state_7
-
+        self.state = self.state_7
 
     def state_7(self, action: str, __: Any) -> None:
         """

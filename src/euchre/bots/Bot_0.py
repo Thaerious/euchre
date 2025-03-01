@@ -17,7 +17,7 @@ class Default_Suit(Query_Base):
         down_suit = snap.down_card.suit
         down_suit_index = Card.suits.index(down_suit)
         next_suit_index = (down_suit_index + 1) % 4
-        return Query_Result("make", Card.suits[next_suit_index], Query_Collection(snap.hand))
+        return Query_Result("make", Card.suits[next_suit_index], Query_Collection(snap.hand), "default")
 
 class Bot_0:
     def __init__(self) -> None:
@@ -84,14 +84,15 @@ class Bot_0:
 
         return (action, data)
 
-    # query each result for the state, return the first one that doesn't result in "skip"
+    # query each result for the state, return the first one that doesn't result in rejected or no action
     def decide_state(self, state: str, snap: Snapshot) -> Tuple[str, Query_Collection]:
         self.state_counts[state] += 1
 
         for query in self.queries[state]:
             self.last_query = query            
             query_result = query.decide(snap)
-            print(query_result)
-            if query_result.action != "skip": return (query_result.action, query_result.data)
+            if query_result.action == "rejected": continue
+            if query_result.action == "no action": continue
+            return (query_result.action, query_result.data)
 
         raise Exception(f"Sanity check failed, last query ({self.last_query.name}) must return a valid result ({action}).")
