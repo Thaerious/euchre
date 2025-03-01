@@ -258,9 +258,13 @@ class Game(Euchre):
             action (str): Expected action "continue".
             __: Unused parameter.
         """
-        self.allowed_actions(action, "continue")        
-        self.next_hand()
-        self.enter_state_1()
+        self.allowed_actions(action, "continue")     
+
+        if self.is_game_over():
+            self.state = self.state_0
+        else:
+            self.next_hand()
+            self.enter_state_1()        
 
     def allowed_actions(self, action: str, *allowed_actions: str) -> None:
         """
