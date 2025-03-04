@@ -1,6 +1,3 @@
-from euchre.card.Card import Card
-from cffi import FFI
-
 class Has_Trump():
     def __init__(self):
         self._trump = None

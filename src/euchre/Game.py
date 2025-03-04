@@ -24,7 +24,7 @@ class Game(Euchre):
         state (Callable[[str, Any], None]): Current state function for the game.
         hash (str): Unique identifier for the current state.
         last_action (Optional[str]): Last action performed in the game.
-        last_player (Optional[Player]): Last player who performed an action.
+        last_player_index (Optional[Player]): Index of last player who performed an action.
     """
 
     def __init__(self, names: list[str], seed = None):
@@ -37,10 +37,14 @@ class Game(Euchre):
         super().__init__(names, seed)
         self.state: Callable[[str, Any], None] = self.state_0
         self.last_action: Optional[str] = None
-        self.last_player: Optional[int] = None
+        self.last_player_index: Optional[int] = None
         self.do_shuffle = True
         self._hooks = {} 
         self.hash = ""
+
+    @property
+    def last_player(self):
+        return self.get_player(self.last_player_index)
 
     def register_hook(self, event: str, func):
         """Register a function to a hook event."""
@@ -91,11 +95,11 @@ class Game(Euchre):
             # States 2 & 5 expect a card object
             if player != self.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.current_player.name}' found '{player}'.")
             if isinstance(data, str): data = self.deck.get_card(data[-1], data[:-1])
-            self.last_player = self.current_player.index            
+            self.last_player_index = self.current_player.index            
             self.state(action, data)
         else:
             if player != self.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.current_player.name}' found '{player}'.")
-            self.last_player = self.current_player.index          
+            self.last_player_index = self.current_player.index          
             self.state(action, data)
 
         self.trigger_hook("after_input", prev_state = prev_state, action = action, data = data)            
@@ -293,7 +297,7 @@ class Game(Euchre):
         """
         sb = super().__str__()
         sb += f"last action: {self.last_action}\n"
-        sb += f"last player: {self.last_player} -> {self.get_player(self.last_player)}\n"
+        sb += f"last player: {self.last_player_index} -> {self.get_player(self.last_player_index)}\n"
         sb += f"state: {self.current_state}\n"
 
         return sb
@@ -302,7 +306,7 @@ class Game(Euchre):
         return super().__json__() | {
             "hash": self.hash,
             "state": self.current_state,
-            "last_player": self.last_player,
+            "last_player": self.last_player_index,
             "last_action": self.last_action
         }
     
@@ -337,7 +341,7 @@ class Game(Euchre):
         game._up_card = card_or_none(game.deck, json_object["up_card"])
         game._down_card = card_or_none(game.deck, json_object["down_card"])
         game._discard = card_or_none(game.deck, json_object["discard"])
-        game.last_player = json_object["last_player"]
+        game.last_player_index = json_object["last_player"]
         game.last_action = json_object["last_action"]
         game.state = getattr(game, f"state_{json_object["state"]}")
 

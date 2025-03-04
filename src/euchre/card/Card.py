@@ -1,6 +1,5 @@
 from euchre.class_getter import class_getter
 from typing import Optional
-from .compare_cards import best_card
 
 class Card:
     """Represents a single card in Euchre, with suit and rank."""
