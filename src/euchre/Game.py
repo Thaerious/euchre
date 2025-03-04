@@ -1,7 +1,6 @@
 from euchre.card import *
 from euchre.Euchre import *
 from euchre.Player import Player
-import hashlib
 from typing import *
 from .custom_json_serializer import custom_json_serializer
 import json
@@ -311,7 +310,7 @@ class Game(Euchre):
         }
     
     def to_json(self, indent = 2):
-        return json.dumps(self, indent = indent, default=custom_json_serializer)
+        return json.dumps(self, indent=indent, default=custom_json_serializer)
          
     @staticmethod
     def from_json(json_object):

@@ -1,7 +1,8 @@
 from typing import List, Union
 from euchre.card.Card import Card
 from euchre.del_string import del_string
-from .Has_Trump import Has_Trump
+from ..custom_json_serializer import custom_json_serializer
+import json
 
 class Hand(list):
     """
@@ -86,5 +87,5 @@ class Hand(list):
         return del_string(self, ",", "'")
 
     def __repr__(self):
-        return del_string(self, ",", "'")
-        
+        return del_string(self, ",", "'")  
+       

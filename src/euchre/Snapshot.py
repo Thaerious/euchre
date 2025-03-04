@@ -1,26 +1,26 @@
 from .custom_json_serializer import custom_json_serializer
-from typing import Any, Dict
-from euchre.card.Hand import Hand
 from .Game import Game
 from .del_string import del_string
 import copy
+import json
 
 class Snap_Player:
     def __init__(self, player):
         self.__dict__.update(player.__dict__)
-        self.hand = len(player.hand)
+        self.hand_size = len(player.hand)
 
     def __json__(self):
         return {
             "name": self.name,
             "tricks": self.tricks,
             "played": self.played,
-            "hand": self.hand,
-            "alone": self.alone
+            "hand_size": self.hand_size,
+            "alone": self.alone,
+            "index": self.index
         }
 
     def __str__(self):     
-        sb = f"({self.name}, {self.hand} cards, [{del_string(self.played)}], T{self.tricks})"
+        sb = f"({self.name}, {self.hand_size} cards, [{del_string(self.played)}], T{self.tricks})"
         return sb
     
     def __repr__(self):     
@@ -54,4 +54,25 @@ class Snapshot(Game):
         sb += f"for player: {self.for_index} -> {self.players[self.for_index]}\n"
         sb += f"hand: {self.hand}\n"
 
-        return sb
+        return sb  
+    
+    def __json__(self):
+        return {
+            "for_player": self.for_index,
+            "players": self.players,
+            "tricks": self.tricks,
+            "trump": self.trump,
+            "order": self.order, 
+            "current_player": self.current_player_index,
+            "dealer": self.dealer_index,
+            "lead": self.lead_index,
+            "maker": self.maker_index,
+            "hand_count": self.hand_count,
+            "up_card": self.up_card,
+            "down_card": self.down_card,
+            "hand": self.hand,
+            "last_player": self.last_player_index,
+            "last_action": self.last_action,
+            "state": self.current_state,
+            "score": [self.teams[0].score, self.teams[1].score]
+        } 
