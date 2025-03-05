@@ -101,7 +101,7 @@ class Game(Euchre):
             self.last_player_index = self.current_player.index          
             self.state(action, data)
 
-        self.trigger_hook("after_input", prev_state = prev_state, action = action, data = data)            
+        self.trigger_hook("after_input", prev_state = prev_state, player = player, action = action, data = data)            
 
     def state_0(self, action: str, __: Any) -> None:
         """
