@@ -3,6 +3,7 @@ from euchre.card import *
 from euchre.rotate import rotate_to
 from typing import List, Optional, Union
 from .custom_json_serializer import custom_json_serializer
+import json
 
 NUM_PLAYERS = 4
 NUM_CARDS_PER_PLAYER = 5
@@ -21,6 +22,15 @@ class EuchreException(Exception):
             msg (str): The error message.
         """
         super().__init__(msg)
+
+    def to_json(self, indent = 2):
+        return json.dumps(self, indent=indent, default=custom_json_serializer)
+
+    def __json__(self):
+        return {
+            "type": EuchreException.__name__,
+            "message": str(self)
+        }
 
 class Euchre:
     """

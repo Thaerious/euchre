@@ -58,6 +58,7 @@ class Snapshot(Game):
     
     def __json__(self):
         return {
+            "type": Snapshot.__name__,
             "for_player": self.for_index,
             "players": self.players,
             "tricks": self.tricks,

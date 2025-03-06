@@ -7,6 +7,7 @@ from .Player import Player, Team
 from .Game import Game
 from .Snapshot import Snapshot
 from .Euchre import Euchre
+from .Euchre import EuchreException
 
 # Define __all__ to specify what is exported when using 'from euchre import *'
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     'Game',
     'Snapshot',
     'Euchre',
-    'Team'
+    'Team',
+    'EuchreException'
 ]
