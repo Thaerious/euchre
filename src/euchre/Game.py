@@ -36,6 +36,7 @@ class Game(Euchre):
         super().__init__(names, seed)
         self.state: Callable[[str, Any], None] = self.state_0
         self.last_action: Optional[str] = None
+        self.last_data: Optional[str] = None
         self.last_player_index: Optional[int] = None
         self.do_shuffle = True
         self._hooks = {} 
@@ -83,6 +84,12 @@ class Game(Euchre):
         prev_state = self.current_state
 
         self.last_action = action
+        self.last_data = data
+
+        if player is not None:
+            self.last_player_index = self.get_player(player).index
+        else:
+            self.last_player_index = None
 
         if self.current_state == 0:
             self.state(action, data)
@@ -94,11 +101,9 @@ class Game(Euchre):
             # States 2 & 5 expect a card object
             if player != self.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.current_player.name}' found '{player}'.")
             if isinstance(data, str): data = self.deck.get_card(data[-1], data[:-1])
-            self.last_player_index = self.current_player.index            
             self.state(action, data)
         else:
             if player != self.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.current_player.name}' found '{player}'.")
-            self.last_player_index = self.current_player.index          
             self.state(action, data)
 
         self.trigger_hook("after_input", prev_state = prev_state, player = player, action = action, data = data)            
