@@ -468,6 +468,9 @@ class Euchre:
         winner_pindex = self.current_trick.winner
         self.players[winner_pindex].tricks += 1
 
+    def rotate_to_winner(self) -> None:
+        winner_pindex = self.current_trick.winner
+
         # Move the winner to the front of the order
         rotate_to(self._order, winner_pindex)
         self.current_player_index = winner_pindex

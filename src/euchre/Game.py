@@ -252,6 +252,7 @@ class Game(Euchre):
         self.allowed_actions(action, "continue") 
 
         if not self.is_hand_finished:
+            self.rotate_to_winner()
             self.enter_state_5()
             return
 
