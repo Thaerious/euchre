@@ -84,7 +84,11 @@ class Game(Euchre):
         prev_state = self.current_state
 
         self.last_action = action
-        self.last_data = data
+
+        if (action in ["play", "make"]):
+            self.last_data = data
+        else:
+            self.last_data = None
 
         if player is not None:
             self.last_player_index = self.get_player(player).index

@@ -2,7 +2,6 @@ from .custom_json_serializer import custom_json_serializer
 from .Game import Game
 from .del_string import del_string
 import copy
-import json
 
 class Snap_Player:
     def __init__(self, player):
