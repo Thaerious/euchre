@@ -27,14 +27,10 @@ class Snap_Player:
 
 
 class Snapshot(Game):
-    next_serial_id = 0
-
     def __init__(self, game: Game, for_player: str):       
         self.__dict__ = copy.copy(game.__dict__)
         self.players = []
         self.for_index = game.get_player(for_player).index
-        self.serial_id = Snapshot.next_serial_id
-        Snapshot.next_serial_id += 1
 
         # Replace players with Snap_Player versions
         self.players = [Snap_Player(player) for player in game.players]
@@ -79,5 +75,4 @@ class Snapshot(Game):
             "last_data": self.last_data,
             "state": self.current_state,
             "score": [self.teams[0].score, self.teams[1].score],
-            "serial_id": self.serial_id
         } 
