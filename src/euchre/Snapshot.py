@@ -2,6 +2,8 @@ from .custom_json_serializer import custom_json_serializer
 from .Game import Game
 from .del_string import del_string
 import copy
+import hashlib
+import json
 
 class Snap_Player:
     def __init__(self, player):
@@ -54,11 +56,10 @@ class Snapshot(Game):
 
         return sb  
     
-    def __json__(self):
+    def hashable_json(self):
         return {
-            "type": Snapshot.__name__,
             "for_player": self.for_index,
-            "players": self.players,
+            "players": [p.__json__() for p in self.players],
             "tricks": self.tricks,
             "trump": self.trump,
             "order": self.order, 
@@ -76,3 +77,17 @@ class Snapshot(Game):
             "state": self.current_state,
             "score": [self.teams[0].score, self.teams[1].score],
         } 
+    
+    def id_hash(self):
+        data = self.hashable_json()
+        json_str = json.dumps(data, sort_keys=True, default=custom_json_serializer)
+        return hashlib.sha256(json_str.encode('utf-8')).hexdigest()
+
+    def __json__(self):
+        data = self.hashable_json()
+        data["type"] = Snapshot.__name__
+        data["hash"] = self.id_hash()    
+        return data
+    
+    def __repr__(self):
+        return f"{self.id_hash()[:8]}:{type(self).__name__}"

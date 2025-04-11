@@ -88,4 +88,7 @@ class Hand(list):
 
     def __repr__(self):
         return del_string(self, ",", "'")  
+    
+    def __json__(self):
+        return str(self)
        

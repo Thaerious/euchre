@@ -1,12 +1,12 @@
 from euchre import *
-import pickle
+import json
+from euchre.custom_json_serializer import custom_json_serializer
 
-game_in = Game(["adam", "eve", "cain", "able"])
+game_in = Game(["adam", "eve", "cain", "able"], seed = 0)
 game_in.input(None, "start")
+snapshot = Snapshot(game_in, "adam")
 
-with open("game.file", "wb") as fp:
-    pickle.dump(game_in, fp)
+j = json.dumps(snapshot, indent=2, default=custom_json_serializer)
 
-with open("game.file", "rb") as f:
-    game_out = pickle.load(f)
-    print(game_out)    
+# print(snapshot.__repr__())
+print(j)
