@@ -50,6 +50,7 @@ class Euchre:
         self.dealer_index = self._order[3]
         self.lead_index = self._order[0]
         self.hand_count = 0
+        self.win_condition = 10
 
         self._teams = []
         self._teams.append(Team([self.players[0], self.players[2]]))
@@ -569,7 +570,7 @@ class Euchre:
         """
 
         for team in self._teams:
-            if team.score >= 10: return True
+            if team.score >= self.win_condition: return True
         return False
 
     def set_cards(self, player, cards):

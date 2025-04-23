@@ -274,10 +274,16 @@ class Game(Euchre):
         self.allowed_actions(action, "continue")     
 
         if self.is_game_over():
-            self.state = self.state_0
+            self.state = self.state_8
         else:
             self.next_hand()
             self.enter_state_1()        
+
+    def state_8(self, _: str, __: Any) -> None:
+        """
+        State 8: Game over, no transitions.
+        """
+        pass
 
     def allowed_actions(self, action: str, *allowed_actions: str) -> None:
         """
