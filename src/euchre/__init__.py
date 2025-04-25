@@ -1,3 +1,4 @@
+# __init__.py
 # euchre/__init__.py
 
 # Import classes and functions to expose them at the package level

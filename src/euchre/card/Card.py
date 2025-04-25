@@ -1,3 +1,4 @@
+# Card.py
 from euchre.ClassGetter import ClassGetter
 
 

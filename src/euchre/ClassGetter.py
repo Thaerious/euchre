@@ -1,3 +1,4 @@
+# ClassGetter.py
 class ClassGetter:
     def __init__(self, func):
         self.fget = func

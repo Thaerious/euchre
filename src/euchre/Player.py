@@ -1,3 +1,4 @@
+# Player.py
 from euchre.card import Hand
 from euchre.del_string import del_string
 

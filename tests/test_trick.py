@@ -1,3 +1,4 @@
+# test_trick.py
 from euchre.card import Deck, Trick
 
 

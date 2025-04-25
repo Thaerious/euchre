@@ -1,3 +1,4 @@
+# Trick.py
 from colorama import Fore, Style
 
 from euchre.card import Card

@@ -1,3 +1,4 @@
+# custom_json_serializer.py
 def custom_json_serializer(obj):
     """Custom JSON serializer that looks for __json__()"""
     if hasattr(obj, "__json__"):

@@ -1,3 +1,4 @@
+# Euchre.py
 import json
 
 from euchre.card import Card, Deck, Trick, playable

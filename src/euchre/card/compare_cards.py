@@ -1,3 +1,4 @@
+# compare_cards.py
 from .Card import Card
 
 lookup_table = {

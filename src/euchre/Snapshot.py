@@ -1,3 +1,4 @@
+# Snapshot.py
 import copy
 import hashlib
 import json

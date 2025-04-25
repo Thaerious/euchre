@@ -1,3 +1,4 @@
+# test_euchre.py
 import pytest
 
 from euchre.Euchre import Euchre, EuchreError

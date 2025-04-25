@@ -1,3 +1,4 @@
+# ObjectSerializer.py
 class ObjectSerializer:
     @staticmethod
     def to_dict(obj):
