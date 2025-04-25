@@ -1,0 +1,14 @@
+# ruff.toml
+line-length = 100
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "W", "I", "C90", "N", "UP"]  # basic errors, warnings, style, unused imports, etc.
+ignore = ["E501",  # ignore line-too-long (optional)
+          "N999",  # ignore invalid module name
+          "C901",  # ignore code too complex
+         ]
+
+[format]
+quote-style = "double"
+indent-style = "space"

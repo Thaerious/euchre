@@ -1,24 +1,20 @@
 # euchre/__init__.py
 
 # Import classes and functions to expose them at the package level
-from .card.Card import Card
-from .card.Deck import Deck
+from . import card  # ✅ import the card module itself
+from .Euchre import Euchre, EuchreError
+from .Game import ActionError, Game
 from .Player import Player, Team
-from .Game import Game
-# from .Snapshot import Snapshot
-# from .Euchre import Euchre
-# from .Euchre import EuchreException
-# from .Game import ActionException
+from .Snapshot import Snapshot
 
 # Define __all__ to specify what is exported when using 'from euchre import *'
 __all__ = [
-    'Card',
-    'Deck',
-    # 'Player',
-    # 'Game',
-    # 'Snapshot',
-    # 'Euchre',
-    # 'Team',
-    # 'EuchreException',
-    # 'ActionException'
+    "Player",
+    "Game",
+    "Snapshot",
+    "Euchre",
+    "Team",
+    "EuchreError",
+    "ActionError",
+    "card"
 ]

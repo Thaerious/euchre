@@ -1,15 +1,17 @@
-from typing import List, Optional
-from euchre.card.Card import Card
-from .Has_Trump import Has_Trump
-from .compare_cards import best_card
 from colorama import Fore, Style
 
-class Trick(List[Card], Has_Trump):
+from euchre.card import Card
+
+from .compare_cards import best_card
+from .HasTrump import HasTrump
+
+
+class Trick(list[Card], HasTrump):
     """
     Represents a trick in Euchre, storing cards played in order and tracking the winner.
     """
 
-    def __init__(self, trump: str, order: List[int], init = []):
+    def __init__(self, trump: str, order: list[int], init=[]):
         """
         Initializes an empty trick.
 
@@ -19,9 +21,9 @@ class Trick(List[Card], Has_Trump):
         super().__init__()
         self._trump: str = trump  # The trump suit for this trick
         self._order = order
-        
+
         for card in init:
-            self.append(Card(self, card))    
+            self.append(Card(self, card))
 
     def copy(self) -> "Trick":
         """
@@ -34,8 +36,8 @@ class Trick(List[Card], Has_Trump):
         new_trick.extend(self)
         return new_trick
 
-    def normalize(self)-> "Trick":
-        norm_trick = Trick('♠', self._order)
+    def normalize(self) -> "Trick":
+        norm_trick = Trick("♠", self._order)
         for card in self:
             norm_trick.append(card.normalize(self))
         return norm_trick
@@ -50,7 +52,7 @@ class Trick(List[Card], Has_Trump):
 
         Returns:
             str: The trump suit for this trick.
-        
+
         Notes:
             - This allows controlled access to the `_trump` attribute.
             - Using `@property` ensures that `trump` is read-only unless explicitly modified via a setter.
@@ -69,19 +71,21 @@ class Trick(List[Card], Has_Trump):
 
         Returns:
             str: The suit of the first played card, adjusted for Left Bower.
-        """        
+        """
         return self[0].suit_effective()
 
     @property
-    def best_card(self) -> Optional[Card]:
+    def best_card(self) -> Card | None:
         """
         Determines the best (winning) card in the trick.
 
         Returns:
             Optional[Card]: The winning card, or None if the trick is empty.
         """
-        if len(self) == 0: return None
-        if len(self) == 1: return self[0]
+        if len(self) == 0:
+            return None
+        if len(self) == 1:
+            return self[0]
 
         best = self[0]
 
@@ -91,7 +95,7 @@ class Trick(List[Card], Has_Trump):
         return best
 
     @property
-    def winner(self) -> Optional[int]:
+    def winner(self) -> int | None:
         """
         Determines the player index of the trick's winner.
 
@@ -99,12 +103,14 @@ class Trick(List[Card], Has_Trump):
             Optional[int]: The index of the winning player, or None if the trick is empty.
         """
         best = self.best_card
-        if best is None: return None
+        if best is None:
+            return None
         return self.who_played(best)
 
     def who_played(self, card_in_question):
         for i, card_in_trick in enumerate(self):
-            if card_in_trick == card_in_question: return self._order[i]
+            if card_in_trick == card_in_question:
+                return self._order[i]
 
         return None
 
@@ -124,17 +130,18 @@ class Trick(List[Card], Has_Trump):
                 sb += Fore.LIGHTYELLOW_EX + str(card) + Style.RESET_ALL
             else:
                 sb += str(card)
-                
-            if i != len(self) - 1: sb += ", "
-        
+
+            if i != len(self) - 1:
+                sb += ", "
+
         sb += f"]:{self.trump}"
         return sb
 
     def highlight_if_win(self, card):
         print(card, self.best_card, card == self.best_card)
-        if card != self.best_card: return str(card)
+        if card != self.best_card:
+            return str(card)
         return Style.BRIGHT + str(card) + Style.RESET_ALL
-
 
     def __repr__(self) -> str:
         """

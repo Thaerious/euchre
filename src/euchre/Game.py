@@ -1,16 +1,20 @@
-from euchre.card import *
-from euchre.Euchre import *
-from euchre.Player import Player
-from typing import *
-from .custom_json_serializer import custom_json_serializer
 import json
+from collections.abc import Callable
+from typing import Any
 
-class ActionException(EuchreException):
+from euchre import Euchre, EuchreError
+from euchre.card import Card, Trick
+
+from .custom_json_serializer import custom_json_serializer
+
+
+class ActionError(EuchreError):
     """
     Custom exception for handling invalid actions in the game.
     Inherits from the base EuchreException class.
     Used when an exception arrises from user (or server) input.
     """
+
     def __init__(self, msg: str):
         super().__init__(msg)
 
@@ -26,7 +30,7 @@ class Game(Euchre):
         last_player_index (Optional[Player]): Index of last player who performed an action.
     """
 
-    def __init__(self, names: list[str], seed = None):
+    def __init__(self, names: list[str], seed=None):
         """
         Initialize the Game object with player names.
 
@@ -35,11 +39,11 @@ class Game(Euchre):
         """
         super().__init__(names, seed)
         self.state: Callable[[str, Any], None] = self.state_0
-        self.last_action: Optional[str] = None
-        self.last_data: Optional[str] = None
-        self.last_player_index: Optional[int] = None
+        self.last_action: str | None = None
+        self.last_data: str | None = None
+        self.last_player_index: int | None = None
         self.do_shuffle = True
-        self._hooks = {} 
+        self._hooks = {}
         self.hash = ""
 
     @property
@@ -68,7 +72,12 @@ class Game(Euchre):
         """
         return int(self.state.__name__[6:])
 
-    def input(self, player: Optional[str], action: str, data: Optional[Union[str, Card]] = None) -> None:
+    def input(
+        self,
+        player: str | None,
+        action: str,
+        data: str | Card | None = None,
+    ) -> None:
         """
         Process player input based on the current game state.
 
@@ -80,12 +89,12 @@ class Game(Euchre):
         Raises:
             ActionException: If the action or player is invalid.
         """
-        self.trigger_hook("before_input", action = action, data = data)
+        self.trigger_hook("before_input", action=action, data=data)
         prev_state = self.current_state
 
         self.last_action = action
 
-        if (action in ["play", "make"]):
+        if action in ["play", "make"]:
             self.last_data = data
         else:
             self.last_data = None
@@ -99,18 +108,33 @@ class Game(Euchre):
             self.state(action, data)
         elif self.current_state == 6 or self.current_state == 7:
             if player is not None:
-                raise ActionException(f"Incorrect Player: expected 'None' found '{player}'.")
+                raise ActionError(
+                    f"Incorrect Player: expected 'None' found '{player}'."
+                )
             self.state(action, data)
         elif self.current_state == 2 or self.current_state == 5:
             # States 2 & 5 expect a card object
-            if player != self.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.current_player.name}' found '{player}'.")
-            if isinstance(data, str): data = self.deck.get_card(data[-1], data[:-1])
+            if player != self.current_player.name:
+                raise ActionError(
+                    f"Incorrect Player: expected '{self.current_player.name}' found '{player}'."
+                )
+            if isinstance(data, str):
+                data = self.deck.get_card(data[-1], data[:-1])
             self.state(action, data)
         else:
-            if player != self.current_player.name: raise ActionException(f"Incorrect Player: expected '{self.current_player.name}' found '{player}'.")
+            if player != self.current_player.name:
+                raise ActionError(
+                    f"Incorrect Player: expected '{self.current_player.name}' found '{player}'."
+                )
             self.state(action, data)
 
-        self.trigger_hook("after_input", prev_state = prev_state, player = player, action = action, data = data)            
+        self.trigger_hook(
+            "after_input",
+            prev_state=prev_state,
+            player=player,
+            action=action,
+            data=data,
+        )
 
     def state_0(self, action: str, __: Any) -> None:
         """
@@ -161,7 +185,7 @@ class Game(Euchre):
         self.activate_dealer()
         self.state = self.state_2
 
-    def state_2(self, action: str, card: Optional[Card]) -> None:
+    def state_2(self, action: str, card: Card | None) -> None:
         """
         State 2: Dealer decides to pick up the card or pass.
 
@@ -183,7 +207,7 @@ class Game(Euchre):
         self.turn_down_card()
         self.state = self.state_3
 
-    def state_3(self, action: str, suit: Optional[str]) -> None:
+    def state_3(self, action: str, suit: str | None) -> None:
         """
         State 3: Players decide to pass, make, or go alone for trump.
 
@@ -203,7 +227,7 @@ class Game(Euchre):
             self.activate_first_player()
             self.enter_state_5()
 
-    def state_4(self, action: str, suit: Optional[str]) -> None:
+    def state_4(self, action: str, suit: str | None) -> None:
         """
         State 4: Dealer decides to make trump or go alone.
 
@@ -238,7 +262,8 @@ class Game(Euchre):
         self.allowed_actions(action, "play")
         self.play_card(card)
 
-        if not self.is_trick_finished: return
+        if not self.is_trick_finished:
+            return
         self.enter_state_6()
 
     def enter_state_6(self) -> None:
@@ -252,8 +277,8 @@ class Game(Euchre):
         Args:
             action (str): Expected action "continue".
             __: Unused parameter.
-        """        
-        self.allowed_actions(action, "continue") 
+        """
+        self.allowed_actions(action, "continue")
 
         if not self.is_hand_finished:
             self.rotate_to_winner()
@@ -271,13 +296,13 @@ class Game(Euchre):
             action (str): Expected action "continue".
             __: Unused parameter.
         """
-        self.allowed_actions(action, "continue")     
+        self.allowed_actions(action, "continue")
 
         if self.is_game_over():
             self.state = self.state_8
         else:
             self.next_hand()
-            self.enter_state_1()        
+            self.enter_state_1()
 
     def state_8(self, _: str, __: Any) -> None:
         """
@@ -301,7 +326,7 @@ class Game(Euchre):
             if action.lower() == allowed.lower():
                 return
 
-        raise ActionException("Unhandled Action " + str(action))
+        raise ActionError("Unhandled Action " + str(action))
 
     def __str__(self) -> str:  # pragma: no cover
         """
@@ -316,39 +341,40 @@ class Game(Euchre):
         sb += f"state: {self.current_state}\n"
 
         return sb
-    
+
     def __json__(self):
         return super().__json__() | {
             "hash": self.hash,
             "state": self.current_state,
             "last_player": self.last_player_index,
-            "last_action": self.last_action
+            "last_action": self.last_action,
         }
-    
-    def to_json(self, indent = 2):
+
+    def to_json(self, indent=2):
         return json.dumps(self, indent=indent, default=custom_json_serializer)
-         
+
     @staticmethod
     def from_json(json_object):
-        player_names = [player["name"] for player in json_object["players"]]        
+        player_names = [player["name"] for player in json_object["players"]]
         game = Game(player_names)
-        game.order = [int(i) for i in json_object["order"]]    
+        game.order = [int(i) for i in json_object["order"]]
         game.trump = json_object["trump"]
 
         for p in json_object["players"]:
-            player = game.get_player(p['name'])
-            player.tricks = p['tricks']
-            player.alone = p['alone']
-            cards_from_json(game.deck, player.played, p['played'])
-            cards_from_json(game.deck, player.hand, p['hand'])
+            player = game.get_player(p["name"])
+            player.tricks = p["tricks"]
+            player.alone = p["alone"]
+            cards_from_json(game.deck, player.played, p["played"])
+            cards_from_json(game.deck, player.hand, p["hand"])
 
         game.deck.clear()
-        for c in json_object["deck"]: game.deck.append(Card(game.deck, c))
+        for c in json_object["deck"]:
+            game.deck.append(Card(game.deck, c))
 
         for trick in json_object["tricks"]:
             game._tricks.append(Trick(game.trump, game.order, trick))
 
-        game.current_player_index = int_or_none(json_object["current_player"])    
+        game.current_player_index = int_or_none(json_object["current_player"])
         game.dealer_index = int_or_none(json_object["dealer"])
         game.lead_index = int_or_none(json_object["lead"])
         game.maker_index = int_or_none(json_object["maker"])
@@ -360,17 +386,18 @@ class Game(Euchre):
         game.last_action = json_object["last_action"]
         game.state = getattr(game, f"state_{json_object['state']}")
 
-        return game         
-    
+        return game
+
 def int_or_none(source):
-    if source is None: return None
+    if source is None:
+        return None
     return int(source)
 
 def card_or_none(deck, source):
-    if source is None: return None
+    if source is None:
+        return None
     return Card(deck, source)
 
 def cards_from_json(deck, target, source):
-    for c in source: 
+    for c in source:
         target.append(Card(deck, c))
-

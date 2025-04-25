@@ -1,15 +1,13 @@
-from typing import List, Union
 from euchre.card.Card import Card
 from euchre.del_string import del_string
-from ..custom_json_serializer import custom_json_serializer
-import json
+
 
 class Hand(list):
     """
     Represents a player's hand in Euchre, extending `CardList`.
     """
 
-    def normalize(self, source)-> "Hand":
+    def normalize(self, source) -> "Hand":
         norm_hand = Hand()
         for card in self:
             norm_hand.append(card.normalize(source))
@@ -24,7 +22,7 @@ class Hand(list):
             suit (str): The suit to check for (e.g., "♠", "♥", "♣", "♦").
 
         Returns:
-            bool: 
+            bool:
                 - `True` if at least one card in the hand matches the specified suit.
                 - `False` if no cards in the hand match the specified suit.
 
@@ -36,7 +34,7 @@ class Hand(list):
         for card in self:
             if card.suit_effective() == suit:
                 return True
-        return False   
+        return False
 
     def count_suit(self, suit: str) -> bool:
         """
@@ -48,7 +46,7 @@ class Hand(list):
             trump (str): The current trump suit in the game.
 
         Returns:
-            bool: 
+            bool:
                 - `True` if at least one card in the hand matches the specified suit.
                 - `False` if no cards in the hand match the specified suit.
 
@@ -59,8 +57,10 @@ class Hand(list):
             hand.has_suit("♦", "♣")  # Returns 0
         """
         return len(self.select(Card.ranks, [suit]))
-    
-    def select(self, values: List[int] = Card.ranks, suits: List[str] = Card.suits) -> list[Card]:
+
+    def select(
+        self, values: list[int] = Card.ranks, suits: list[str] = Card.suits
+    ) -> list[Card]:
         """
         Selects and returns a list of cards from the hand that match the given values and suits,
         considering effective suits.
@@ -74,21 +74,24 @@ class Hand(list):
         """
         selected = []
         for card in self:
-            if card.suit_effective() not in suits: continue
-            if card.rank not in values: continue
+            if card.suit_effective() not in suits:
+                continue
+            if card.rank not in values:
+                continue
             selected.append(card)
 
         return selected
-    
-    def count(self, values: List[int] = Card.ranks, suits: List[str] = Card.suits) -> int:
+
+    def count(
+        self, values: list[int] = Card.ranks, suits: list[str] = Card.suits
+    ) -> int:
         return len(self.select(values, suits))
-    
+
     def __str__(self):
         return del_string(self, ",", "'")
 
     def __repr__(self):
-        return del_string(self, ",", "'")  
-    
+        return del_string(self, ",", "'")
+
     def __json__(self):
         return str(self)
-       

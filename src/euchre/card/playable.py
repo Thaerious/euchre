@@ -1,11 +1,13 @@
-from euchre.card.Trick import Trick
 from euchre.card.Hand import Hand
+from euchre.card.Trick import Trick
 
-#given a Trick and a Hand object, returns a list of all cards that Hand is allowed to play
+
+# given a Trick and a Hand object, returns a list of all cards that Hand is allowed to play
 def playable(trick: Trick, hand: Hand):
     playable_cards = []
 
-    if len(trick) == 0: return hand.copy()
+    if len(trick) == 0:
+        return hand.copy()
 
     for card in hand:
         if card.suit_effective() == trick.lead_suit:
@@ -17,4 +19,3 @@ def playable(trick: Trick, hand: Hand):
             continue
 
     return playable_cards
-    

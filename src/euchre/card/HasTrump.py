@@ -1,4 +1,4 @@
-class Has_Trump():
+class HasTrump:
     def __init__(self):
         self._trump = None
 

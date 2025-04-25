@@ -1,4 +1,3 @@
-from euchre import *
 import pickle
 
 with open("game.file", "rb") as f:

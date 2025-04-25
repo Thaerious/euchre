@@ -1,5 +1,5 @@
-from euchre.card.Deck import Deck
-from euchre.card.Card import Card
+from euchre.card import Card, Deck
+
 
 def test_deck_initialization():
     """Test that a newly created deck contains exactly 24 Euchre cards."""
@@ -7,16 +7,10 @@ def test_deck_initialization():
     assert len(deck) == 24, "Deck should have 24 cards"
 
     # Check that all expected cards are present
-    expected_cards = {deck.get_card(suit, value) for suit in Card.suits for value in Card.ranks}
+    expected_cards = {
+        deck.get_card(suit, value) for suit in Card.suits for value in Card.ranks
+    }
     assert set(deck) == expected_cards, "Deck should contain all Euchre cards"
-
-# def test_deck_order():
-#     """Other tests require the deck to be in a predicatable order."""
-#     deck = Deck()
-#     assert deck == ["9♥", "10♥", "J♥", "Q♥", "K♥", "A♥",
-#                     "9♠", "10♠", "J♠", "Q♠", "K♠", "A♠",
-#                     "9♣", "10♣", "J♣", "Q♣", "K♣", "A♣",
-#                     "9♦", "10♦", "J♦", "Q♦", "K♦", "A♦"]
 
 def test_deck_shuffling():
     """Test that shuffling the deck changes the order but keeps the same cards."""
@@ -40,7 +34,9 @@ def test_deck_multiple_shuffles():
     deck.shuffle()
     second_shuffle = deck[:]
 
-    assert first_shuffle != second_shuffle, "Two shuffles should produce different orders"
+    assert (
+        first_shuffle != second_shuffle
+    ), "Two shuffles should produce different orders"
 
 def test_deck_is_cardlist_instance():
     """Test that Deck is an instance of CardList."""

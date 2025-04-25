@@ -1,6 +1,5 @@
-from euchre.card.Trick import Trick
-from euchre.card.Deck import Deck
-import pytest
+from euchre.card import Deck, Trick
+
 
 def build_trick(trump: str, order: int = [0, 1, 2, 3]):
     deck = Deck()
@@ -12,7 +11,7 @@ def test_trick_initialization():
     """Test Trick initialization with a valid set of cards."""
     (deck, trick) = build_trick("♠")
 
-    trick.append( deck.get_card("9♥"))
+    trick.append(deck.get_card("9♥"))
     trick.append(deck.get_card("K♥"))
     trick.append(deck.get_card("J♠"))
     trick.append(deck.get_card("9♣"))
@@ -30,14 +29,14 @@ def test_trick_winner_no_cards():
 def test_trick_winner_one_card():
     """Test that a single played card is automatically the winner."""
     (deck, trick) = build_trick("♠")
-    trick.append( deck.get_card("A♠"))
+    trick.append(deck.get_card("A♠"))
 
     assert trick.winner == 0, "Single player should be the winner"
 
 def test_trick_append():
     """Test adding cards to a trick."""
     (deck, trick) = build_trick("♠")
-    trick.append( deck.get_card("10♥"))
+    trick.append(deck.get_card("10♥"))
     trick.append(deck.get_card("J♠"))
 
     assert len(trick) == 2, "Trick should contain 2 cards after two plays"
@@ -46,12 +45,12 @@ def test_trick_append():
     assert trick.trump == "♠", "Trump suit should be ♠"
     assert trick.best_card == "J♠", "Best card should be the Right Bower J♠"
     assert trick.winner == 1, "Winner should be player 2 who played J♠"
-    assert trick.lead_suit == "♥", "Lead suit should be ♥ from the first played card"    
+    assert trick.lead_suit == "♥", "Lead suit should be ♥ from the first played card"
 
 def test_trick_best_card_with_mixed_trump():
     """Test best_card when trick contains trump and non-trump cards."""
     (deck, trick) = build_trick("♣")
-    trick.append( deck.get_card("A♥"))
+    trick.append(deck.get_card("A♥"))
     trick.append(deck.get_card("K♣"))
     trick.append(deck.get_card("J♣"))
     trick.append(deck.get_card("9♠"))
@@ -71,20 +70,20 @@ def test_trick_winner_with_no_trump():
 
     assert trick.best_card == "K♦", "Best card should be the highest non-trump card"
     assert trick.winner == 2, "Winner should be player 3 who played J♦"
-    assert trick.lead_suit == "♦", "Lead suit should be ♦ from the first played card"            
+    assert trick.lead_suit == "♦", "Lead suit should be ♦ from the first played card"
 
 def test_trick_winner_with_left_bower():
     """Test winner when Left Bower is played in a trick."""
     (deck, trick) = build_trick("♣")
 
-    trick.append( deck.get_card("A♠"))
+    trick.append(deck.get_card("A♠"))
     trick.append(deck.get_card("J♠"))
     trick.append(deck.get_card("K♣"))
     trick.append(deck.get_card("Q♣"))
 
     assert trick.best_card == "J♠", "Best card should be Left Bower J♠ (acts as ♣)"
     assert trick.winner == 1, "Winner should be player 1 who played J♠"
-    assert trick.lead_suit == "♠", "Lead suit should be ♠ from the first played card"    
+    assert trick.lead_suit == "♠", "Lead suit should be ♠ from the first played card"
 
 def test_trick_winner_with_only_one_card():
     """Test winner when only one card is played."""
@@ -93,4 +92,4 @@ def test_trick_winner_with_only_one_card():
 
     assert trick.winner == 0, "Single player should be the winner"
     assert trick.best_card == "K♠", "Best card should be K♠"
-    assert trick.lead_suit == "♠", "Lead suit should be ♠ from the only card"    
+    assert trick.lead_suit == "♠", "Lead suit should be ♠ from the only card"

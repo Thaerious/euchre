@@ -1,8 +1,9 @@
-from euchre import *
 import json
+
+from euchre import Game, Snapshot
 from euchre.custom_json_serializer import custom_json_serializer
 
-game_in = Game(["adam", "eve", "cain", "able"], seed = 0)
+game_in = Game(["adam", "eve", "cain", "able"], seed=0)
 game_in.input(None, "start")
 snapshot = Snapshot(game_in, "adam")
 
