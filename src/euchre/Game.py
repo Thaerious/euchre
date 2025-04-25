@@ -358,7 +358,7 @@ class Game(Euchre):
         game._discard = card_or_none(game.deck, json_object["discard"])
         game.last_player_index = json_object["last_player"]
         game.last_action = json_object["last_action"]
-        game.state = getattr(game, f"state_{json_object["state"]}")
+        game.state = getattr(game, f"state_{json_object['state']}")
 
         return game         
     

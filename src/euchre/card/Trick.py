@@ -1,7 +1,5 @@
-from typing import Dict, List, Optional, Union
+from typing import List, Optional
 from euchre.card.Card import Card
-from typeguard import typechecked
-from euchre.del_string import del_string
 from .Has_Trump import Has_Trump
 from .compare_cards import best_card
 from colorama import Fore, Style
