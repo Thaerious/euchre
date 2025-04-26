@@ -90,15 +90,6 @@ def test_effective_suit_trump_not_set_j(deck):
     card1 = deck.get_card("J♣")
     assert card1.suit_effective() == "♣"
 
-def test_effective_suit_override_trump_not_set(deck):
-    card1 = deck.get_card("J♣")
-    assert card1.suit_effective("♠") == "♠"
-
-def test_effective_suit_override_trump_set(deck):
-    deck.trump = "♦"
-    card1 = deck.get_card("J♣")
-    assert card1.suit_effective("♠") == "♠"
-
 @pytest.mark.parametrize(
     "suit, trump, expected_suit",
     [

@@ -1,6 +1,6 @@
 # test_deck.py
 from euchre.card import Card, Deck
-
+import random
 
 def test_deck_initialization():
     """Test that a newly created deck contains exactly 24 Euchre cards."""
@@ -12,6 +12,29 @@ def test_deck_initialization():
         deck.get_card(suit, value) for suit in Card.suits for value in Card.ranks
     }
     assert set(deck) == expected_cards, "Deck should contain all Euchre cards"
+
+def test_deck_seed():
+    """Test that a newly created deck contains exactly 24 Euchre cards."""
+    deck1 = Deck(1234)
+    deck2 = Deck(1234)
+    
+    # new seeded decks are the same before shuffle
+    for i in range(len(deck1)):
+        assert deck1[i] == deck2[i]
+
+    # decks are the same after shuffle
+    deck1.shuffle()
+    deck2.shuffle()
+    for i in range(len(deck1)):
+        assert deck1[i] == deck2[i]
+
+    # using random doesn't affect decks
+    deck1.shuffle()
+    random.random()
+    deck2.shuffle()
+    for i in range(len(deck1)):
+        assert deck1[i] == deck2[i]
+
 
 def test_deck_shuffling():
     """Test that shuffling the deck changes the order but keeps the same cards."""
