@@ -1,7 +1,7 @@
 # test_del_string.py
 import unittest
 
-from euchre.del_string import del_string
+from euchre.utility.del_string import del_string
 
 
 class TestDelString(unittest.TestCase):

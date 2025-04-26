@@ -2,10 +2,8 @@
 import json
 
 from euchre.card import Card, Deck, Trick, playable
-from euchre.Player import Player, PlayerList, Team
-
-from .custom_json_serializer import custom_json_serializer
-from .rotate import rotate_to
+from euchre.player import Player, PlayerList, Team
+from euchre.utility import custom_json_serializer, rotate_to
 
 NUM_PLAYERS = 4
 NUM_CARDS_PER_PLAYER = 5

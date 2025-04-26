@@ -6,7 +6,7 @@ from typing import Any
 from euchre import Euchre, EuchreError
 from euchre.card import Card, Trick
 
-from .custom_json_serializer import custom_json_serializer
+from .utility.custom_json_serializer import custom_json_serializer
 
 
 class ActionError(EuchreError):

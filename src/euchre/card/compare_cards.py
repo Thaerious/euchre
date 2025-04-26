@@ -9,7 +9,7 @@ lookup_table = {
     None: {"♠": {}, "♥": {}, "♣": {}, "♦": {}, None: {}},
 }
 
-# [trump][lead]
+# [trump][lead][card] = rank
 lookup_table["♠"]["♠"] = {
     "J♠": 24,
     "J♣": 23,

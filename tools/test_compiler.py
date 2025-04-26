@@ -4,7 +4,7 @@ import re
 import sys
 from collections import deque
 
-from euchre.del_string import del_string
+from euchre.utility.del_string import del_string
 
 
 class Header(list):

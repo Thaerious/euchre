@@ -1,4 +1,3 @@
-# __init__.py
 # euchre/card/__init__.py
 
 # Import classes and functions to expose them at the package level

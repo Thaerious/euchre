@@ -1,56 +1,20 @@
 # Card.py
-from euchre.ClassGetter import ClassGetter
+from .HasTrump import HasTrump
 
+"""Card module for Euchre.
+
+This module defines the Card class representing Euchre cards,
+and helper functions for determining winning and losing cards during play.
+"""
 
 class Card:
     """Represents a single card in Euchre, with suit and rank."""
 
-    # Suits available in Euchre
-    @ClassGetter
-    def suits():
-        return ["♠", "♥", "♣", "♦"]
+    suits = ["♠", "♥", "♣", "♦"]
+    ranks = ["9", "10", "J", "Q", "K", "A"]
 
-    @ClassGetter
-    def ranks():
-        return ["9", "10", "J", "Q", "K", "A"]
-
-    # Dictionary to determine the left bower suit (Jack of the same color as trump)
+    # Maps trump suits to their matching Left Bower suits.
     left_bower_suit: dict[str, str] = {"♠": "♣", "♣": "♠", "♥": "♦", "♦": "♥"}
-
-    def __init__(self, source, suit: str, rank: str | None = None):
-        """
-        Initialize a Card object.
-
-        Args:
-            suit (str): Either a full card string (e.g., "10♥") or just the suit.
-            rank (str, optional): The card rank (e.g., "10"). If not provided, `suit` is parsed as "10♥".
-        """
-
-        if not hasattr(source, "trump"):
-            raise NotImplementedError("Expected attribute 'trump' not found.")
-        if suit is None:
-            raise AttributeError("Suit can not be None.")
-        self._source = source
-
-        if rank is None:
-            # If rank is not provided, assume `suit` is a full card string (e.g., "10♥")
-            self._suit = str(suit)[-1]  # Extract suit from last character
-            self._rank = str(suit)[:-1]  # Extract rank from all preceding characters
-        else:
-            self._suit = suit
-            self._rank = rank
-
-    @property
-    def trump(self):
-        return self._source.trump
-
-    @property
-    def suit(self):
-        return self._suit
-
-    @property
-    def rank(self):
-        return self._rank
 
     _normalization_matrix = {
         "♠": {"♠": "♠", "♥": "♥", "♣": "♣", "♦": "♦"},
@@ -59,22 +23,78 @@ class Card:
         "♦": {"♠": "♥", "♥": "♣", "♣": "♦", "♦": "♠"},
     }
 
+    def __init__(self, source: HasTrump, suit: str, rank: str | None = None):
+        """
+        Initialize a Card.
+
+        Args:
+            source (HasTrump): Object that provides a 'trump' attribute (e.g., Game, Hand).
+            suit (str): Card suit (e.g., "♠") or full card string (e.g., "J♠") if 'rank' is omitted.
+            rank (str, optional): Card rank (e.g., "J", "9"). Defaults to None.
+
+        Raises:
+            TypeError: If 'source' does not implement HasTrump.
+            AttributeError: If 'suit' is None.
+            ValueError: If 'suit' or 'rank' is invalid.
+        """
+
+        if not isinstance(source, HasTrump):
+            raise TypeError("Paramter 'source' must implement HasTrump.")
+        if suit is None:
+            raise AttributeError("Parameter 'suit' cannot be None.")
+
+        self._source = source
+
+        if rank is None:
+            self._suit = str(suit)[-1]
+            self._rank = str(suit)[:-1]
+        else:
+            self._suit = suit
+            self._rank = rank
+
+        if not self._suit in Card.suits:
+            raise ValueError(f"Invalid suit: {suit!r}. Must be one of {Card.suits}.")
+
+        if not self._rank in Card.ranks:
+            raise ValueError(f"Invalid rank: {rank!r}. Must be one of {Card.ranks}.")
+
+    @property
+    def trump(self):
+        """Current trump suit as determined by the source."""
+        return self._source.trump
+
+    @property
+    def suit(self):
+        """Suit of the card."""
+        return self._suit
+
+    @property
+    def rank(self):
+        """Rank of the card."""
+        return self._rank
+
     def normalize(self):
-        """Return a new normalized card"""
+        """
+        Normalize the card relative to the current trump.
+
+        Returns:
+            Card: A new normalized Card object, or self if no trump is set.
+        """
         if self.trump is None:
             return self
         norm_suit = Card._normalization_matrix[self.trump][self.suit]
         return Card(self._source, norm_suit, self.rank)
 
     def __str__(self) -> str:
-        """Return a string representation of the card."""
+        """Return a user-friendly string representation of the card."""
         return self._rank + self._suit
 
     def __repr__(self) -> str:
-        """Return a formal representation of the card (same as __str__)."""
+        """Return a developer-friendly representation of the card."""
         return self._rank + self._suit
 
     def __json__(self):
+        """Serialize the card as a string for JSON output."""
         return str(self)
 
     def __eq__(self, that: object) -> bool:
@@ -82,17 +102,17 @@ class Card:
         Check if two cards are equal.
 
         Args:
-            that (object): The card to compare against.
+            that (object): Another object to compare.
 
         Returns:
-            bool: True if both cards have the same suit and rank, False otherwise.
+            bool: True if suits and ranks match; otherwise False.
         """
         if that is None:
             return False
         return str(self) == str(that)
 
     def __hash__(self) -> int:
-        """Return a hash value for the card (useful for sets and dictionaries)."""
+        """Compute a hash based on the card's string representation."""
         return hash(str(self))
 
     def suit_effective(self, trump=None) -> str:
@@ -100,10 +120,10 @@ class Card:
         Determine the effective suit of the card.
 
         Args:
-            trump (str): The trump suit in the current hand.
+            trump (str, optional): The trump suit to consider.
 
         Returns:
-            str: The effective suit (adjusts for Left Bower being counted as trump).
+            str: The suit considered for trick-taking rules.
         """
         if trump is None:
             trump = self.trump
@@ -111,18 +131,18 @@ class Card:
             return self._suit
 
         if self.is_left_bower(trump):
-            return trump  # Left Bower is considered part of the trump suit
+            return trump
         return self._suit
 
     def is_right_bower(self, trump=None) -> bool:
         """
-        Determine if the card is the Right Bower (Jack of trump suit).
+        Check if this card is the Right Bower (Jack of trump suit).
 
         Args:
-            trump (str): The trump suit.
+            trump (str, optional): Trump suit to check against.
 
         Returns:
-            bool: True if this card is the Right Bower, False otherwise.
+            bool: True if card is Right Bower; False otherwise.
         """
         if trump is None:
             trump = self.trump
@@ -130,13 +150,13 @@ class Card:
 
     def is_left_bower(self, trump=None) -> bool:
         """
-        Determine if the card is the Left Bower (Jack of the same-color suit as trump).
+        Check if this card is the Left Bower (Jack of matching color to trump).
 
         Args:
-            trump (str): The trump suit.
+            trump (str, optional): Trump suit to check against.
 
         Returns:
-            bool: True if this card is the Left Bower, False otherwise.
+            bool: True if card is Left Bower; False otherwise.
         """
         if trump is None:
             trump = self.trump
@@ -145,30 +165,80 @@ class Card:
         return self._rank == "J" and self._suit == Card.left_bower_suit[trump]
 
     def __int__(self):
+        """
+        Convert card to a unique integer based on suit and rank position.
+
+        Returns:
+            int: Encoded integer value.
+        """
         b = Card.suits.index(self.suit) << 3
-        b = b | Card.ranks.index(self.rank)
+        b |= Card.ranks.index(self.rank)
         return b
 
     def __index__(self):
+        """Enable the card to be used in indexed contexts (e.g., arrays)."""
         return self.__int__()
+
+    def beats(self, other: "Card", lead_suit: str) -> bool:
+        """
+        Determine if this card beats another card based on Euchre rules.
+
+        Args:
+            other (Card): The card to compare against.
+            lead_suit (str): The lead suit of the trick.
+
+        Returns:
+            bool: True if this card beats the other card.
+        """
+        if self.is_right_bower():
+            return True
+        if other.is_right_bower():
+            return False
+
+        if self.is_left_bower():
+            return True
+        if other.is_left_bower():
+            return False
+
+        if self.suit_effective() == self.trump and other.suit_effective() != self.trump:
+            return True
+        if self.suit_effective() != self.trump and other.suit_effective() == self.trump:
+            return False
+
+        if self.suit_effective() == lead_suit and other.suit_effective() != lead_suit:
+            return True
+        if self.suit_effective() != lead_suit and other.suit_effective() == lead_suit:
+            return False
+
+        rank_self = Card.ranks.index(self.rank)
+        rank_other = Card.ranks.index(other.rank)
+
+        return rank_self > rank_other
+
+    def loses_to(self, other: "Card", lead_suit: str) -> bool:
+        """
+        Determine if this card loses to another card.
+
+        Args:
+            other (Card): The card to compare against.
+            lead_suit (str): The lead suit of the trick.
+
+        Returns:
+            bool: True if this card loses to the other card.
+        """
+        return not self.beats(other, lead_suit)
 
 def winning_card(lead_suit: str, card1: Card, card2: Card) -> Card | None:
     """
-    Determines which card wins in a trick based on suit and rank.
-
-    The evaluation follows this priority order:
-    1. A trump card beats a non-trump card.
-    2. A card following the lead suit beats one that does not.
-    3. The higher-ranked card wins if both are the same suit.
-    4. If both are off-suit with the same rank, the result is None (moot).
+    Determine which card wins between two cards based on Euchre rules.
 
     Args:
-        lead_suit (str): The suit that was led in the trick.
-        card1 (Card): The first card in play.
-        card2 (Card): The second card in play.
+        lead_suit (str): The suit that was led.
+        card1 (Card): First card played.
+        card2 (Card): Second card played.
 
     Returns:
-        Optional[Card]: The winning card, or None if neither wins definitively.
+        Card | None: The winning card, or None if no winner.
     """
     if card1.is_right_bower():
         return card1
@@ -181,13 +251,11 @@ def winning_card(lead_suit: str, card1: Card, card2: Card) -> Card | None:
 
     if card1.suit_effective() == card1.trump and card2.suit_effective() != card2.trump:
         return card1
-
     if card1.suit_effective() != card1.trump and card2.suit_effective() == card2.trump:
         return card2
 
     if card1.suit_effective() == lead_suit and card2.suit_effective() != lead_suit:
         return card1
-
     if card1.suit_effective() != lead_suit and card2.suit_effective() == lead_suit:
         return card2
 
@@ -196,13 +264,24 @@ def winning_card(lead_suit: str, card1: Card, card2: Card) -> Card | None:
 
     if rank1_index > rank2_index:
         return card1
-
     if rank1_index < rank2_index:
         return card2
 
     return None
 
+
 def losing_card(lead_suit: str, card1: Card, card2: Card) -> Card | None:
+    """
+    Determine which card loses between two cards based on Euchre rules.
+
+    Args:
+        lead_suit (str): The suit that was led.
+        card1 (Card): First card played.
+        card2 (Card): Second card played.
+
+    Returns:
+        Card | None: The losing card, or None if no loser.
+    """
     winner = winning_card(lead_suit, card1, card2)
     if winner == card1:
         return card2
