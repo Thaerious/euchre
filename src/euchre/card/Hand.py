@@ -17,21 +17,6 @@ class Hand(list):
     Inherits from Python's list and stores Card objects.
     """
 
-    def normalize(self, source) -> "Hand":
-        """
-        Normalize all cards in the hand relative to a given source.
-
-        Args:
-            source: A context providing a trump attribute (e.g., a Game).
-
-        Returns:
-            Hand: A new normalized Hand object.
-        """
-        norm_hand = Hand()
-        for card in self:
-            norm_hand.append(card.normalize(source))
-        return norm_hand
-
     def has_suit(self, suit: str) -> bool:
         """
         Check if the hand contains at least one card of the specified effective suit.
@@ -49,21 +34,6 @@ class Hand(list):
             if card.suit_effective() == suit:
                 return True
         return False
-
-    def count_suit(self, suit: str) -> int:
-        """
-        Count how many cards in the hand match the specified effective suit.
-
-        Args:
-            suit (str): The suit to count ("♠", "♥", "♣", or "♦").
-
-        Returns:
-            int: Number of cards matching the suit.
-
-        Example:
-            hand.count_suit("♠")
-        """
-        return len(self.select(values=Card.ranks, suits=[suit]))
 
     def select(
         self, values: list[str] = Card.ranks, suits: list[str] = Card.suits
@@ -87,21 +57,6 @@ class Hand(list):
             selected.append(card)
 
         return selected
-
-    def count(
-        self, values: list[str] = Card.ranks, suits: list[str] = Card.suits
-    ) -> int:
-        """
-        Count how many cards match given values and suits.
-
-        Args:
-            values (List[str], optional): Allowed ranks. Defaults to all.
-            suits (List[str], optional): Allowed suits. Defaults to all.
-
-        Returns:
-            int: Number of matching cards.
-        """
-        return len(self.select(values, suits))
 
     def __str__(self):
         """Return a human-readable string of the hand."""

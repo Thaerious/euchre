@@ -10,6 +10,7 @@
 ### Running Tests
 
 ```bash
+pip install pytest
 pytest
 pytest tests/test_name.py
 ```
@@ -20,7 +21,7 @@ pytest tests/test_name.py
 
 ```bash
 pip install coverage
-coverage run -m pytest
+coverage run -m pytest tests
 coverage report
 coverage html
 ```

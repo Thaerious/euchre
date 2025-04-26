@@ -690,6 +690,7 @@ def best_card(left: Card, right: Card, lead: str = None) -> int:
 
     Returns:
         The better of the two cards based on the lookup table.
+        When tied the left card is considered better.
     """
     compare = compare_cards(left, right, lead)
     if compare > 0:
@@ -709,6 +710,7 @@ def worst_card(left: Card, right: Card, lead: str = None) -> int:
 
     Returns:
         The worse of the two cards based on the lookup table.
+        When tied the right card is considered worse.
     """
     compare = compare_cards(left, right, lead)
     if compare > 0:
