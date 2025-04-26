@@ -2,7 +2,7 @@
 import json
 
 from euchre.card import Card, Deck, Trick, playable
-from euchre.player import Player, PlayerList, Team
+from euchre.player import Player, Team
 from euchre.utility import custom_json_serializer, rotate_to
 
 NUM_PLAYERS = 4
@@ -24,9 +24,6 @@ class EuchreError(Exception):
         """
         super().__init__(msg)
 
-    def to_json(self, indent=2):
-        return json.dumps(self, indent=indent, default=custom_json_serializer)
-
     def __json__(self):
         return {"type": EuchreError.__name__, "message": str(self)}
 
@@ -42,7 +39,7 @@ class Euchre:
         Args:
             names (List[str]): A list of player names, in seating order.
         """
-        self.players = PlayerList(names)
+        self.players = [Player(name, i) for i, name in enumerate(names)]
         self._order: list[int] = [0, 1, 2, 3]
         self.current_player_index = self._order[0]
         self.dealer_index = self._order[3]
@@ -342,7 +339,7 @@ class Euchre:
 
         # Mark the current player as going alone
         self.current_player.alone = True
-        partner_index = self.players.index(self.current_player.partner)
+        partner_index = (self.current_player_index + 2) % 4
         self._order.remove(partner_index)
 
     def make_trump(self, suit: str) -> None:
@@ -513,7 +510,7 @@ class Euchre:
 
         maker_tricks = self.maker.team.tricks
 
-        if maker_tricks == NUM_TRICKS_PER_HAND and self.maker.team.is_alone:
+        if maker_tricks == NUM_TRICKS_PER_HAND and self.maker.team.has_alone:
             self.maker.team.score = self.maker.team.score + 4
         elif maker_tricks == NUM_TRICKS_PER_HAND:
             self.maker.team.score = self.maker.team.score + 2
@@ -547,7 +544,7 @@ class Euchre:
         maker_tricks = self.maker.team.tricks
         scores = {team: 0 for team in self._teams}
 
-        if maker_tricks == NUM_TRICKS_PER_HAND and self.maker.team.is_alone:
+        if maker_tricks == NUM_TRICKS_PER_HAND and self.maker.team.has_alone:
             scores[self.maker.team] = 4
         elif maker_tricks == NUM_TRICKS_PER_HAND:
             scores[self.maker.team] = 2

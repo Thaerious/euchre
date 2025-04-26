@@ -19,7 +19,7 @@ class Trick(list[Card], HasTrump):
     Inherits from list (to hold Card objects) and HasTrump (to track trump suit).
     """
 
-    def __init__(self, trump: str, order: list[int], init: list = []):
+    def __init__(self, trump: str, order: list[int]):
         """
         Initialize a Trick.
 
@@ -31,9 +31,6 @@ class Trick(list[Card], HasTrump):
         super().__init__()
         self._trump: str = trump
         self._order: list[int] = order
-
-        for card in init:
-            self.append(Card(self, card))
 
     def copy(self) -> "Trick":
         """
@@ -76,16 +73,6 @@ class Trick(list[Card], HasTrump):
             str: Trump suit symbol ("♠", "♥", "♣", "♦").
         """
         return self._trump
-
-    @property
-    def lead_player(self) -> int:
-        """
-        Player who led the trick.
-
-        Returns:
-            int: The seat index of the lead player.
-        """
-        return self._order[0]
 
     @property
     def lead_suit(self) -> str:
@@ -135,10 +122,13 @@ class Trick(list[Card], HasTrump):
         Returns:
             int | None: Player seat index who played it, or None if not found.
         """
+
+        if not card_in_question in self:
+             raise ValueError(f"Card {card_in_question} was not played in this trick.")
+
         for i, card_in_trick in enumerate(self):
             if card_in_trick == card_in_question:
-                return self._order[i]
-        return None
+                return self._order[i]        
 
     def __str__(self) -> str:
         """
@@ -169,17 +159,3 @@ class Trick(list[Card], HasTrump):
             str: Same as __str__().
         """
         return str(self)
-
-    def highlight_if_win(self, card: Card) -> str:
-        """
-        Highlight a card if it is currently winning the trick.
-
-        Args:
-            card (Card): The card to check.
-
-        Returns:
-            str: Highlighted string if winning, plain string otherwise.
-        """
-        if card == self.best_card:
-            return Style.BRIGHT + str(card) + Style.RESET_ALL
-        return str(card)

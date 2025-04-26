@@ -18,7 +18,7 @@ class Team:
         return del_string([p.name for p in self._players])
 
     @property
-    def is_alone(self):
+    def has_alone(self):
         """Return True if any player on the team is playing alone."""
         for player in self._players:
             if player.alone:

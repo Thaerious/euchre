@@ -61,7 +61,7 @@ class Snapshot(Game):
         if game.dealer and game.dealer.name != for_player:
             self.discard = None
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         """
         Return a human-readable string of the Snapshot for debugging.
 

@@ -219,7 +219,7 @@ def test_go_alone(euchre):
     assert euchre.current_player.alone is True
 
     # Ensure Player1's partner (Player3) has been removed from the order
-    partners_index = euchre.players.index(euchre.current_player.partner)
+    partners_index = (euchre.current_player_index + 2) % 4
     assert partners_index not in euchre.order
 
 # must have 5 tricks played to advance

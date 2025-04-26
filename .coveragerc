@@ -3,6 +3,7 @@ branch = True
 omit =
     */tests/*
     */__init__.py
+    src/euchre/utility/custom_json_serializer.py
 
 [report]
 exclude_lines =

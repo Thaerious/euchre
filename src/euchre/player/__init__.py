@@ -2,8 +2,7 @@
 
 # Import classes and functions to expose them at the package level
 from .Player import Player
-from .PlayerList import PlayerList
 from .Team import Team
 
 # Define __all__ to specify what is exported when using 'from euchre.Card import *'
-__all__ = ["Player", "PlayerList", "Team"]
+__all__ = ["Player", "Team"]

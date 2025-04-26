@@ -8,6 +8,11 @@ def build_trick(trump: str, order: int = [0, 1, 2, 3]):
     trick = Trick(trump, order)
     return (deck, trick)
 
+def test_empty_trick_winner_is_none():
+    """Test Trick initialization with a valid set of cards."""
+    (deck, trick) = build_trick("♠")
+    assert trick.winner == None
+
 def test_trick_initialization():
     """Test Trick initialization with a valid set of cards."""
     (deck, trick) = build_trick("♠")
