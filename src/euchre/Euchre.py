@@ -46,6 +46,7 @@ class Euchre:
         self.lead_index = self._order[0]
         self.hand_count = 0
         self.win_condition = 10
+        self.won_last_hand = None
 
         self._teams = []
         self._teams.append(Team([self.players[0], self.players[2]]))
@@ -282,6 +283,19 @@ class Euchre:
         return self.players[self.maker_index]
 
     @property
+    def defender_team(self) -> Player | None:
+        """
+        Retrieve the player who declared the trump suit (the maker).
+
+        Returns:
+            Optional[Player]: The player object representing the maker, or None if no trump suit is declared.
+        """
+        if self.maker_index is None:
+            return None
+        def_index = (self.maker_index + 1) % 4
+        return self.players[def_index].team
+
+    @property
     def first_player(self) -> Player:
         """
         Retrieve the player object for the first player (based on the current self.order).
@@ -509,6 +523,10 @@ class Euchre:
         """
 
         maker_tricks = self.maker.team.tricks
+        if maker_tricks >= REQUIRED_TRICKS_TO_WIN:
+            self.won_last_hand = self.maker.team
+        else:
+            self.won_last_hand = self.defender_team
 
         if maker_tricks == NUM_TRICKS_PER_HAND and self.maker.team.has_alone:
             self.maker.team.score = self.maker.team.score + 4
@@ -517,9 +535,7 @@ class Euchre:
         elif maker_tricks >= REQUIRED_TRICKS_TO_WIN:
             self.maker.team.score = self.maker.team.score + 1
         else:
-            for team in self._teams:
-                if team != self.maker.team:
-                    team.score = team.score + 2
+            self.defender_team.score += 2
 
     def calc_hand(self) -> int:
         """

@@ -82,6 +82,7 @@ class Trick(list[Card], HasTrump):
         Returns:
             str: The lead suit symbol.
         """
+        if len(self) == 0: return None
         return self[0].suit_effective()
 
     @property
@@ -112,9 +113,9 @@ class Trick(list[Card], HasTrump):
             return None
         return self.who_played(best)
 
-    def who_played(self, card_in_question: Card) -> int | None:
+    def who_played(self, card: Card) -> int | None:
         """
-        Find which player played a specific card.
+        The index of the player that played the card
 
         Args:
             card_in_question (Card): The card to locate.
@@ -123,11 +124,11 @@ class Trick(list[Card], HasTrump):
             int | None: Player seat index who played it, or None if not found.
         """
 
-        if not card_in_question in self:
-             raise ValueError(f"Card {card_in_question} was not played in this trick.")
+        if not card in self:
+             raise ValueError(f"Card {card} was not played in this trick.")
 
         for i, card_in_trick in enumerate(self):
-            if card_in_trick == card_in_question:
+            if card_in_trick == card:
                 return self._order[i]        
 
     def __str__(self) -> str:
@@ -141,7 +142,7 @@ class Trick(list[Card], HasTrump):
 
         for i, card in enumerate(self):
             if card == self.best_card:
-                sb += Fore.LIGHTYELLOW_EX + str(card) + Style.RESET_ALL
+                sb += Fore.LIGHTGREEN_EX + str(card) + Style.RESET_ALL
             else:
                 sb += str(card)
 
