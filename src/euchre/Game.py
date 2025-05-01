@@ -108,10 +108,6 @@ class Game(Euchre):
         if self.state == 0:
             self._state(action, data)
         elif self.state == 6 or self.state == 7:
-            if player is not None:
-                raise ActionError(
-                    f"Incorrect Player: expected 'None' found '{player}'."
-                )
             self._state(action, data)
         elif self.state == 2 or self.state == 5:
             # States 2 & 5 expect a card object

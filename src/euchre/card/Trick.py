@@ -103,7 +103,7 @@ class Trick(list[Card], HasTrump):
     @property
     def winner(self) -> int | None:
         """
-        The player index who won the trick.
+        The index of the player who is currently winning the trick.
 
         Returns:
             int | None: The seat index of the winner, or None if trick is empty.
