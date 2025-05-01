@@ -7,7 +7,7 @@ from euchre import Game
 @pytest.fixture
 def game():
     game = Game(["Player1", "Player2", "Player3", "Player4"])
-    assert game.current_state == 0
+    assert game.state == 0
     game.input(None, "start", None)
 
     game.set_cards("Player1", ["J♦", "10♣", "9♣", "Q♥", "Q♠"])

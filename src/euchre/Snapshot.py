@@ -97,7 +97,7 @@ class Snapshot(Game):
             "last_player": self.last_player_index,
             "last_action": self.last_action,
             "last_data": self.last_data,
-            "state": self.current_state,
+            "state": self.state,
             "score": [self.teams[0].score, self.teams[1].score],
         }
 

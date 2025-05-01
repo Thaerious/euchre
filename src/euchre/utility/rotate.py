@@ -1,6 +1,8 @@
 # rotate.py
 def rotate(list):
-    """move the last item to the first"""
+    """Move the last item to the first
+        Modifies the list.
+    """
     list.append(list.pop(0))
     return list
 

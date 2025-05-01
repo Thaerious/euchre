@@ -39,7 +39,7 @@ class Game(Euchre):
             names (list of str): List of player names.
         """
         super().__init__(names, seed)
-        self.state: Callable[[str, Any], None] = self.state_0
+        self._state: Callable[[str, Any], None] = self.state_0
         self.last_action: str | None = None
         self.last_data: str | None = None
         self.last_player_index: int | None = None
@@ -64,14 +64,14 @@ class Game(Euchre):
                 func(*args, **kwargs)
 
     @property
-    def current_state(self) -> int:
+    def state(self) -> int:
         """
         Get the current state as an integer based on the function name.
 
         Returns:
             int: Current state number.
         """
-        return int(self.state.__name__[6:])
+        return int(self._state.__name__[6:])
 
     def input(
         self,
@@ -91,7 +91,7 @@ class Game(Euchre):
             ActionException: If the action or player is invalid.
         """
         self.trigger_hook("before_input", action=action, data=data)
-        prev_state = self.current_state
+        prev_state = self.state
 
         self.last_action = action
 
@@ -105,15 +105,15 @@ class Game(Euchre):
         else:
             self.last_player_index = None
 
-        if self.current_state == 0:
-            self.state(action, data)
-        elif self.current_state == 6 or self.current_state == 7:
+        if self.state == 0:
+            self._state(action, data)
+        elif self.state == 6 or self.state == 7:
             if player is not None:
                 raise ActionError(
                     f"Incorrect Player: expected 'None' found '{player}'."
                 )
-            self.state(action, data)
-        elif self.current_state == 2 or self.current_state == 5:
+            self._state(action, data)
+        elif self.state == 2 or self.state == 5:
             # States 2 & 5 expect a card object
             if player != self.current_player.name:
                 raise ActionError(
@@ -121,13 +121,13 @@ class Game(Euchre):
                 )
             if isinstance(data, str):
                 data = self.deck.get_card(data[-1], data[:-1])
-            self.state(action, data)
+            self._state(action, data)
         else:
             if player != self.current_player.name:
                 raise ActionError(
                     f"Incorrect Player: expected '{self.current_player.name}' found '{player}'."
                 )
-            self.state(action, data)
+            self._state(action, data)
 
         self.trigger_hook(
             "after_input",
@@ -156,7 +156,7 @@ class Game(Euchre):
             self.shuffle_deck()
 
         self.deal_cards()
-        self.state = self.state_1
+        self._state = self.state_1
 
     def state_1(self, action: str, __: Any) -> None:
         """
@@ -184,7 +184,7 @@ class Game(Euchre):
         Transition to state 2: Dealer's turn to decide.
         """
         self.activate_dealer()
-        self.state = self.state_2
+        self._state = self.state_2
 
     def state_2(self, action: str, card: Card | None) -> None:
         """
@@ -206,7 +206,7 @@ class Game(Euchre):
 
     def enter_state_3(self):
         self.turn_down_card()
-        self.state = self.state_3
+        self._state = self.state_3
 
     def state_3(self, action: str, suit: str | None) -> None:
         """
@@ -220,7 +220,7 @@ class Game(Euchre):
 
         if action == "pass":
             if self.activate_next_player() == self.dealer:
-                self.state = self.state_4
+                self._state = self.state_4
         elif action in ["make", "alone"]:
             self.make_trump(suit)
             if action == "alone":
@@ -250,7 +250,7 @@ class Game(Euchre):
         """
         self.add_trick()
         self.reset_lead_player()
-        self.state = self.state_5
+        self._state = self.state_5
 
     def state_5(self, action: str, card: Card) -> None:
         """
@@ -269,7 +269,7 @@ class Game(Euchre):
 
     def enter_state_6(self) -> None:
         self.score_trick()
-        self.state = self.state_6
+        self._state = self.state_6
 
     def state_6(self, action: str, __: Any) -> None:
         """
@@ -287,7 +287,7 @@ class Game(Euchre):
             return
 
         self.score_hand()
-        self.state = self.state_7
+        self._state = self.state_7
 
     def state_7(self, action: str, __: Any) -> None:
         """
@@ -300,7 +300,7 @@ class Game(Euchre):
         self.allowed_actions(action, "continue")
 
         if self.is_game_over():
-            self.state = self.state_8
+            self._state = self.state_8
         else:
             self.next_hand()
             self.enter_state_1()
@@ -339,14 +339,14 @@ class Game(Euchre):
         sb = super().__str__()
         sb += f"last action: {self.last_action}\n"
         sb += f"last player: {self.last_player_index} -> {self.get_player(self.last_player_index)}\n"
-        sb += f"state: {self.current_state}\n"
+        sb += f"state: {self.state}\n"
 
         return sb
 
     def __json__(self):
         return super().__json__() | {
             "hash": self.hash,
-            "state": self.current_state,
+            "state": self.state,
             "last_player": self.last_player_index,
             "last_action": self.last_action,
         }
@@ -385,7 +385,7 @@ class Game(Euchre):
         game._discard = card_or_none(game.deck, json_object["discard"])
         game.last_player_index = json_object["last_player"]
         game.last_action = json_object["last_action"]
-        game.state = getattr(game, f"state_{json_object['state']}")
+        game._state = getattr(game, f"state_{json_object['state']}")
 
         return game
 

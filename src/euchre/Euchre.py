@@ -87,11 +87,11 @@ class Euchre:
         return self.players[self.lead_index]
 
     @property
-    def teams(self) -> list[int]:
+    def teams(self) -> list[Team]:
         return self._teams.copy()
 
     @property
-    def up_card(self) -> str:
+    def up_card(self) -> Card:
         return self._up_card
 
     @up_card.setter
