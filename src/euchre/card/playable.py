@@ -1,6 +1,7 @@
-# playable.py
+"""
+playable.py
 
-"""Playable card logic for Euchre.
+Playable card logic for Euchre.
 
 Determines which cards from a player's hand are legally playable based on the current trick.
 """

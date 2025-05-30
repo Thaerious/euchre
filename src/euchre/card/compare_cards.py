@@ -1,4 +1,17 @@
-# compare_cards.py
+"""
+compare_cards.py
+
+Provides logic for comparing Euchre cards based on trump and lead suit.
+A central `lookup_table` is used to assign a rank to each card depending
+on the context (trump suit and lead suit). Includes helper functions:
+
+- `compare_cards`: Returns a numerical comparison of two cards.
+- `best_card`: Returns the stronger of two cards.
+- `worst_card`: Returns the weaker of two cards.
+
+Useful for determining trick winners and AI decisions.
+"""
+
 from .Card import Card
 
 lookup_table = {

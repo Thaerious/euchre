@@ -1,7 +1,18 @@
-# Player.py
+"""
+Player.py
+
+Defines the `Player` class for representing a Euchre player.
+
+Each player tracks:
+- name and seat index
+- their team and partner
+- cards in hand and played cards
+- tricks won and whether they are playing alone
+
+Includes methods for state reset, copying, and JSON serialization.
+"""
 from euchre.card import Hand
 from euchre.utility.del_string import del_string
-
 
 class Player:
     """Represents a single player in Euchre."""

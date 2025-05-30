@@ -1,4 +1,16 @@
-# Team.py
+"""
+Team.py
+
+Defines the `Team` class for grouping Euchre players into a team.
+
+Tracks:
+- players belonging to the team
+- cumulative tricks won
+- current team score
+- whether any player is going alone
+
+Provides utility accessors for game logic and display.
+"""
 from euchre.utility.del_string import del_string
 
 

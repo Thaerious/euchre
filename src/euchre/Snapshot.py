@@ -1,4 +1,20 @@
-# Snapshot.py
+"""
+Snapshot.py
+
+Defines the `Snapshot` and `SnapPlayer` classes used to create partial,
+read-only views of a Euchre `Game` for a specific player.
+
+- `SnapPlayer`: Lightweight copy of a player that hides sensitive hand data.
+- `Snapshot`: Derived from `Game`, but limits visibility to only what a given
+  player should see—useful for AI input, serialization, and logging.
+
+Includes methods to:
+- Mask opponent hands and discards
+- Provide deterministic JSON serialization
+- Generate snapshot hashes for state comparison or caching
+"""
+# pylint: disable=E1101
+
 import copy
 import hashlib
 import json
@@ -94,7 +110,7 @@ class Snapshot(Game):
             "up_card": self.up_card,
             "down_card": self.down_card,
             "hand": self.hand,
-            "last_player": self.last_player_index,
+            "last_player": self.last_player.index,
             "last_action": self.last_action,
             "last_data": self.last_data,
             "state": self.state,

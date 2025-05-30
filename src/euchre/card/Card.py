@@ -1,11 +1,20 @@
-# Card.py
-from .HasTrump import HasTrump
-
-"""Card module for Euchre.
-
-This module defines the Card class representing Euchre cards,
-and helper functions for determining winning and losing cards during play.
 """
+Card.py
+
+Defines the `Card` class used in Euchre, along with logic to represent,
+normalize, and evaluate individual cards during gameplay.
+
+Key features:
+- Support for Left and Right Bowers depending on trump suit.
+- Suit normalization relative to trump.
+- Equality, hashing, and JSON serialization support.
+- Utilities for determining trick-taking suit and card precedence.
+
+Relies on a `HasTrump` source (e.g., a game or hand context) to dynamically
+resolve the active trump suit.
+"""
+
+from .HasTrump import HasTrump
 
 
 class Card:
@@ -53,10 +62,10 @@ class Card:
             self._suit = suit
             self._rank = rank
 
-        if not self._suit in Card.suits:
+        if self._suit not in Card.suits:
             raise ValueError(f"Invalid suit: {suit!r}. Must be one of {Card.suits}.")
 
-        if not self._rank in Card.ranks:
+        if self._rank not in Card.ranks:
             raise ValueError(f"Invalid rank: {rank!r}. Must be one of {Card.ranks}.")
 
     @property

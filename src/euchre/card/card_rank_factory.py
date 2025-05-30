@@ -1,3 +1,19 @@
+"""
+card_rank_factory.py
+
+Defines card ordering and lookup tables used for evaluating card strength
+based on trump and lead suits in Euchre.
+
+Components:
+- `RANKS`, `SUITS`, `ORDER`: bidirectional mappings between symbols and numeric values.
+- `COMPL`: Maps each suit to its complementary suit (used for left bower logic).
+- `lookup_table`: Nested dictionaries containing precomputed card ranks
+  for each combination of trump and lead suits.
+- `card_rank_factory`: Returns a function that gives a card's rank given the current context.
+
+This module is essential for fast, deterministic evaluation of trick winners.
+"""
+
 # pylint ignore long lines, similar lines
 # pylint: disable=C0301, R0801
 
@@ -697,4 +713,15 @@ lookup_table[None][None] = {
 
 
 def card_rank_factory(trump, lead):
+    """
+    Create a function that returns the rank of a card given a trump and lead suit.
+
+    Args:
+        trump (str or None): The current trump suit.
+        lead (str or None): The suit that was led in the current trick.
+
+    Returns:
+        Callable[[str], int]: A function that takes a card string (e.g., "J♠")
+                              and returns its rank based on the current context.
+    """
     return lambda card: lookup_table[trump][lead][card]

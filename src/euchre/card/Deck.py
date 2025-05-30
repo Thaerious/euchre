@@ -1,6 +1,7 @@
-# Deck.py
+"""
+Deck.py
 
-"""Deck module for Euchre.
+Deck module for Euchre.
 
 This module defines the Deck class, representing a full Euchre card deck
 with methods for resetting, shuffling, and card creation.

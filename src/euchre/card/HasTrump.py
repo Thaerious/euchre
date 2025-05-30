@@ -1,6 +1,7 @@
-# HasTrump.py
+"""
+HasTrump.py
 
-"""HasTrump mixin module.
+HasTrump mixin module.
 
 Provides a reusable base class for any object that needs to store and access a trump suit.
 """

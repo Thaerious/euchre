@@ -1,4 +1,10 @@
-# del_string.py
+"""
+del_string.py
+
+Utility function to convert a list of items into a single delimited string,
+with optional wrapping around each item. Commonly used for formatting output
+such as CSV-like lines, logging, or display in user interfaces.
+"""
 
 
 def del_string(a_list, delimiter=", ", wrap=""):

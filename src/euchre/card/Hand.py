@@ -1,6 +1,7 @@
-# Hand.py
+"""
+Hand.py
 
-"""Hand module for Euchre.
+Hand module for Euchre.
 
 Defines the Hand class, representing a player's set of cards in a Euchre game,
 with utilities for suit matching, counting, and selection.

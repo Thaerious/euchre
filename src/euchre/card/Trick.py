@@ -1,6 +1,7 @@
-# Trick.py
+"""
+Trick.py
 
-"""Trick module for Euchre.
+Trick module for Euchre.
 
 Defines the Trick class, representing a sequence of played cards in a round,
 handling trump suit, winner detection, and card comparison.
@@ -125,12 +126,11 @@ class Trick(list[Card], HasTrump):
             int | None: Player seat index who played it, or None if not found.
         """
 
-        if not card in self:
-            raise ValueError(f"Card {card} was not played in this trick.")
-
         for i, card_in_trick in enumerate(self):
             if card_in_trick == card:
                 return self._order[i]
+
+        raise ValueError(f"Card {card} was not played in this trick.")
 
     def __str__(self) -> str:
         """

@@ -1,4 +1,8 @@
-"""Euchre.py: Main module for euchre state"""
+"""
+Euchre.py
+Main module for euchre state
+"""
+
 # pylint ignore attribute and public method counts
 # pylint: disable=R0902, R0904
 
