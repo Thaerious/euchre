@@ -1,11 +1,10 @@
-## Start Here
-
-- Use `source ./venv/bin/activate` when opening a new terminal.
-- On fresh repos, don't forget to install the local module with `pip install -e .`.
-
----
+# Start Here
 
 ## 🛠️ Development Setup
+- `pip install .[dev]`
+- Use `source ./venv/bin/activate` when opening a new terminal.
+- On fresh repos use `pip install -e .` to install the library locally.
+
 
 ### Running Tests
 
@@ -68,14 +67,14 @@ ruff check . --select E701
 ```
 
 ## Naming Conventions
-## 📜 Python Naming Conventions
 
-| Thing             | Style                  | Example                          |
-|:------------------|:------------------------|:---------------------------------|
-| **Class names**    | PascalCase (CapWords)    | `class MyAwesomeClass:`          |
-| **Function names** | snake_case               | `def do_something():`            |
-| **Variable names** | snake_case               | `user_name = "ed"`               |
-| **Constant names** | ALL_CAPS                 | `MAX_RETRIES = 5`                |
-| **Module names**   | snake_case               | `import my_module`               |
-| **Package names**  | snake_case (short)       | `import mypackage`               |
-| **Exception classes** | PascalCase + end with `Error` | `class DataLoadError(Exception):` |
+| Thing                   | Style                          | Example                           |
+| :---------------------- | :----------------------------- | :-------------------------------- |
+| **Class names**         | PascalCase (CapWords)          | `class MyAwesomeClass:`           |
+| **Function names**      | snake\_case                    | `def do_something():`             |
+| **Variable names**      | snake\_case                    | `user_name = "ed"`                |
+| **Constant names**      | ALL\_CAPS                      | `MAX_RETRIES = 5`                 |
+| **Module names**        | snake\_case                    | `import my_module`                |
+| **Capitalized modules** | PascalCase if 1 class per file | `from User import User`           |
+| **Package names**       | snake\_case (short)            | `import mypackage`                |
+| **Exception classes**   | PascalCase + end with `Error`  | `class DataLoadError(Exception):` |

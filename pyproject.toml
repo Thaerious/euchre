@@ -12,5 +12,8 @@ dependencies = [
     "pytest"
 ]
 
+[project.optional-dependencies]
+dev = ["pylint"]
+
 [tool.setuptools.packages]
 find = {where = ["src"]}

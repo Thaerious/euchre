@@ -1,6 +1,6 @@
+''' Euchre.py: Main module for euchre state '''
 # Euchre.py
 import json
-
 from euchre.card import Card, Deck, Trick, playable
 from euchre.player import Player, Team
 from euchre.utility import custom_json_serializer, rotate_to
@@ -61,12 +61,24 @@ class Euchre:
         self.__reset()
         self._tricks: list[Trick] = []
 
-    @property
+    @property 
     def order(self):
+        """
+        Get the current play order of players.
+
+        Returns:
+            List[int]: A copy of the list representing player indices in current order.
+        """          
         return self._order.copy()
 
     @order.setter
     def order(self, value):
+        """
+        Set a new order for player turns and update dependent indices.
+
+        Args:
+            value (List[int]): New player index order.
+        """        
         self._order = value.copy()
         self.current_player_index = self._order[0]
         self.dealer_index = self._order[3]
@@ -84,18 +96,42 @@ class Euchre:
 
     @property
     def lead_player(self) -> Player:
+        """
+        Retrieve the player who is leading the current trick.
+
+        Returns:
+            Player: The player in the lead position for the current trick.
+        """        
         return self.players[self.lead_index]
 
     @property
     def teams(self) -> list[Team]:
+        """
+        Get a copy of the two teams in the game.
+
+        Returns:
+            List[Team]: A copy of the list containing both teams.
+        """        
         return self._teams.copy()
 
     @property
     def up_card(self) -> Card:
+        """
+        Get the up card (the card placed face-up during trump selection).
+
+        Returns:
+            Card: The up card currently in play.
+        """        
         return self._up_card
 
     @up_card.setter
     def up_card(self, value):
+        """
+        Set the up card.
+
+        Args:
+            value (str | Card): A string or Card to be set as the up card.
+        """        
         if value is None:
             self._up_card = None
         else:
@@ -103,10 +139,22 @@ class Euchre:
 
     @property
     def down_card(self) -> str:
+        """
+        Get the down card (the card turned down when trump is passed).
+
+        Returns:
+            Card: The card that was turned down.
+        """        
         return self._down_card
 
     @down_card.setter
     def down_card(self, value):
+        """
+        Set the down card.
+
+        Args:
+            value (str | Card): A string or Card to be set as the down card.
+        """        
         if value is None:
             self._down_card = None
         else:
@@ -134,6 +182,10 @@ class Euchre:
 
     @trump.setter
     def trump(self, value):
+        """
+        Rotate player order so that the winner of the last trick is the new lead.
+        Updates current player and lead index accordingly.
+        """        
         if value not in ["♠", "♥", "♣", "♦", None]:
             raise Exception(f"Unexpected value: '{value}'")
         self.deck.trump = value
@@ -329,6 +381,10 @@ class Euchre:
         self.current_player_index = self._order[0]
 
     def reset_lead_player(self):
+        """
+        Reset the lead player to be the current player.
+        Used to explicitly set the player who will lead the next trick.
+        """        
         self.lead_index = self.current_player_index
 
     def deal_cards(self) -> None:
@@ -590,6 +646,14 @@ class Euchre:
         return False
 
     def set_cards(self, player, cards):
+        """
+        Manually assign a list of card strings to a specific player's hand.
+        Useful for testing or simulating a hand.
+
+        Args:
+            player (int | str): The player's index or name.
+            cards (List[str]): List of card strings to assign.
+        """        
         player = self.get_player(player)
         player.hand.clear()
         for card_string in cards:

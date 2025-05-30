@@ -1,3 +1,6 @@
+# pylint ignore long lines
+# pylint: disable=C0301
+
 from bidict import bidict
 
 RANKS = bidict({"9": 0, "10": 1, "J": 2, "Q": 3, "K": 4, "A": 5})
