@@ -89,7 +89,7 @@ class Snapshot(Game):
             "current_player": self.current_player_index,
             "dealer": self.dealer_index,
             "lead": self.lead_index,
-            "maker": self.maker_index,
+            "maker": self._maker_index,
             "hand_count": self.hand_count,
             "up_card": self.up_card,
             "down_card": self.down_card,

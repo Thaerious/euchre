@@ -1,14 +1,16 @@
-''' Euchre.py: Main module for euchre state '''
-# Euchre.py
-import json
+"""Euchre.py: Main module for euchre state"""
+# pylint ignore attribute and public method counts
+# pylint: disable=R0902, R0904
+
 from euchre.card import Card, Deck, Trick, playable
 from euchre.player import Player, Team
-from euchre.utility import custom_json_serializer, rotate_to
+from euchre.utility import rotate_to
 
 NUM_PLAYERS = 4
 NUM_CARDS_PER_PLAYER = 5
 NUM_TRICKS_PER_HAND = 5
 REQUIRED_TRICKS_TO_WIN = 3
+
 
 class EuchreError(Exception):
     """
@@ -26,6 +28,7 @@ class EuchreError(Exception):
 
     def __json__(self):
         return {"type": EuchreError.__name__, "message": str(self)}
+
 
 class Euchre:
     """
@@ -58,17 +61,31 @@ class Euchre:
 
         self.seed = seed
         self.deck = Deck(seed)
-        self.__reset()
         self._tricks: list[Trick] = []
 
-    @property 
+        self._up_card: Card | None = None
+        self._down_card: Card | None = None
+        self._discard: Card | None = None
+        self._maker_index: int | None = None
+
+    @property
+    def discard(self):
+        """
+        Retrive the current discarded card
+
+        Returns:
+            List[int]: A copy of the list representing player indices in current order.
+        """
+        return self._discard
+
+    @property
     def order(self):
         """
         Get the current play order of players.
 
         Returns:
             List[int]: A copy of the list representing player indices in current order.
-        """          
+        """
         return self._order.copy()
 
     @order.setter
@@ -78,7 +95,7 @@ class Euchre:
 
         Args:
             value (List[int]): New player index order.
-        """        
+        """
         self._order = value.copy()
         self.current_player_index = self._order[0]
         self.dealer_index = self._order[3]
@@ -92,7 +109,7 @@ class Euchre:
         self._down_card: Card | None = None
         self.discard: Card | None = None
         self.trump: str | None = None
-        self.maker_index: int | None = None
+        self._maker_index: int | None = None
 
     @property
     def lead_player(self) -> Player:
@@ -101,7 +118,7 @@ class Euchre:
 
         Returns:
             Player: The player in the lead position for the current trick.
-        """        
+        """
         return self.players[self.lead_index]
 
     @property
@@ -111,7 +128,7 @@ class Euchre:
 
         Returns:
             List[Team]: A copy of the list containing both teams.
-        """        
+        """
         return self._teams.copy()
 
     @property
@@ -121,7 +138,7 @@ class Euchre:
 
         Returns:
             Card: The up card currently in play.
-        """        
+        """
         return self._up_card
 
     @up_card.setter
@@ -131,7 +148,7 @@ class Euchre:
 
         Args:
             value (str | Card): A string or Card to be set as the up card.
-        """        
+        """
         if value is None:
             self._up_card = None
         else:
@@ -144,7 +161,7 @@ class Euchre:
 
         Returns:
             Card: The card that was turned down.
-        """        
+        """
         return self._down_card
 
     @down_card.setter
@@ -154,7 +171,7 @@ class Euchre:
 
         Args:
             value (str | Card): A string or Card to be set as the down card.
-        """        
+        """
         if value is None:
             self._down_card = None
         else:
@@ -185,9 +202,9 @@ class Euchre:
         """
         Rotate player order so that the winner of the last trick is the new lead.
         Updates current player and lead index accordingly.
-        """        
+        """
         if value not in ["♠", "♥", "♣", "♦", None]:
-            raise Exception(f"Unexpected value: '{value}'")
+            raise EuchreError(f"Unexpected value: '{value}'")
         self.deck.trump = value
 
     @property
@@ -313,14 +330,15 @@ class Euchre:
         """
 
         if index is None:
-            return None
+            raise TypeError("Index must be an int or str, not None")
 
         if isinstance(index, str):
             for player in self.players:
                 if player.name == index:
                     return player
-        else:
-            return self.players[index]
+            raise ValueError(f"No player with name '{index}'")
+
+        return self.players[index]
 
     @property
     def maker(self) -> Player | None:
@@ -330,9 +348,9 @@ class Euchre:
         Returns:
             Optional[Player]: The player object representing the maker, or None if no trump suit is declared.
         """
-        if self.maker_index is None:
+        if self._maker_index is None:
             return None
-        return self.players[self.maker_index]
+        return self.players[self._maker_index]
 
     @property
     def defender_team(self) -> Player | None:
@@ -342,9 +360,9 @@ class Euchre:
         Returns:
             Optional[Player]: The player object representing the maker, or None if no trump suit is declared.
         """
-        if self.maker_index is None:
+        if self._maker_index is None:
             return None
-        def_index = (self.maker_index + 1) % 4
+        def_index = (self._maker_index + 1) % 4
         return self.players[def_index].team
 
     @property
@@ -384,7 +402,7 @@ class Euchre:
         """
         Reset the lead player to be the current player.
         Used to explicitly set the player who will lead the next trick.
-        """        
+        """
         self.lead_index = self.current_player_index
 
     def deal_cards(self) -> None:
@@ -415,6 +433,7 @@ class Euchre:
     def make_trump(self, suit: str) -> None:
         """
         Declare the trump suit.
+        Will update the maker to the current player.
 
         Args:
             suit (Optional[str]): The desired trump suit.
@@ -423,10 +442,10 @@ class Euchre:
             EuchreException: Various conditions (mismatched downCard, missing upCard, etc.).
         """
         # Disallow trump if it matches the downCard's suit
-        if self._down_card is not None and self._down_card._suit == suit:
+        if self.down_card is not None and self.down_card.suit == suit:
             raise EuchreError("Trump can not match the down card.")
 
-        self.maker_index = self.current_player_index
+        self._maker_index = self.current_player_index
         self.trump = suit
         self.deck.trump = suit
 
@@ -539,6 +558,12 @@ class Euchre:
         self.players[winner_pindex].tricks += 1
 
     def rotate_to_winner(self) -> None:
+        """
+        Rotate the player order so the trick winner becomes the new lead.
+
+        Updates the internal player order and sets the current player index
+        and lead index to the winner of the current trick.
+        """
         winner_pindex = self.current_trick.winner
 
         # Move the winner to the front of the order
@@ -653,7 +678,7 @@ class Euchre:
         Args:
             player (int | str): The player's index or name.
             cards (List[str]): List of card strings to assign.
-        """        
+        """
         player = self.get_player(player)
         player.hand.clear()
         for card_string in cards:
@@ -679,7 +704,7 @@ class Euchre:
         sb = sb + f"down card: {self._down_card}" + "\n"
         sb = sb + f"discard: {self.discard}" + "\n"
         sb = sb + f"trump: {self.trump}" + "\n"
-        sb = sb + f"maker: {self.maker_index} -> {self.maker}" + "\n"
+        sb = sb + f"maker: {self._maker_index} -> {self.maker}" + "\n"
         sb = sb + f"lead: {self.lead_index} -> {self.players[self.lead_index]}" + "\n"
 
         sb = sb + "tricks:\n"
@@ -698,11 +723,12 @@ class Euchre:
             "current_player": self.current_player_index,
             "dealer": self.dealer_index,
             "lead": self.lead_index,
-            "maker": self.maker_index,
+            "maker": self._maker_index,
             "hand_count": self.hand_count,
             "up_card": self.up_card,
             "down_card": self.down_card,
             "discard": self.discard,
         }
+
 
 __all__ = ["Euchre", "EuchreError"]

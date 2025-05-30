@@ -1,5 +1,6 @@
 # del_string.py
 
+
 def del_string(a_list, delimiter=", ", wrap=""):
     """
     Convert a list into a single string with a delimiter between items.

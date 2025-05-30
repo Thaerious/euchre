@@ -19,6 +19,7 @@ class ActionError(EuchreError):
     def __init__(self, msg: str):
         super().__init__(msg)
 
+
 class Game(Euchre):
     """
     Manages the overall flow and state of a Euchre game.
@@ -374,7 +375,7 @@ class Game(Euchre):
         game.current_player_index = int_or_none(json_object["current_player"])
         game.dealer_index = int_or_none(json_object["dealer"])
         game.lead_index = int_or_none(json_object["lead"])
-        game.maker_index = int_or_none(json_object["maker"])
+        game._maker_index = int_or_none(json_object["maker"])
         game.hand_count = int_or_none(json_object["hand_count"])
         game._up_card = card_or_none(game.deck, json_object["up_card"])
         game._down_card = card_or_none(game.deck, json_object["down_card"])
@@ -385,15 +386,18 @@ class Game(Euchre):
 
         return game
 
+
 def int_or_none(source):
     if source is None:
         return None
     return int(source)
 
+
 def card_or_none(deck, source):
     if source is None:
         return None
     return Card(deck, source)
+
 
 def cards_from_json(deck, target, source):
     for c in source:

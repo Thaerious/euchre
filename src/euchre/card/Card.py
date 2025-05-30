@@ -7,6 +7,7 @@ This module defines the Card class representing Euchre cards,
 and helper functions for determining winning and losing cards during play.
 """
 
+
 class Card:
     """Represents a single card in Euchre, with suit and rank."""
 
@@ -168,6 +169,6 @@ class Card:
         b |= Card.ranks.index(self.rank)
         return b
 
-    def __index__(self): # pragma: no cover
+    def __index__(self):  # pragma: no cover
         """Enable the card to be used in indexed contexts (e.g., arrays)."""
         return self.__int__()

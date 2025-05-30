@@ -2,6 +2,7 @@
 from euchre.card import Hand
 from euchre.utility.del_string import del_string
 
+
 class Player:
     """Represents a single player in Euchre."""
 
@@ -40,6 +41,3 @@ class Player:
     def __str__(self):
         """Return a string summarizing the player's state."""
         return f"({self.name}, {del_string(self.hand)}, [{del_string(self.played)}], T{self.tricks})"
-
-
-

@@ -6,6 +6,7 @@ from euchre.card.compare_cards import best_card
 
 # ["♠", "♥", "♣", "♦"]
 
+
 @pytest.mark.parametrize(
     "lead_suit, trump, card1_str, card2_str, expected",
     [
@@ -33,7 +34,6 @@ from euchre.card.compare_cards import best_card
         ("♠", "♦", "9♣", "9♥", "9♣"),
     ],
 )
-
 def test_compare_cards(lead_suit, trump, card1_str, card2_str, expected):
     deck = Deck()
     card1 = Card(deck, card1_str)

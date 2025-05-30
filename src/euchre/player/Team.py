@@ -1,6 +1,7 @@
 # Team.py
 from euchre.utility.del_string import del_string
 
+
 class Team:
     """Represents a Euchre team consisting of multiple players."""
 

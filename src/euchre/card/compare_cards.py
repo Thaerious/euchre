@@ -661,6 +661,7 @@ lookup_table[None][None] = {
     "9♦": 19,
 }
 
+
 def compare_cards(left: Card, right: Card, lead: str = None) -> int:
     """
     Compare two cards based on their value in the lookup table.
@@ -678,6 +679,7 @@ def compare_cards(left: Card, right: Card, lead: str = None) -> int:
     lhs = lookup_table[left.trump][lead][left]
     rhs = lookup_table[left.trump][lead][right]
     return lhs - rhs
+
 
 def best_card(left: Card, right: Card, lead: str = None) -> int:
     """
@@ -698,6 +700,7 @@ def best_card(left: Card, right: Card, lead: str = None) -> int:
     if compare < 0:
         return right
     return left
+
 
 def worst_card(left: Card, right: Card, lead: str = None) -> int:
     """

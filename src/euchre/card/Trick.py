@@ -82,7 +82,8 @@ class Trick(list[Card], HasTrump):
         Returns:
             str: The lead suit symbol.
         """
-        if len(self) == 0: return None
+        if len(self) == 0:
+            return None
         return self[0].suit_effective()
 
     @property
@@ -125,11 +126,11 @@ class Trick(list[Card], HasTrump):
         """
 
         if not card in self:
-             raise ValueError(f"Card {card} was not played in this trick.")
+            raise ValueError(f"Card {card} was not played in this trick.")
 
         for i, card_in_trick in enumerate(self):
             if card_in_trick == card:
-                return self._order[i]        
+                return self._order[i]
 
     def __str__(self) -> str:
         """

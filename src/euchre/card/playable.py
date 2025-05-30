@@ -8,6 +8,7 @@ Determines which cards from a player's hand are legally playable based on the cu
 from euchre.card.Hand import Hand
 from euchre.card.Trick import Trick
 
+
 def playable(trick: Trick, hand: Hand) -> list:
     """
     Determine which cards from a hand are legally playable for the current trick.

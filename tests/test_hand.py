@@ -17,6 +17,7 @@ def build_hand(cards):
 
     return hand
 
+
 def test_hand_has_suit_present():
     """Test has_suit() returns True when the suit is in hand, considering trump."""
     hand = build_hand(["10♠", "J♦", "A♣"])
@@ -24,6 +25,7 @@ def test_hand_has_suit_present():
     assert hand.has_suit(suit="♠") is True, "Hand contains ♠, should return True"
     assert hand.has_suit(suit="♦") is True, "Hand contains ♦, should return True"
     assert hand.has_suit(suit="♣") is True, "Hand contains ♣, should return True"
+
 
 def test_hand_has_suit_absent():
     """Test has_suit() returns False when the suit is not in hand, considering trump."""
@@ -36,6 +38,7 @@ def test_hand_has_suit_absent():
         hand.has_suit(suit="♣") is False
     ), "Hand does not contain ♣, should return False"
 
+
 def test_hand_has_suit_mixed():
     """Test has_suit() with a mix of suits, considering trump."""
     hand = build_hand(["A♥", "9♠", "Q♣"])
@@ -46,6 +49,7 @@ def test_hand_has_suit_mixed():
         hand.has_suit(suit="♦") is False
     ), "Hand does not contain ♦, should return False"
 
+
 def test_hand_empty():
     """Test has_suit() with an empty hand, considering trump."""
     hand = build_hand([])  # Empty hand
@@ -53,6 +57,7 @@ def test_hand_empty():
     assert hand.has_suit(suit="♠") is False, "Empty hand should return False"
     assert hand.has_suit(suit="♦") is False, "Empty hand should return False"
     assert hand.has_suit(suit="♣") is False, "Empty hand should return False"
+
 
 def test_hand_has_all_suits():
     """Test has_suit() when hand contains all four suits, considering trump."""
@@ -63,11 +68,13 @@ def test_hand_has_all_suits():
     assert hand.has_suit(suit="♣") is True, "Hand contains ♣, should return True"
     assert hand.has_suit(suit="♥") is True, "Hand contains ♥, should return True"
 
+
 def test_hand_has_suit_with_only_left_bower():
     """Test has_suit() when the hand contains the Left Bower (acting as trump)."""
     hand = build_hand(["J♣"])  # J♣ is the Left Bower if trump is ♠
 
     assert hand.has_suit(suit="♠") is True, "J♣ should count as ♠ when ♠ is trump"
+
 
 @pytest.mark.parametrize(
     "cards, values, suits, expected",

@@ -1,10 +1,11 @@
 # rotate.py
 def rotate(list):
     """Move the last item to the first
-        Modifies the list.
+    Modifies the list.
     """
     list.append(list.pop(0))
     return list
+
 
 def rotate_to(list, target):
     """repeatedly move the last item to the first until target is first"""

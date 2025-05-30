@@ -10,17 +10,20 @@ def euchre():
     euchre = Euchre(names)
     return euchre
 
+
 def test_get_player_int(euchre):
     assert euchre.get_player(0).name == "Player1"
     assert euchre.get_player(1).name == "Player2"
     assert euchre.get_player(2).name == "Player3"
     assert euchre.get_player(3).name == "Player4"
 
+
 def test_get_player_str(euchre):
     assert euchre.get_player("Player1").name == "Player1"
     assert euchre.get_player("Player2").name == "Player2"
     assert euchre.get_player("Player3").name == "Player3"
     assert euchre.get_player("Player4").name == "Player4"
+
 
 def test_initialization(euchre):
     assert len(euchre.players) == 4
@@ -39,6 +42,7 @@ def test_initialization(euchre):
     assert euchre.teams[0].score == 0
     assert euchre.teams[1].score == 0
 
+
 def test_shuffle_deck(euchre):
     original_deck = euchre.deck.copy()
     euchre.shuffle_deck()
@@ -55,18 +59,22 @@ def test_shuffle_deck(euchre):
     # Assert the deck order has changed (non-trivial shuffle)
     assert original_deck != shuffled_deck, "Deck order did not change after shuffle"
 
+
 def test_activate_dealer(euchre):
     euchre.activate_dealer()
     assert euchre.current_player == euchre.dealer
+
 
 def test_activate_first_player(euchre):
     euchre.activate_dealer()
     euchre.activate_first_player()
     assert euchre.current_player.name == "Player1"
 
+
 def test_activate_next_player(euchre):
     euchre.activate_next_player()
     assert euchre.current_player.name == "Player2"
+
 
 # activate next player rotates to first player
 def test_activate_next_player_x4(euchre):
@@ -75,6 +83,7 @@ def test_activate_next_player_x4(euchre):
     euchre.activate_next_player()
     euchre.activate_next_player()
     assert euchre.current_player.name == "Player1"
+
 
 def test_deal_cards(euchre):
     euchre.deal_cards()
@@ -85,6 +94,7 @@ def test_deal_cards(euchre):
 
     assert set(euchre.players[0].hand) == {"9♠", "K♠", "J♥", "9♣", "K♣"}
 
+
 def test_turn_down_card(euchre):
     euchre.deal_cards()
     euchre.turn_down_card()
@@ -92,6 +102,7 @@ def test_turn_down_card(euchre):
     assert euchre.up_card is None
     assert euchre.down_card == "J♦"
     assert euchre.discard is None
+
 
 def test_swap_card(euchre):
     euchre.deal_cards()
@@ -102,6 +113,7 @@ def test_swap_card(euchre):
     assert euchre.discard == "Q♠"
     assert "J♦" in euchre.dealer.hand
     assert "Q♥" not in euchre.dealer.hand
+
 
 # can not turn down card after picking up
 def test_turn_down_card_exception(euchre):
@@ -114,6 +126,7 @@ def test_turn_down_card_exception(euchre):
     with pytest.raises(EuchreError, match="Discard must be None to turn down."):
         euchre.turn_down_card()
 
+
 # can not pick up card twice
 def test_pick_up_exception_0(euchre):
     euchre.deal_cards()
@@ -125,6 +138,7 @@ def test_pick_up_exception_0(euchre):
     with pytest.raises(EuchreError, match="Discard must be None to swap."):
         euchre.dealer_swap_card("Q♠")
 
+
 # can not pick up card twice
 def test_pick_up_exception_1(euchre):
     euchre.deal_cards()
@@ -132,14 +146,14 @@ def test_pick_up_exception_1(euchre):
     with pytest.raises(EuchreError, match="Must swap card from hand: 9♠"):
         euchre.dealer_swap_card("9♠")
 
+
 # must make trump before adding trick
 def test_add_trick_exception_2(euchre):
     euchre.deal_cards()
 
-    with pytest.raises(
-        EuchreError, match="Trump must be made before adding a trick."
-    ):
+    with pytest.raises(EuchreError, match="Trump must be made before adding a trick."):
         euchre.add_trick()
+
 
 def test_make_trump_up_card(euchre):
     euchre.deal_cards()
@@ -151,11 +165,13 @@ def test_make_trump_up_card(euchre):
     assert euchre.trump == "♦"
     assert euchre.maker.name == "Player1"
 
+
 def test_make_trump(euchre):
     euchre.deal_cards()
     euchre.make_trump("♠")
     assert euchre.trump == "♠"
     assert euchre.maker.name == "Player1"
+
 
 # trump can not match the down card
 def test_make_trump_exception_0(euchre):
@@ -168,14 +184,14 @@ def test_make_trump_exception_0(euchre):
     with pytest.raises(EuchreError, match="Trump can not match the down card."):
         euchre.make_trump("♦")
 
+
 # must make trump before adding trick
 def test_add_trick_exception_0(euchre):
     euchre.deal_cards()
 
-    with pytest.raises(
-        EuchreError, match="Trump must be made before adding a trick."
-    ):
+    with pytest.raises(EuchreError, match="Trump must be made before adding a trick."):
         euchre.add_trick()
+
 
 def test_add_trick(euchre):
     euchre.deal_cards()
@@ -183,6 +199,7 @@ def test_add_trick(euchre):
     euchre.add_trick()
 
     assert len(euchre.tricks) == 1
+
 
 def test_add_second_trick(euchre):
     euchre.deal_cards()
@@ -192,6 +209,7 @@ def test_add_second_trick(euchre):
     with pytest.raises(EuchreError, match="Previous trick not complete."):
         euchre.add_trick()
 
+
 def test_play_card_exception_0(euchre):
     euchre.deal_cards()
     euchre.make_trump("♠")
@@ -200,10 +218,12 @@ def test_play_card_exception_0(euchre):
     with pytest.raises(EuchreError, match="Card 'Q♥' not in hand of 'Player1'."):
         euchre.play_card("Q♥")
 
+
 def test_go_alone_exception_0(euchre):
     # Player1 goes alone
     with pytest.raises(EuchreError, match="Trump must be made before going alone."):
         euchre.go_alone()
+
 
 def test_go_alone(euchre):
     euchre.deal_cards()
@@ -222,6 +242,7 @@ def test_go_alone(euchre):
     partners_index = (euchre.current_player_index + 2) % 4
     assert partners_index not in euchre.order
 
+
 # must have 5 tricks played to advance
 def test_next_hand_exception_0(euchre):
     euchre.deal_cards()
@@ -229,6 +250,7 @@ def test_next_hand_exception_0(euchre):
 
     with pytest.raises(EuchreError, match="Hand not finished."):
         euchre.next_hand()
+
 
 # todo test scoring
 # @pytest.mark.parametrize(

@@ -18,6 +18,7 @@ def game():
 
     return game
 
+
 def test_before_first_hand(game):
     assert game.current_state == 1
     assert game.current_player.name == "Player1"
@@ -36,6 +37,7 @@ def test_before_first_hand(game):
 
     # First player is lead when play first begins (state 5)
     assert game.lead_player.name == "Player1"
+
 
 def test_play_first_hand(game):
     test_before_first_hand(game)

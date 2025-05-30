@@ -2,9 +2,9 @@
 # euchre/__init__.py
 
 # Import classes and functions to expose them at the package level
-from . import card    # ✅ import the card module itself
+from . import card  # ✅ import the card module itself
 from . import player  # ✅ import the player module itself
-from . import utility # ✅ import the utility module itself
+from . import utility  # ✅ import the utility module itself
 from .Euchre import Euchre, EuchreError
 from .Game import Game, ActionError
 from .Snapshot import Snapshot
@@ -18,5 +18,5 @@ __all__ = [
     "ActionError",
     "card",
     "player",
-    "utility"
+    "utility",
 ]

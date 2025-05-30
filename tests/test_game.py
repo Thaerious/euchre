@@ -3,6 +3,7 @@ from euchre import Game
 
 # ["♠", "♥", "♣", "♦"]
 
+
 def test_maker_is_dealer_that_orders_up():
     game = Game(["Player1", "Player2", "Player3", "Player4"])
     game.input(None, "start", None)

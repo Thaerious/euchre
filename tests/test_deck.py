@@ -2,6 +2,7 @@
 from euchre.card import Card, Deck
 import random
 
+
 def test_deck_initialization():
     """Test that a newly created deck contains exactly 24 Euchre cards."""
     deck = Deck()
@@ -13,11 +14,12 @@ def test_deck_initialization():
     }
     assert set(deck) == expected_cards, "Deck should contain all Euchre cards"
 
+
 def test_deck_seed():
     """Test that a newly created deck contains exactly 24 Euchre cards."""
     deck1 = Deck(1234)
     deck2 = Deck(1234)
-    
+
     # new seeded decks are the same before shuffle
     for i in range(len(deck1)):
         assert deck1[i] == deck2[i]
@@ -49,6 +51,7 @@ def test_deck_shuffling():
     assert set(deck) == set(original_order), "Shuffled deck should have the same cards"
     assert shuffled_order != original_order, "Shuffling should change card order"
 
+
 def test_deck_multiple_shuffles():
     """Test that multiple shuffles produce different orders."""
     deck = Deck()
@@ -62,10 +65,12 @@ def test_deck_multiple_shuffles():
         first_shuffle != second_shuffle
     ), "Two shuffles should produce different orders"
 
+
 def test_deck_is_cardlist_instance():
     """Test that Deck is an instance of CardList."""
     deck = Deck()
     assert isinstance(deck, list), "Deck should inherit from CardList"
+
 
 def test_deck_method_chaining():
     """Test that `shuffle()` returns self, allowing method chaining."""
