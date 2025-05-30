@@ -68,7 +68,7 @@ class Snapshot(Game):
         self.for_index = game.get_player(for_player).index
 
         # Replace players with SnapPlayer versions
-        self.players = [SnapPlayer(player) for player in game.players]
+        self.players = [SnapPlayer(player) for player in game._players]
 
         # Copy hand for the player the snapshot is created for
         self.hand = copy.copy(game.get_player(for_player).hand)
@@ -102,11 +102,11 @@ class Snapshot(Game):
             "tricks": self.tricks,
             "trump": self.trump,
             "order": self.order,
-            "current_player": self.current_player_index,
-            "dealer": self.dealer_index,
-            "lead": self.lead_index,
+            "current_player": self._current_player_index,
+            "dealer": self._dealer_index,
+            "lead": self._lead_index,
             "maker": self._maker_index,
-            "hand_count": self.hand_count,
+            "hand_count": self._hand_count,
             "up_card": self.up_card,
             "down_card": self.down_card,
             "hand": self.hand,

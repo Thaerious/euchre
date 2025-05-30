@@ -25,6 +25,12 @@ coverage report
 coverage html
 ```
 
+#### Clear Coverage Files
+```bash
+rm .coverage
+rm -r htmlcov
+```
+
 ---
 
 ### Helpful Test Flags

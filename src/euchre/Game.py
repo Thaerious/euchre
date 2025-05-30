@@ -395,11 +395,11 @@ class Game(Euchre):
 
         game._tricks.append(Trick(game.trump, game.order))
 
-        game.current_player_index = int_or_none(json_object["current_player"])
-        game.dealer_index = int_or_none(json_object["dealer"])
-        game.lead_index = int_or_none(json_object["lead"])
+        game._current_player_index = int_or_none(json_object["current_player"])
+        game._dealer_index = int_or_none(json_object["dealer"])
+        game._lead_index = int_or_none(json_object["lead"])
         game._maker_index = int_or_none(json_object["maker"])
-        game.hand_count = int_or_none(json_object["hand_count"])
+        game._hand_count = int_or_none(json_object["hand_count"])
         game._up_card = card_or_none(game.deck, json_object["up_card"])
         game._down_card = card_or_none(game.deck, json_object["down_card"])
         game._discard = card_or_none(game.deck, json_object["discard"])

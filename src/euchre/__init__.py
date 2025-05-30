@@ -5,9 +5,10 @@
 from . import card  # ✅ import the card module itself
 from . import player  # ✅ import the player module itself
 from . import utility  # ✅ import the utility module itself
-from .Euchre import Euchre, EuchreError
-from .Game import Game, EuchreError
+from .Euchre import Euchre
+from .Game import Game
 from .Snapshot import Snapshot
+from .EuchreError import EuchreError
 
 # Define __all__ to specify what is exported when using 'from euchre import *'
 __all__ = [
