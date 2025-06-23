@@ -3,37 +3,34 @@ from euchre.card.Card import Card
 from euchre.card.Deck import Deck
 from euchre.player.Player import Player
 import euchre.constants as const
+from .PlayerManager import PlayerManager
 
+class DeckManager:
+    def __init__(self, seed=None):
+        self.deck = Deck(seed)
+        self.up_card = None
+        self.down_card = None
+        self.discard = None
 
-class DealManager:
-    def __init__(self, deck: Deck):
-        self.deck = deck
-        self._up_card = None
-        self._down_card = None
-        self._discard = None
-        
-    @property
-    def up_card(self) -> Card | None:
-        return self._up_card
+    def __json__(self):
+        return {
+            "deck": self.deck,
+            "up_card": self.up_card,
+            "down_card": self.down_card,
+            "discard": self.discard
+        }
 
-    @property
-    def down_card(self) -> Card | None:
-        return self._down_card
-
-    @property
-    def discard(self) -> Card | None:
-        return self._discard   
-
-    def reset(self):
+    def shuffle(self):
         """
         Reset the deal state.
 
         Clears the up card, down card, and discard, typically called at the
         end of a hand or when starting a new deal.
         """        
-        self._up_card = None
-        self._down_card = None
-        self._discard = None        
+        self.deck.shuffle()
+        self.up_card = None
+        self.down_card = None
+        self.discard = None        
 
     def set_discard(self, card) -> Card:
         """
@@ -51,13 +48,13 @@ class DealManager:
         Raises:
             EuchreError: If a discard has already been set.
         """        
-        if self._discard is not None:
+        if self.discard is not None:
             raise EuchreError("Discard already set.")
         
-        pick_up_card = self.up_card
-        self._discard = card
-        self._up_card = None
-        return pick_up_card
+        pickup_card = self.up_card
+        self.discard = card
+        self.up_card = None
+        return pickup_card
 
     def turn_down_card(self) -> None:
         """
@@ -69,8 +66,8 @@ class DealManager:
         if self.discard is not None:
             raise EuchreError("Discard must be None to turn down.")
 
-        self._down_card = self._up_card
-        self._up_card = None    
+        self.down_card = self.up_card
+        self.up_card = None    
 
     def make_trump(self, suit: str) -> None:
         """
@@ -89,7 +86,7 @@ class DealManager:
 
         self.deck.trump = suit
         
-    def deal_cards(self, players: list[Player]) -> None:
+    def deal_cards(self, players: PlayerManager) -> None:
         """
         Deal 5 cards to each player, then set the upCard from the top of the deck.
         """
@@ -101,7 +98,15 @@ class DealManager:
             for player in players:
                 card = self.deck.pop(0)
                 player.hand.append(card)
-        self._up_card = self.deck.pop(0)
+                
+        self.up_card = self.deck.pop(0)
+
+    def __str__(self):
+        sb = ""
+        sb = sb + f"up card: {self.up_card}\n"
+        sb = sb + f"down card: {self.down_card}\n"
+        sb = sb + f"discard: {self.discard}"
+        return sb
 
     def __repr__(self):
-        return f"<DealManager up={self._up_card} down={self._down_card} discard={self._discard}>"
+        return f"<DeckManager up={self.up_card} down={self.down_card} discard={self.discard}>"

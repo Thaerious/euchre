@@ -1,5 +1,5 @@
 import pytest
-from euchre.DealManager import DealManager
+from euchre.DeckManager import DeckManager
 from euchre.card.Deck import Deck
 from euchre.card.Card import Card
 from euchre.player.Player import Player
@@ -7,16 +7,12 @@ from euchre.EuchreError import EuchreError
 import euchre.constants as const
 
 @pytest.fixture
-def full_deck():
-    return Deck()
-
-@pytest.fixture
 def players():
     return [Player(name, i) for i, name in enumerate(["A", "B", "C", "D"])]
 
 @pytest.fixture
-def manager(full_deck):
-    return DealManager(full_deck)
+def manager():
+    return DeckManager()
 
 
 def test_deal_cards_sets_upcard(manager, players):
@@ -26,10 +22,10 @@ def test_deal_cards_sets_upcard(manager, players):
         assert len(player.hand) == const.NUM_CARDS_PER_PLAYER
 
 
-def test_reset_clears_all(manager, players):
+def test_shuffle_clears_all(manager, players):
     manager.deal_cards(players)
     manager.turn_down_card()
-    manager.reset()
+    manager.shuffle()
     assert manager.up_card is None
     assert manager.down_card is None
     assert manager.discard is None
@@ -73,10 +69,8 @@ def test_make_trump_fails_if_matching_downcard(manager, players):
 
 
 def test_deal_cards_fails_with_small_deck():
-    deck = Deck()
-    deck.pop()
-    print(len(deck))
-    manager = DealManager(deck)
+    manager = DeckManager()
+    manager.deck.pop()
     players = [Player(name, i) for i, name in enumerate(["A", "B", "C", "D"])]
     with pytest.raises(EuchreError, match="Not enough cards in the deck to deal"):
         manager.deal_cards(players)

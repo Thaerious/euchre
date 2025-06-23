@@ -137,8 +137,6 @@ def test_normalize(suit, trump, expected_suit):
     card = Card(deck, suit, "10")
     normalized = card.normalize()
 
-    print(f"{suit} {trump} {expected_suit}")
-
     assert (
         normalized.suit == expected_suit
     ), f"Expected {expected_suit}, got {normalized.suit}"

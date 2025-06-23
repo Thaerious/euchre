@@ -23,7 +23,10 @@ class Player:
         self.partner = None
         self.index = index
         self.team = None
-        self.clear()
+        self.hand = Hand()
+        self.played = []
+        self.tricks = 0
+        self.alone = False
 
     def __json__(self):
         """Return a JSON-serializable dictionary of player data."""
@@ -33,7 +36,15 @@ class Player:
             "played": self.played,
             "hand": self.hand,
             "alone": self.alone,
+            "index": self.index
         }
+
+    def __str__(self):
+        """Return a string summarizing the player's state."""
+        sb = f"#{self.index} {self.name} [{self.hand}] {self.played} T{self.tricks}"
+        if self.alone:
+            sb += " Alone"
+        return sb
 
     def clear(self):
         """Reset the player's hand, played cards, tricks won, and alone status."""
@@ -48,7 +59,3 @@ class Player:
         for card in self.hand:
             new_player.hand.append(card)
         return new_player
-
-    def __str__(self):
-        """Return a string summarizing the player's state."""
-        return f"({self.name}, {del_string(self.hand)}, [{del_string(self.played)}], T{self.tricks})"

@@ -13,6 +13,13 @@ from .compare_cards import best_card
 from .HasTrump import HasTrump
 
 
+from typing import Optional
+from colorama import Fore, Style
+from euchre.card import Card
+from .compare_cards import best_card
+from .HasTrump import HasTrump
+
+
 class Trick(list[Card], HasTrump):
     """
     Represents a trick in Euchre, tracking cards played and determining the winner.
@@ -20,7 +27,7 @@ class Trick(list[Card], HasTrump):
     Inherits from list (to hold Card objects) and HasTrump (to track trump suit).
     """
 
-    def __init__(self, trump: str, order: list[int]):
+    def __init__(self, trump: str, order: list[int]) -> None:
         """
         Initialize a Trick.
 
@@ -56,7 +63,7 @@ class Trick(list[Card], HasTrump):
             norm_trick.append(card.normalize(self))
         return norm_trick
 
-    def append(self, card: Card):
+    def append(self, card: Card) -> None:
         """
         Append a card to the trick.
 
@@ -64,6 +71,16 @@ class Trick(list[Card], HasTrump):
             card (Card): The card to add.
         """
         super().append(Card(self, card))
+
+    @property
+    def order(self) -> list[int]:
+        """
+        Get the play order of players for this trick.
+
+        Returns:
+            List[int]: A copy of the list representing player indices in current order.
+        """
+        return self._order.copy()
 
     @property
     def trump(self) -> str:
@@ -76,7 +93,7 @@ class Trick(list[Card], HasTrump):
         return self._trump
 
     @property
-    def lead_suit(self) -> str:
+    def lead_suit(self) -> Optional[str]:
         """
         The effective lead suit of the trick (adjusting for Left Bower).
 
@@ -88,7 +105,7 @@ class Trick(list[Card], HasTrump):
         return self[0].suit_effective()
 
     @property
-    def best_card(self) -> Card | None:
+    def best_card(self) -> Optional[Card]:
         """
         The currently winning card in the trick.
 
@@ -103,7 +120,7 @@ class Trick(list[Card], HasTrump):
         return best
 
     @property
-    def winner(self) -> int | None:
+    def winner(self) -> Optional[int]:
         """
         The index of the player who is currently winning the trick.
 
@@ -115,7 +132,7 @@ class Trick(list[Card], HasTrump):
             return None
         return self.who_played(best)
 
-    def who_played(self, card: Card) -> int | None:
+    def who_played(self, card: Card) -> int:
         """
         The index of the player that played the card
 
@@ -125,7 +142,6 @@ class Trick(list[Card], HasTrump):
         Returns:
             int | None: Player seat index who played it, or None if not found.
         """
-
         for i, card_in_trick in enumerate(self):
             if card_in_trick == card:
                 return self._order[i]

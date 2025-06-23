@@ -20,7 +20,13 @@ class Team:
     def __init__(self, players):
         """Initialize the team with a list of players."""
         self._players = players
-        self._score = 0
+        self.score = 0
+
+    def __json__(self):
+        return {
+            "players": [p.index for p in self._players],
+            "score": self.score
+        }
 
     def __str__(self):
         """Return a comma-separated string of player names."""
@@ -33,10 +39,7 @@ class Team:
     @property
     def has_alone(self):
         """Return True if any player on the team is playing alone."""
-        for player in self._players:
-            if player.alone:
-                return True
-        return False
+        return any(player.alone for player in self._players)
 
     @property
     def tricks(self):
@@ -50,13 +53,3 @@ class Team:
     def players(self):
         """Return a copy of the list of players."""
         return self._players.copy()
-
-    @property
-    def score(self):
-        """Return the team's current score."""
-        return self._score
-
-    @score.setter
-    def score(self, value):
-        """Set the team's score to a new value."""
-        self._score = value

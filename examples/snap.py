@@ -6,4 +6,5 @@ game1 = copy.deepcopy(game)
 game.input(None, "start", None)
 snap = Snapshot(game, "Adam")
 
-print(snap)
+print(game.players, type(game.players))
+

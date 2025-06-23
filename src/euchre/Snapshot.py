@@ -68,7 +68,7 @@ class Snapshot(Game):
         self.for_index = game.get_player(for_player).index
 
         # Replace players with SnapPlayer versions
-        self.players = [SnapPlayer(player) for player in game._players]
+        self.players = [SnapPlayer(player) for player in game.players]
 
         # Copy hand for the player the snapshot is created for
         self.hand = copy.copy(game.get_player(for_player).hand)

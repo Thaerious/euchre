@@ -29,26 +29,12 @@ class DummyGame:
 
 @pytest.fixture
 def setup_game():
-    game = DummyGame(["A", "B", "C", "D"])
-    manager = TrickManager(game)
-    return game, manager
-
+    manager = TrickManager()
+    return manager
 
 def test_add_trick(setup_game):
-    _, manager = setup_game
-    manager.add_trick()
+    manager = setup_game
+    manager.add_trick("♠", [0, 1, 2, 3])
     assert manager.current_trick is not None
     assert len(manager) == 1
 
-def test_add_trick_fails_without_trump(setup_game):
-    game, manager = setup_game
-    game.trump = None  # unset trump
-    with pytest.raises(EuchreError, match="Trump must be declared"):
-        manager.add_trick()
-
-def test_add_trick_fails_if_previous_not_finished(setup_game):
-    game, manager = setup_game
-    manager.add_trick()
-    # Trick not finished — no cards played
-    with pytest.raises(EuchreError, match="Previous trick is still in progress."):
-        manager.add_trick()

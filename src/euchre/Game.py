@@ -9,10 +9,11 @@ maintains the finite state machine for a euchre game
 import json
 from collections.abc import Callable
 from typing import Any
-from euchre import Euchre, EuchreError
+from euchre.Euchre import Euchre
+from euchre.EuchreError import EuchreError
 from euchre.card import Card, Trick
-from .utility.custom_json_serializer import custom_json_serializer
-
+from euchre.utility import custom_json_serializer
+from euchre.Settings import Settings
 
 class Game(Euchre):
     """
@@ -45,7 +46,10 @@ class Game(Euchre):
     @property
     def last_player(self):
         """Retrieve the last player that performed an action"""
-        return self.get_player(self._last_player_index)
+        if self._last_player_index == None: 
+            return None
+        
+        return self.players[self._last_player_index]
 
     def register_hook(self, event: str, func):
         """Register a function to a hook event."""
@@ -71,7 +75,7 @@ class Game(Euchre):
 
     def input(
         self,
-        player: str | None,
+        player_name: str | None,
         action: str,
         data: str | Card | None = None,
     ) -> None:
@@ -96,8 +100,8 @@ class Game(Euchre):
         else:
             self.last_data = None
 
-        if player is not None:
-            self._last_player_index = self.get_player(player).index
+        if player_name is not None:
+            self._last_player_index = self.players[player_name].index
         else:
             self._last_player_index = None
 
@@ -107,24 +111,24 @@ class Game(Euchre):
             self._state(action, data)
         elif self.state in (2, 5):
             # States 2 & 5 expect a card object
-            if player != self.current_player.name:
+            if player_name != self.players.current.name:
                 raise EuchreError(
-                    f"Incorrect Player: expected '{self.current_player.name}' found '{player}'."
+                    f"Incorrect Player: expected '{self.players.current.name}' found '{player}'."
                 )
             if isinstance(data, str):
                 data = self.deck.get_card(data[-1], data[:-1])
             self._state(action, data)
         else:
-            if player != self.current_player.name:
+            if player_name != self.players.current.name:
                 raise EuchreError(
-                    f"Incorrect Player: expected '{self.current_player.name}' found '{player}'."
+                    f"Incorrect Player: expected '{self.players.current.name}' found '{player}'."
                 )
             self._state(action, data)
 
         self.trigger_hook(
             "after_input",
             prev_state=prev_state,
-            player=player,
+            player=player_name,
             action=action,
             data=data,
         )
@@ -144,10 +148,10 @@ class Game(Euchre):
         """
         Transition to state 1: Shuffle and deal cards.
         """
-        if self.do_shuffle:
-            self.shuffle_deck()
+        if Settings.do_shuffle:
+            self.deck_manager.shuffle()
 
-        self.deal_cards()
+        self.deck_manager.deal_cards(self.players)
         self._state = self.state_1
 
     def state_1(self, action: str, __: Any) -> None:
@@ -161,21 +165,23 @@ class Game(Euchre):
         self.allowed_actions(action, "pass", "order", "alone")
 
         if action == "pass":
-            if self.activate_next_player() == self.first_player:
+            if self.players.activate_next_player() == self.players[0]:
                 self.enter_state_3()
-        elif action == "order":
-            self.make_trump(self.up_card.suit)
+        elif action == "order":            
+            self.deck_manager.make_trump(self.deck_manager.up_card.suit)
+            self.players.set_maker()
             self.enter_state_2()
         elif action == "alone":
-            self.make_trump(self.up_card.suit)
-            self.go_alone()
+            self.deck_manager.make_trump(self.deck_manager.up_card.suit)
+            self.players.set_maker()
+            self.players.go_alone()
             self.enter_state_2()
 
     def enter_state_2(self) -> None:
         """
         Transition to state 2: Dealer's turn to decide.
         """
-        self.activate_dealer()
+        self.players.activate_dealer()
         self._state = self.state_2
 
     def state_2(self, action: str, card: Card | None) -> None:
@@ -189,11 +195,12 @@ class Game(Euchre):
         self.allowed_actions(action, "down", "up")
 
         if action == "up":
+            
             self.dealer_swap_card(card)
         else:
-            self.turn_down_card()
+            self.deck_manager.turn_down_card()
 
-        self.activate_first_player()
+        self.players.activate_first_player()
         self.enter_state_5()
 
     def enter_state_3(self):
@@ -201,7 +208,7 @@ class Game(Euchre):
         Transition to state 3: Dealer turns down the up-card,
         and players begin selecting a trump suit.
         """
-        self.turn_down_card()
+        self.deck_manager.turn_down_card()
         self._state = self.state_3
 
     def state_3(self, action: str, suit: str | None) -> None:
@@ -215,13 +222,13 @@ class Game(Euchre):
         self.allowed_actions(action, "pass", "make", "alone")
 
         if action == "pass":
-            if self.activate_next_player() == self.dealer:
+            if self.players.activate_next_player() == self.players.dealer:
                 self._state = self.state_4
         elif action in ["make", "alone"]:
-            self.make_trump(suit)
+            self.deck_manager.make_trump(suit)
             if action == "alone":
-                self.go_alone()
-            self.activate_first_player()
+                self.players.go_alone()
+            self.players.activate_first_player()
             self.enter_state_5()
 
     def state_4(self, action: str, suit: str | None) -> None:
@@ -236,16 +243,16 @@ class Game(Euchre):
 
         self.make_trump(suit)
         if action == "alone":
-            self.go_alone()
-        self.activate_first_player()
+            self.players.go_alone()
+        self.players.activate_first_player()
         self.enter_state_5()
 
     def enter_state_5(self) -> None:
         """
         Transition to state 5: Players play tricks.
         """
-        self.add_trick()
-        self.reset_lead_player()
+        self.tricks.add_trick(self.deck_manager.deck.trump, self.players.order)
+        self.players.reset_lead_player()
         self._state = self.state_5
 
     def state_5(self, action: str, card: Card) -> None:
@@ -257,9 +264,9 @@ class Game(Euchre):
             card (Card): Card to play.
         """
         self.allowed_actions(action, "play")
-        self.play_card(card)
+        self.tricks.play_card(card)
 
-        if not self.is_trick_finished:
+        if not self.tricks.is_trick_finished:
             return
         self.enter_state_6()
 
@@ -268,7 +275,8 @@ class Game(Euchre):
         Transition to state 6: Score the current trick and
         determine whether to continue playing or move to scoring the hand.
         """
-        self.score_trick()
+        winner = self.players.get(self.tricks.trick_winner())
+        winner.tricks = winner.tricks + 1
         self._state = self.state_6
 
     def state_6(self, action: str, __: Any) -> None:
@@ -281,8 +289,8 @@ class Game(Euchre):
         """
         self.allowed_actions(action, "continue")
 
-        if not self.is_hand_finished:
-            self.rotate_to_winner()
+        if not self.tricks.is_hand_finished():
+            self.tricks.rotate_to_winner()
             self.enter_state_5()
             return
 
@@ -339,7 +347,10 @@ class Game(Euchre):
         """
         sb = super().__str__()
         sb += f"last action: {self.last_action}\n"
-        sb += f"last player: {self._last_player_index} -> {self.get_player(self._last_player_index)}\n"
+        if self.last_player != None:
+            sb += f"last player: {self.last_player.index}\n"
+        else:
+            sb += f"last player: None\n"
         sb += f"state: {self.state}\n"
 
         return sb
@@ -362,53 +373,7 @@ class Game(Euchre):
         Returns:
             str: A JSON-formatted string representation of the game state.
         """
-        return json.dumps(self, indent=indent, default=custom_json_serializer)
-
-    @staticmethod
-    def from_json(json_object):
-        """
-        Reconstruct a Game instance from a JSON-serializable dictionary.
-
-        Args:
-            json_object (dict): JSON-compatible dictionary representing game state.
-
-        Returns:
-            Game: A restored Game object with state and players reconstructed.
-        """
-        # permit pylint access to protected member
-        # pylint: disable=W0212
-        player_names = [player["name"] for player in json_object["players"]]
-        game = Game(player_names)
-        game.order = [int(i) for i in json_object["order"]]
-        game.trump = json_object["trump"]
-
-        for p in json_object["players"]:
-            player = game.get_player(p["name"])
-            player.tricks = p["tricks"]
-            player.alone = p["alone"]
-            cards_from_json(game.deck, player.played, p["played"])
-            cards_from_json(game.deck, player.hand, p["hand"])
-
-        game.deck.clear()
-        for c in json_object["deck"]:
-            game.deck.append(Card(game.deck, c))
-
-        game._tricks.append(Trick(game.trump, game.order))
-
-        game._current_player_index = int_or_none(json_object["current_player"])
-        game._dealer_index = int_or_none(json_object["dealer"])
-        game._lead_index = int_or_none(json_object["lead"])
-        game._maker_index = int_or_none(json_object["maker"])
-        game._hand_count = int_or_none(json_object["hand_count"])
-        game._up_card = card_or_none(game.deck, json_object["up_card"])
-        game._down_card = card_or_none(game.deck, json_object["down_card"])
-        game._discard = card_or_none(game.deck, json_object["discard"])
-        game._last_player_index = json_object["last_player"]
-        game.last_action = json_object["last_action"]
-        game._state = getattr(game, f"state_{json_object['state']}")
-
-        return game
-
+        return json.dumps(self, indent=indent, default=custom_json_serializer)   
 
 def int_or_none(source):
     """
@@ -439,16 +404,3 @@ def card_or_none(deck, source):
     if source is None:
         return None
     return Card(deck, source)
-
-
-def cards_from_json(deck, target, source):
-    """
-    Convert a list of serialized cards into Card objects and append to target.
-
-    Args:
-        deck (Deck): Reference to the current Deck object.
-        target (list): List to which Card objects are appended.
-        source (list): List of card representations from JSON.
-    """
-    for c in source:
-        target.append(Card(deck, c))

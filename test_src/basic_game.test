@@ -1,0 +1,19 @@
+preamble:
+    names ["Player1", "Player2", "Player3", "Player4"]
+    seed 100
+    assert state == 0
+    start 
+
+    set $Player1 = [J♦, 10♣, 9♣, Q♥, Q♠]
+    set $Player2 = [9♦, K♥, Q♣, K♦, 10♠]
+    set $Player3 = [9♥, Q♦, A♠, A♦, K♠]
+    set $Player4 = [A♣, K♣, A♥, 10♦, 9♠]
+    set deck_manager.up_card = 10♥
+    
+    print $Player1
+
+test first_test: ima description yes I am
+    call preamble
+    assert state == 1
+    pass pass pass pass make ♦
+    assert state == 5

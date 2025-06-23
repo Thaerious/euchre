@@ -59,6 +59,10 @@ class Hand(list):
 
         return selected
 
+    def set(self, cards):
+        self.clear()
+        self.extend(cards)
+
     def __str__(self):
         """Return a human-readable string of the hand."""
         return del_string(self, ",", "'")
