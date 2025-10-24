@@ -29,7 +29,7 @@ class DummyGame:
 
 @pytest.fixture
 def setup_game():
-    manager = TrickManager()
+    manager = TrickManager(DummyGame(["A", "B", "C", "D"]))
     return manager
 
 def test_add_trick(setup_game):

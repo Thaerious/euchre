@@ -1,6 +1,6 @@
 from euchre.EuchreError import EuchreError
 from euchre.player import Player, Team
-from euchre.utility.rotate import rotate_to
+from euchre.utility.rotate import rotate, rotate_to
 import euchre.constants as const
 import json
 

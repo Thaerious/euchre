@@ -1,11 +1,10 @@
 # test_compiler.py
+
 import os
 import re
 import sys
 from collections import deque
-
 from euchre.utility.del_string import del_string
-
 
 class Header(list):
     def write_out(self, file):

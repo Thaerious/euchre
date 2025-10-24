@@ -16,7 +16,7 @@ class Euchre:
     The core class representing a single game of Euchre.
     """
 
-    def __init__(self, names: list[str], seed:int = None) -> None:
+    def __init__(self, names:list[str], seed:int = None) -> None:
         self.deck_manager = DeckManager(seed)
         self.players = PlayerManager(names, self.deck_manager.deck)
         self.tricks = TrickManager(self)

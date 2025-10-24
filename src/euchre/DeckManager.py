@@ -1,3 +1,7 @@
+"""
+DeckManager.py
+"""
+
 from euchre.EuchreError import EuchreError
 from euchre.card.Card import Card
 from euchre.card.Deck import Deck

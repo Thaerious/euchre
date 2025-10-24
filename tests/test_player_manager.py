@@ -29,13 +29,13 @@ def test_dealer_on_new_instance(manager):
 
 def test_activate_dealer(manager):
     manager.activate_dealer()
-    assert manager.current_player.name == "D"
+    assert manager.current.name == "D"
 
 
 def test_activate_first_player(manager):
     manager.activate_dealer()
     manager.activate_first_player()
-    assert manager.current_player.name == "A"
+    assert manager.current.name == "A"
 
 
 def test_reset_lead_player(manager):
@@ -47,7 +47,7 @@ def test_reset_lead_player(manager):
 def test_go_alone_removes_partner(manager):
     manager.activate_first_player()  # player "A", index 0
     manager.go_alone()
-    assert manager.current_player.alone is True
+    assert manager.current.alone is True
     assert 2 not in manager.order  # partner index is 2
 
 
@@ -57,22 +57,22 @@ def test_go_alone_without_trump():
         pm.go_alone()
 
 
-def test_get_player_by_index(manager):
-    assert manager.get_player(1).name == "B"
+def test_get_by_index(manager):
+    assert manager.get(1).name == "B"
 
 
-def test_get_player_by_name(manager):
-    assert manager.get_player("C").name == "C"
+def test_get_by_name(manager):
+    assert manager.get("C").name == "C"
 
 
-def test_get_player_invalid_name(manager):
+def test_get_invalid_name(manager):
     with pytest.raises(ValueError):
-        manager.get_player("Z")
+        manager.get("Z")
 
 
-def test_get_player_none(manager):
+def test_get_none(manager):
     with pytest.raises(TypeError):
-        manager.get_player(None)
+        manager.get(None)
 
 
 def test_invalid_constructor_param():
@@ -84,4 +84,4 @@ def test_rotate(manager):
     assert manager.order == [1, 2, 3, 0]
     assert manager.dealer.name == "A"
     assert manager.lead_player.name == "B"
-    assert manager.current_player.name == "B"
+    assert manager.current.name == "B"

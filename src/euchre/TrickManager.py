@@ -6,7 +6,6 @@ import euchre.constants as const
 from euchre import Euchre
 from euchre.card.Card import Card
 
-
 class TrickManager:
     """
     Manages the trick flow in a Euchre hand, including play order, trick state, and winner logic.
