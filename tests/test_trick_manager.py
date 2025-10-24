@@ -7,7 +7,6 @@ from euchre.TrickManager import TrickManager
 from euchre.utility.rotate import rotate_to
 from euchre import EuchreError
 
-
 class DummyGame:
     def __init__(self, player_names, trump="♠"):
         self.players = [Player(name, i) for i, name in enumerate(player_names)]
