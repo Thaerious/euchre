@@ -1,16 +1,18 @@
 # Start Here
 
 ## 🛠️ Development Setup
-- `pip install .[dev]`
-- Use `source ./venv/bin/activate` when opening a new terminal.
-- On fresh repos use `pip install -e .` to install the library locally.
 
+```bash
+python -m venv venv
+source ./venv/bin/activate # when opening a new terminal
+pip install .[dev]
+pip install -e . # install euchre library locally.
 
 ### Running Tests
 
 ```bash
 pip install pytest
-pytest
+pytest tests
 pytest tests/test_name.py
 ```
 
