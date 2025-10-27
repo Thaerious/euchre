@@ -11,7 +11,6 @@ import random
 from euchre.card.Card import Card
 from .HasTrump import HasTrump
 
-
 class Deck(list, HasTrump):
     """
     Represents a Euchre deck (24 cards: 9, 10, J, Q, K, A of each suit).

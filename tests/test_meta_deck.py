@@ -1,5 +1,5 @@
 import pytest
-from euchre.DeckManager import DeckManager
+from euchre.MetaDeck import MetaDeck
 from euchre.card.Deck import Deck
 from euchre.card.Card import Card
 from euchre.player.Player import Player
@@ -12,7 +12,7 @@ def players():
 
 @pytest.fixture
 def manager():
-    return DeckManager()
+    return MetaDeck()
 
 
 def test_deal_cards_sets_upcard(manager, players):
@@ -57,7 +57,7 @@ def test_make_trump_sets_trump(manager, players):
     manager.deal_cards(players)
     suit = manager.up_card.suit
     manager.make_trump(suit)
-    assert manager.deck.trump == suit
+    assert manager.trump == suit
 
 
 def test_make_trump_fails_if_matching_downcard(manager, players):
@@ -69,8 +69,8 @@ def test_make_trump_fails_if_matching_downcard(manager, players):
 
 
 def test_deal_cards_fails_with_small_deck():
-    manager = DeckManager()
-    manager.deck.pop()
+    manager = MetaDeck()
+    manager.pop()
     players = [Player(name, i) for i, name in enumerate(["A", "B", "C", "D"])]
     with pytest.raises(EuchreError, match="Not enough cards in the deck to deal"):
         manager.deal_cards(players)

@@ -149,9 +149,9 @@ class Game(Euchre):
         Transition to state 1: Shuffle and deal cards.
         """
         if Settings.do_shuffle:
-            self.deck_manager.shuffle()
+            self.deck.shuffle()
 
-        self.deck_manager.deal_cards(self.players)
+        self.deck.deal_cards(self.players)
         self._state = self.state_1
 
     def state_1(self, action: str, __: Any) -> None:
@@ -168,11 +168,11 @@ class Game(Euchre):
             if self.players.activate_next_player() == self.players[0]:
                 self.enter_state_3()
         elif action == "order":            
-            self.deck_manager.make_trump(self.deck_manager.up_card.suit)
+            self.deck.make_trump(self.deck.up_card.suit)
             self.players.set_maker()
             self.enter_state_2()
         elif action == "alone":
-            self.deck_manager.make_trump(self.deck_manager.up_card.suit)
+            self.deck.make_trump(self.deck.up_card.suit)
             self.players.set_maker()
             self.players.go_alone()
             self.enter_state_2()
@@ -198,7 +198,7 @@ class Game(Euchre):
             
             self.dealer_swap_card(card)
         else:
-            self.deck_manager.turn_down_card()
+            self.deck.turn_down_card()
 
         self.players.activate_first_player()
         self.enter_state_5()
@@ -208,7 +208,7 @@ class Game(Euchre):
         Transition to state 3: Dealer turns down the up-card,
         and players begin selecting a trump suit.
         """
-        self.deck_manager.turn_down_card()
+        self.deck.turn_down_card()
         self._state = self.state_3
 
     def state_3(self, action: str, suit: str | None) -> None:
@@ -225,7 +225,7 @@ class Game(Euchre):
             if self.players.activate_next_player() == self.players.dealer:
                 self._state = self.state_4
         elif action in ["make", "alone"]:
-            self.deck_manager.make_trump(suit)
+            self.deck.make_trump(suit)
             if action == "alone":
                 self.players.go_alone()
             self.players.activate_first_player()
@@ -251,7 +251,7 @@ class Game(Euchre):
         """
         Transition to state 5: Players play tricks.
         """
-        self.tricks.add_trick(self.deck_manager.deck.trump, self.players.order)
+        self.tricks.add_trick(self.deck.trump, self.players.order)
         self.players.reset_lead_player()
         self._state = self.state_5
 

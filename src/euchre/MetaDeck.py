@@ -1,5 +1,5 @@
 """
-DeckManager.py
+MetaDeck.py
 """
 
 from euchre.EuchreError import EuchreError
@@ -9,16 +9,26 @@ from euchre.player.Player import Player
 import euchre.constants as const
 from .PlayerManager import PlayerManager
 
-class DeckManager:
+class MetaDeck(Deck):
+
+    up_card: Card | None
+    """ The card visible to all players. """
+
+    down_card: Card | None
+    """ The card that the dealer turned down. """
+
+    discard: Card | None
+    """ The card that the dealer discarded. """
+
     def __init__(self, seed=None):
-        self.deck = Deck(seed)
+        super().__init__()
         self.up_card = None
         self.down_card = None
         self.discard = None
 
     def __json__(self):
         return {
-            "deck": self.deck,
+            "deck": self,
             "up_card": self.up_card,
             "down_card": self.down_card,
             "discard": self.discard
@@ -29,9 +39,9 @@ class DeckManager:
         Reset the deal state.
 
         Clears the up card, down card, and discard, typically called at the
-        end of a hand or when starting a new deal.
+        end of a hand when starting a new deal.
         """        
-        self.deck.shuffle()
+        super().shuffle()
         self.up_card = None
         self.down_card = None
         self.discard = None        
@@ -88,22 +98,22 @@ class DeckManager:
         if self.down_card is not None and self.down_card.suit == suit:
             raise EuchreError("Trump can not match the down card.")
 
-        self.deck.trump = suit
+        self.trump = suit
         
     def deal_cards(self, players: PlayerManager) -> None:
         """
         Deal 5 cards to each player, then set the upCard from the top of the deck.
         """
 
-        if len(self.deck) < 24:
+        if len(self) < 24:
             raise EuchreError("Not enough cards in the deck to deal.")
 
         for _ in range(const.NUM_CARDS_PER_PLAYER):
             for player in players:
-                card = self.deck.pop(0)
+                card = self.pop(0)
                 player.hand.append(card)
                 
-        self.up_card = self.deck.pop(0)
+        self.up_card = self.pop(0)
 
     def __str__(self):
         sb = ""
@@ -113,4 +123,4 @@ class DeckManager:
         return sb
 
     def __repr__(self):
-        return f"<DeckManager up={self.up_card} down={self.down_card} discard={self.discard}>"
+        return f"<MetaDeck up={self.up_card} down={self.down_card} discard={self.discard}>"

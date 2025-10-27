@@ -79,7 +79,7 @@ class GameTester():
             split = input[1:-1].split(",")
             return [self.parse_value(s.strip()) for s in split]                    
         elif re.fullmatch(r"[910JQKAL]+[♠♥♣♦]", input):
-            card = self.game.deck_manager.deck.get_card(input)
+            card = self.game.deck_manager.get_card(input)
             return card
         elif input.isdigit():
             return int(input)
