@@ -16,7 +16,7 @@ class TrickManager:
         self.game: Euchre = game
 
     def __str__(self) -> str:
-        sb = "tricks:\n"
+        sb = ""
         for i, trick in enumerate(self._tricks):
             sb += f"  {i}: {trick}"
             if trick != self._tricks[-1]:

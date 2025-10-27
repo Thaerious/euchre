@@ -11,14 +11,11 @@ from colorama import Fore, Style
 from euchre.card import Card
 from .compare_cards import best_card
 from .HasTrump import HasTrump
-
-
 from typing import Optional
 from colorama import Fore, Style
 from euchre.card import Card
 from .compare_cards import best_card
 from .HasTrump import HasTrump
-
 
 class Trick(list[Card], HasTrump):
     """
@@ -155,6 +152,9 @@ class Trick(list[Card], HasTrump):
         Returns:
             str: A colored string representing the trick.
         """
+
+        if len(self) == 0: return "[]"
+
         sb = "["
 
         for i, card in enumerate(self):

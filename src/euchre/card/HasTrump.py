@@ -10,7 +10,6 @@ from typing import Literal
 
 TrumpSuit = Literal["♠", "♥", "♣", "♦"]
 
-
 class HasTrump:
     """
     A mixin class that provides a `trump` property for classes needing trump suit management.

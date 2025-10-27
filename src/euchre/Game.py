@@ -345,13 +345,14 @@ class Game(Euchre):
         Returns:
             str: Debug information for the game.
         """
-        sb = super().__str__()
-        sb += f"last action: {self.last_action}\n"
+        sb = super().__str__()  
+        sb += "<State>\n"      
+        sb += f"  last action: {self.last_action}\n"
         if self.last_player != None:
-            sb += f"last player: {self.last_player.index}\n"
+            sb += f"  last player: {self.last_player.index}\n"
         else:
-            sb += f"last player: None\n"
-        sb += f"state: {self.state}\n"
+            sb += f"  last player: None\n"
+        sb += f"  state: {self.state}\n"
 
         return sb
 

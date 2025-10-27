@@ -1,16 +1,17 @@
 """
 MetaDeck.py
+
+Extends Deck to provide knowledge of up-card, down-card, and discards.
 """
 
 from euchre.EuchreError import EuchreError
 from euchre.card.Card import Card
 from euchre.card.Deck import Deck
-from euchre.player.Player import Player
+from euchre.card.HasTrump import HasTrump, TrumpSuit
 import euchre.constants as const
 from .PlayerManager import PlayerManager
 
 class MetaDeck(Deck):
-
     up_card: Card | None
     """ The card visible to all players. """
 
@@ -21,10 +22,10 @@ class MetaDeck(Deck):
     """ The card that the dealer discarded. """
 
     def __init__(self, seed=None):
-        super().__init__()
         self.up_card = None
         self.down_card = None
         self.discard = None
+        super().__init__(seed)
 
     def __json__(self):
         return {
@@ -38,7 +39,7 @@ class MetaDeck(Deck):
         """
         Reset the deal state.
 
-        Clears the up card, down card, and discard, typically called at the
+        Clears the trump, up card, down card, and discard, typically called at the
         end of a hand when starting a new deal.
         """        
         super().shuffle()
@@ -46,7 +47,7 @@ class MetaDeck(Deck):
         self.down_card = None
         self.discard = None        
 
-    def set_discard(self, card) -> Card:
+    def set_discard(self, card: Card | None) -> Card | None:
         """
         Set the discarded card after a player picks up the up card.
 
@@ -54,10 +55,10 @@ class MetaDeck(Deck):
         and stores the given card as the discard. It returns the original up card.
 
         Args:
-            card (Card): The card to discard (replaces the up card in hand).
+            card (Card | None): The card to discard (replaces the up card in hand).
 
         Returns:
-            Card: The up card that was picked up.
+            Card | None: The up card that was picked up.
 
         Raises:
             EuchreError: If a discard has already been set.
@@ -75,30 +76,21 @@ class MetaDeck(Deck):
         Turn down the up card (pass on making trump if upCard is not desired).
 
         Raises:
-            EuchreException: If a discard is already set.
+            EuchreError: If a discard is already set or  up_card is None.
         """
-        if self.discard is not None:
-            raise EuchreError("Discard must be None to turn down.")
+
+        if self.discard is not None or self.up_card is None:
+            raise EuchreError("Discard and up_card must be None to turn down.")
 
         self.down_card = self.up_card
         self.up_card = None    
 
-    def make_trump(self, suit: str) -> None:
-        """
-        Declare the trump suit.
-        Will update the maker to the current player.
-
-        Args:
-            suit (Optional[str]): The desired trump suit.
-
-        Raises:
-            EuchreException: Various conditions (mismatched downCard, missing upCard, etc.).
-        """
-        # Disallow trump if it matches the downCard's suit
-        if self.down_card is not None and self.down_card.suit == suit:
-            raise EuchreError("Trump can not match the down card.")
-
-        self.trump = suit
+    @HasTrump.trump.setter
+    def trump(self, trump: TrumpSuit | None):
+        # override to permit clearing; forbid matching down_card suit
+        if trump is not None and self.down_card is not None and self.down_card.suit == trump:
+            raise EuchreError(f"Trump ({trump}) cannot match the down card ({self.down_card}).")
+        HasTrump.trump.fset(self, trump)
         
     def deal_cards(self, players: PlayerManager) -> None:
         """
@@ -106,21 +98,21 @@ class MetaDeck(Deck):
         """
 
         if len(self) < 24:
-            raise EuchreError("Not enough cards in the deck to deal.")
+            raise EuchreError(f"Not enough cards in the deck (len={len(self)}) to deal.")
 
         for _ in range(const.NUM_CARDS_PER_PLAYER):
             for player in players:
-                card = self.pop(0)
+                card = self.pop()
                 player.hand.append(card)
                 
-        self.up_card = self.pop(0)
+        self.up_card = self.pop()
 
     def __str__(self):
-        sb = ""
-        sb = sb + f"up card: {self.up_card}\n"
-        sb = sb + f"down card: {self.down_card}\n"
-        sb = sb + f"discard: {self.discard}"
-        return sb
+        return "\n".join([
+            f"up card: {self.up_card}",
+            f"down card: {self.down_card}",
+            f"discard: {self.discard}"
+        ])        
 
     def __repr__(self):
         return f"<MetaDeck up={self.up_card} down={self.down_card} discard={self.discard}>"

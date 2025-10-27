@@ -6,4 +6,5 @@ import json
 
 
 game = Game(["Adam", "Eve", "Cain", "Able"])
-game.deck_manager.up_card = "10♣"
+game.deck.up_card = "10♣"
+game.deck.trump = "♠"

@@ -1,3 +1,5 @@
+import textwrap
+
 """
 Euchre.py
 Main module for euchre state
@@ -36,11 +38,19 @@ class Euchre:
         }
 
     def __str__(self):
-        sb = ""
-        sb = sb + (str)(self.players) + "\n"
-        sb = sb + (str)(self.deck) + "\n"
-        sb = sb + (str)(self.tricks) + "\n"
+        sb = "<Deck>\n"
+        sb += textwrap.indent((str)(self.deck), "  ") + "\n"
+        sb += "<Players>\n"
+        sb += textwrap.indent((str)(self.players), "  ") + "\n"
+        sb += "<Tricks>\n"
+        sb += textwrap.indent((str)(self.tricks), "  ")
         return sb
+
+    def deal_cards(self) -> None:
+        """
+        Deal 5 cards to each player, then set the upCard from the top of the deck.
+        """
+        self.deck.deal_cards(self.players)
 
     def is_game_over(self) -> bool:
         """
